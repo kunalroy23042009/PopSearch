@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -e .
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
     envVars:
       - key: YOUTUBE_API_KEY
         sync: false
@@ -36,7 +36,3 @@ services:
         sync: false
       - key: APP_URL
         sync: false
-    disk:
-      name: data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
