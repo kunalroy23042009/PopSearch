@@ -838,11 +838,11 @@ let currentChannelId = null;
                     setLoading('analyze', false);
                     findCompetitors(currentChannelId);
                 } else {
-                    setLoading('analyze', false, data.detail || 'Analysis failed. Check your URL and try again.');
+                    setLoading('analyze', false, data.error || data.detail || 'Analysis failed. Check your URL and try again.');
                     document.getElementById('results').innerHTML = '';
                 }
             } catch (err) {
-                setLoading('analyze', false, 'Network error — is the server running?');
+                setLoading('analyze', false, 'Connection error: ' + (err.message || 'is the server running?'));
                 document.getElementById('results').innerHTML = '';
             } finally {
                 btn.disabled = false;
@@ -1040,11 +1040,11 @@ let currentChannelId = null;
                     renderTopicResults(data, topic);
                     setLoading('topic', false);
                 } else {
-                    setLoading('topic', false, data.detail || 'Search failed.');
+                    setLoading('topic', false, data.error || data.detail || 'Search failed.');
                     document.getElementById('topic-results').innerHTML = '';
                 }
             } catch (err) {
-                setLoading('topic', false, 'Network error — is the server running?');
+                setLoading('topic', false, 'Connection error: ' + (err.message || 'is the server running?'));
                 document.getElementById('topic-results').innerHTML = '';
             } finally {
                 btn.disabled = false;
