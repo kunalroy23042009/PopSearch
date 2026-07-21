@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     REDDIT_CLIENT_SECRET: str = ""
     REDDIT_USER_AGENT: str = "creator-content-radar/0.1"
 
+    # Twitter/X API
+    TWITTER_API_KEY: str = ""
+    TWITTER_API_SECRET: str = ""
+    TWITTER_BEARER_TOKEN: str = ""
+
+    # Twitch API
+    TWITCH_CLIENT_ID: str = ""
+    TWITCH_CLIENT_SECRET: str = ""
+
     # JWT Auth
     SECRET_KEY: str = "dev-secret-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
@@ -49,7 +58,7 @@ class Settings(BaseSettings):
     APP_URL: str = "http://localhost:8000"
 
 
-    @field_validator("YOUTUBE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY")
+    @field_validator("YOUTUBE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_BEARER_TOKEN", "TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET")
     @classmethod
     def strip_quotes(cls, v: str) -> str:
         """Strip surrounding quotes that may come from env files."""

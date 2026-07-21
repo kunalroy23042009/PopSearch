@@ -25,7 +25,10 @@ from starlette.requests import Request
 from app.channel_analyzer import analyze_channel
 from app.competitor_finder import find_competitors
 from app.db import get_cached_channel_profile, get_session, init_db
-from app.models import ChannelProfile, CompetitorChannel, ContentResult, TopicInsight
+from app.models import (
+    ChannelProfile, CompetitorChannel, CompetitorAnalysis,
+    ContentResult, DashboardData, TopicInsight,
+)
 from app.topic_search import search_topic_with_insights
 
 # Auth
@@ -101,6 +104,25 @@ class SearchTopicResponse(BaseModel):
 
     results: list[ContentResult]
     insight: TopicInsight
+
+
+class MultiSourceSearchRequest(BaseModel):
+    """Request body for POST /multi-source-search."""
+
+    channel_id: str
+    topic: str
+    include_trends: bool = True
+    include_twitter: bool = True
+    include_twitch: bool = True
+    include_hn: bool = True
+    include_rss: bool = True
+
+
+class DashboardRequest(BaseModel):
+    """Request body for POST /dashboard."""
+
+    channel_url: str
+    topic: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -303,6 +325,98 @@ async def search_topic_endpoint(
 async def health_check():
     """Simple liveness probe."""
     return {"status": "ok"}
+
+
+@app.post("/multi-source-search", response_model=DashboardData)
+@limiter.limit("5/minute")
+async def multi_source_search_endpoint(
+    request: Request,
+    body: MultiSourceSearchRequest,
+) -> DashboardData:
+    """Search across ALL available content platforms for a topic.
+
+    Gathers from YouTube, Reddit, Google Trends, Twitter/X, Twitch, HN, RSS.
+    Returns a unified DashboardData with cross-platform results and trends.
+    """
+    logger.info(
+        "POST /multi-source-search - channel_id=%s, topic=%s",
+        body.channel_id, body.topic,
+    )
+
+    try:
+        profile = get_cached_channel_profile(body.channel_id)
+        if profile is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Channel profile not found for channel_id={body.channel_id}. "
+                "Please analyze the channel first using /analyze-channel.",
+            )
+
+        from app.services.content_gatherer import ContentGatherer
+        gatherer = ContentGatherer()
+        dashboard = gatherer.gather_all(
+            topic=body.topic,
+            profile=profile,
+            include_trends=body.include_trends,
+        )
+
+        logger.info(
+            "POST /multi-source-search SUCCESS - topic=%s, sources=%d, results=%d",
+            body.topic, dashboard.total_sources_checked, len(dashboard.cross_platform_content),
+        )
+        return dashboard
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("POST /multi-source-search ERROR - %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Multi-source search failed: {str(exc)}",
+        ) from exc
+
+
+@app.post("/dashboard", response_model=DashboardData)
+@limiter.limit("5/minute")
+async def dashboard_endpoint(
+    request: Request,
+    body: DashboardRequest,
+) -> DashboardData:
+    """Get a full dashboard with channel analysis, competitors, trends, and cross-platform content."""
+    logger.info("POST /dashboard - channel_url=%s, topic=%s", body.channel_url, body.topic)
+
+    try:
+        profile = analyze_channel(body.channel_url)
+        from app.services.content_gatherer import ContentGatherer
+        gatherer = ContentGatherer()
+
+        topic = body.topic or profile.niche or profile.topics[0] if profile.topics else "content creation"
+        dashboard = gatherer.gather_all(topic=topic, profile=profile)
+
+        # Add competitor analysis
+        from app.competitor_finder import find_competitors
+        competitors = find_competitors(profile, exclude_channel_id=profile.channel_id)
+        dashboard.competitors = CompetitorAnalysis(
+            competitors=competitors,
+            market_position=f"{profile.channel_tier} creator in {profile.niche}",
+            competitive_advantage=profile.ai_summary[:200] if profile.ai_summary else "",
+            threat_level="Medium" if len(competitors) > 5 else "Low",
+        )
+
+        logger.info(
+            "POST /dashboard SUCCESS - channel=%s, sources=%d",
+            profile.title, dashboard.total_sources_checked,
+        )
+        return dashboard
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("POST /dashboard ERROR - %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Dashboard failed: {str(exc)}",
+        ) from exc
 
 
 # ---------------------------------------------------------------------------

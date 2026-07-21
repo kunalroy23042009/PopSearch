@@ -1,14 +1,15 @@
 # Creator Content Radar
 
-A tool where a YouTube creator pastes their channel URL to get AI-powered niche profiling, competitor discovery, and trending content suggestions from YouTube and Reddit.
+A tool where a YouTube creator pastes their channel URL to get AI-powered niche profiling, competitor discovery, and trending content suggestions from 7+ content platforms — YouTube, Reddit, Google Trends, Twitter/X, Twitch, Hacker News, and RSS feeds. Features a YouTube Studio-style dashboard with interactive charts.
 
 ## Features
 
 - **Channel Analysis** — Paste any YouTube channel URL and get a full niche profile: niche, topics, content style, target audience, growth potential, and content recommendations
-- **Competitor Discovery** — AI generates search queries to find similar channels in your niche, ranked by subscriber-count proximity and search overlap
-- **Topic Search** — Search YouTube + Reddit for trending content in your niche. Results are classified as trending, popular, or underrated
-- **AI Content Angles** — Get specific, actionable content ideas tailored to your channel's style and audience
-- **Multi-AI Support** — Powered by Gemini, Groq, and OpenRouter with automatic fallback
+- **Competitor Discovery** — AI generates search queries to find similar channels in your niche, ranked by subscriber-count proximity and search overlap, with competitor intelligence and market positioning
+- **Multi-Source Topic Search** — Search **YouTube + Reddit + Google Trends + Twitter/X + Twitch + Hacker News + RSS feeds** for trending content. Results classified as trending, popular, or underrated
+- **AI Content Angles** — Get specific, actionable content ideas tailored to your channel. Includes SEO keywords, thumbnail ideas, predicted performance, and best posting times
+- **YouTube Studio Dashboard** — Modern dashboard with Chart.js interactive graphs, performance analytics, cross-platform content feed, and real-time market insights
+- **Multi-AI Support** — Powered by Gemini, Groq, and OpenRouter with automatic fallback and complexity-based provider routing
 - **User Authentication** — JWT-based auth with free/pro/business plans
 - **Stripe Billing** — Subscription management with checkout and customer portal
 - **Export** — Download analysis as PDF or CSV (Pro+ plan)
@@ -48,9 +49,13 @@ See `.env.example` for all required variables. You need at minimum:
 
 Optional:
 - `GROQ_API_KEY`, `OPENROUTER_API_KEY` — Alternative AI providers
-- `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` — Reddit search
+- `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` — Reddit search (via PRAW)
+- `TWITTER_BEARER_TOKEN` — Twitter/X API v2 (free tier)
+- `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` — Twitch API
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — Payments
 - `DATABASE_URL` — PostgreSQL URL for production
+
+**Note**: Google Trends, Hacker News, and RSS feeds work without API keys.
 
 ## API Endpoints
 
@@ -59,6 +64,8 @@ Optional:
 | POST | `/analyze-channel` | Analyze a YouTube channel |
 | POST | `/find-competitors` | Find competitor channels |
 | POST | `/search-topic` | Search YouTube + Reddit for topics |
+| POST | `/multi-source-search` | Search ALL platforms (YT, Reddit, Trends, Twitter, Twitch, HN, RSS) |
+| POST | `/dashboard` | Full dashboard with analysis, competitors, trends, cross-platform content |
 | POST | `/api/auth/register` | Register a new user |
 | POST | `/api/auth/login` | Login and get JWT |
 | GET | `/api/auth/me` | Get current user |
@@ -72,15 +79,21 @@ Optional:
 
 ## Tech Stack
 
-- Python 3.11, FastAPI, Uvicorn
+- Python 3.11+, FastAPI, Uvicorn
 - SQLModel + SQLite (local) / PostgreSQL (production)
 - Google YouTube Data API v3, Google Gemini, Groq, OpenRouter
-- Reddit via PRAW
+- Reddit via PRAW + RSS fallback
+- Google Trends via pytrends
+- Twitter/X API v2 (free tier)
+- Twitch Helix API
+- Hacker News Firebase API
+- RSS feeds (feedparser)
+- Chart.js for interactive dashboards
 - JWT auth (python-jose + passlib)
 - Stripe for payments
 - SlowAPI for rate limiting
 - Prometheus for monitoring
-- Vanilla HTML/CSS/JS frontend
+- Vanilla HTML/CSS/JS frontend (YouTube Studio-style)
 
 ## Deployment
 
@@ -108,15 +121,16 @@ MIT
 
 ## Platform Coverage
 
-| Platform | Free option | Paid needed? |
-|----------|-------------|-------------|
-| YouTube | Yes (quota-limited) | No |
-| Reddit | Yes | No |
-| Google Trends | Yes | No |
-| Twitch | Yes | No |
-| Twitter/X | Very limited | Yes, for real use |
-| TikTok | Scraping only | Recommended (Apify etc.) |
-| Instagram | Scraping only | Recommended (Apify etc.) |
+| Platform | Free option | Paid needed? | Status |
+|----------|-------------|-------------|--------|
+| YouTube | Yes (quota-limited) | No | ✅ Integrated |
+| Reddit | Yes (PRAW + RSS) | No | ✅ Integrated |
+| Google Trends | Yes (pytrends) | No | ✅ Integrated |
+| Twitter/X | Yes (API v2 free tier) | No | ✅ Integrated |
+| Twitch | Yes (Helix API) | No | ✅ Integrated |
+| Hacker News | Yes (Firebase API) | No | ✅ Integrated |
+| RSS Feeds | Yes (feedparser) | No | ✅ Integrated |
+| Product Hunt | Yes (RSS/API) | No | ✅ Integrated |
 
 ## What Could Differentiate This Project
 

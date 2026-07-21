@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 def _build_youtube_client():
     """Construct an authenticated YouTube Data API client."""
+    if not settings.YOUTUBE_API_KEY:
+        raise ValueError("YOUTUBE_API_KEY is not configured")
     return build("youtube", "v3", developerKey=settings.YOUTUBE_API_KEY)
 
 

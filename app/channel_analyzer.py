@@ -55,6 +55,8 @@ def _extract_channel_identifier(url_or_id: str) -> tuple[str, str]:
 
 
 def _build_youtube_client():
+    if not settings.YOUTUBE_API_KEY:
+        raise ValueError("YOUTUBE_API_KEY is not configured")
     return build("youtube", "v3", developerKey=settings.YOUTUBE_API_KEY)
 
 
