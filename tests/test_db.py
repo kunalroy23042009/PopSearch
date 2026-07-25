@@ -24,6 +24,8 @@ def temp_db(tmp_path, monkeypatch):
     db_path = tmp_path / "cache.db"
     monkeypatch.setattr("app.db.DB_PATH", db_path)
     monkeypatch.setattr("app.db.DB_DIR", tmp_path)
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+    monkeypatch.setattr("app.config.settings.DATABASE_URL", f"sqlite:///{db_path}")
     reset_engine()
     init_db()
     yield db_path

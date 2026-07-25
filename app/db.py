@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -17,6 +18,7 @@ DB_DIR = Path("data")
 DB_PATH = DB_DIR / "cache.db"
 
 _engine = None
+_engine_lock = threading.Lock()
 
 
 class Channel(SQLModel, table=True):
@@ -103,7 +105,11 @@ class JobModel(SQLModel, table=True):
 
 def _get_engine():
     global _engine
-    if _engine is None:
+    if _engine is not None:
+        return _engine
+    with _engine_lock:
+        if _engine is not None:
+            return _engine
         db_url = getattr(settings, "DATABASE_URL", "") or f"sqlite:///{DB_PATH}"
         if db_url.startswith("postgresql") or db_url.startswith("postgres"):
             logger.info("Attempting PostgreSQL connection: %s", db_url.split("@")[-1] if "@" in db_url else db_url)

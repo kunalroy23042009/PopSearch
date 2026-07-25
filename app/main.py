@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -222,7 +223,7 @@ async def find_competitors_endpoint(
     logger.info("POST /find-competitors - channel_id=%s, user=%d", body.channel_id, user.id)
 
     try:
-        profile = get_cached_channel_profile(body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -230,7 +231,7 @@ async def find_competitors_endpoint(
                 "Please analyze the channel first using /analyze-channel.",
             )
 
-        competitors = find_competitors(profile, exclude_channel_id=body.channel_id)
+        competitors = await asyncio.to_thread(find_competitors, profile, exclude_channel_id=body.channel_id)
         track_user_event(user.id, "competitors_found", {
             "channel_id": body.channel_id,
             "count": len(competitors),
@@ -261,7 +262,7 @@ async def search_topic_endpoint(
     )
 
     try:
-        profile = get_cached_channel_profile(body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -269,11 +270,9 @@ async def search_topic_endpoint(
                 "Please analyze the channel first using /analyze-channel.",
             )
 
-        classified_results, insight = search_topic_with_insights(
-            profile,
-            body.topic,
-            body.competitor_channel_ids,
-            subreddits=None,
+        classified_results, insight = await asyncio.to_thread(
+            search_topic_with_insights,
+            profile, body.topic, body.competitor_channel_ids, None,
         )
 
         update_user_usage(user.id, 1)
@@ -293,7 +292,7 @@ async def search_topic_endpoint(
         logger.error("POST /search-topic ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(exc)}",
+            detail="Internal server error. Please try again later.",
         ) from exc
 
 
@@ -317,7 +316,7 @@ async def multi_source_search_endpoint(
     )
 
     try:
-        profile = get_cached_channel_profile(body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -326,10 +325,9 @@ async def multi_source_search_endpoint(
 
         from app.services.content_gatherer import ContentGatherer
         gatherer = ContentGatherer()
-        dashboard = gatherer.gather_all(
-            topic=body.topic,
-            profile=profile,
-            include_trends=body.include_trends,
+        dashboard = await asyncio.to_thread(
+            gatherer.gather_all,
+            topic=body.topic, profile=profile, include_trends=body.include_trends,
         )
 
         update_user_usage(user.id, 1)
@@ -347,7 +345,7 @@ async def multi_source_search_endpoint(
         logger.error("POST /multi-source-search ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Multi-source search failed: {str(exc)}",
+            detail="Internal server error. Please try again later.",
         ) from exc
 
 
@@ -363,15 +361,15 @@ async def dashboard_endpoint(
     logger.info("POST /dashboard - channel_url=%s, user=%d", body.channel_url, user.id)
 
     try:
-        profile = analyze_channel(body.channel_url)
+        profile = await asyncio.to_thread(analyze_channel, body.channel_url)
         from app.services.content_gatherer import ContentGatherer
         gatherer = ContentGatherer()
 
         topic = body.topic or profile.niche or (profile.topics[0] if profile.topics else "content creation")
-        dashboard = gatherer.gather_all(topic=topic, profile=profile)
+        dashboard = await asyncio.to_thread(gatherer.gather_all, topic=topic, profile=profile)
 
         from app.competitor_finder import find_competitors
-        competitors = find_competitors(profile, exclude_channel_id=profile.channel_id)
+        competitors = await asyncio.to_thread(find_competitors, profile, exclude_channel_id=profile.channel_id)
         dashboard.competitors = CompetitorAnalysis(
             competitors=competitors,
             market_position=f"{profile.channel_tier} creator in {profile.niche}",
@@ -393,7 +391,7 @@ async def dashboard_endpoint(
         logger.error("POST /dashboard ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Dashboard failed: {str(exc)}",
+            detail="Internal server error. Please try again later.",
         ) from exc
 
 

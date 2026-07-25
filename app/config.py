@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     TIKTOK_API_KEY: str = ""
     INSTAGRAM_API_KEY: str = ""
 
-    SECRET_KEY: str = "dev-secret-change-in-production"
+    SECRET_KEY: str = ""
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     ALGORITHM: str = "HS256"
 
@@ -65,8 +65,9 @@ class Settings(BaseSettings):
             missing.append("YOUTUBE_API_KEY")
         if not self.GEMINI_API_KEY:
             missing.append("GEMINI_API_KEY")
-        if not self.SECRET_KEY or self.SECRET_KEY == "change-me-to-a-random-secret":
-            missing.append("SECRET_KEY")
+        insecure_keys = ("", "dev-secret-change-in-production", "change-me-to-a-random-secret")
+        if not self.SECRET_KEY or self.SECRET_KEY in insecure_keys:
+            missing.append("SECRET_KEY (set a strong random value in .env)")
         return missing
 
 
