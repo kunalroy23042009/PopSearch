@@ -339,7 +339,7 @@ async def search_topic_endpoint(
         logger.error("POST /search-topic ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error. Please try again later.",
+            detail=str(exc) or "Internal server error. Please try again later.",
         ) from exc
 
 
@@ -392,7 +392,7 @@ async def multi_source_search_endpoint(
         logger.error("POST /multi-source-search ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error. Please try again later.",
+            detail=str(exc) or "Internal server error. Please try again later.",
         ) from exc
 
 
@@ -438,7 +438,7 @@ async def dashboard_endpoint(
         logger.error("POST /dashboard ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error. Please try again later.",
+            detail=str(exc) or "Internal server error. Please try again later.",
         ) from exc
 
 

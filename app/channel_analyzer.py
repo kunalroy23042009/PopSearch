@@ -15,6 +15,7 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from app.ai_provider import ComplexityLevel, generate_ai_response
 from app.config import settings
@@ -193,8 +194,16 @@ def _analyze_channel_live(url_or_id: str) -> ChannelProfile:
 
     # --- Resolve channel resource ---
     kind, value = _extract_channel_identifier(url_or_id)
-    request = youtube.channels().list(part="snippet,statistics", **{kind: value})
-    response = request.execute()
+    try:
+        request = youtube.channels().list(part="snippet,statistics", **{kind: value})
+        response = request.execute()
+    except HttpError as exc:
+        if exc.status_code == 429:
+            raise RuntimeError(
+                "YouTube API quota exceeded. The daily limit for the current API key has been used up. "
+                "Ask the developer to enable billing in the Google Cloud Console or wait until the quota resets."
+            ) from exc
+        raise RuntimeError(f"YouTube API error: {exc.reason}") from exc
 
     if not response.get("items"):
         raise ValueError(f"No YouTube channel found for '{url_or_id}'")
@@ -206,34 +215,41 @@ def _analyze_channel_live(url_or_id: str) -> ChannelProfile:
 
     # --- Fetch recent videos (up to 50) ---
     all_video_items = []
-    search_resp = (
-        youtube.search()
-        .list(
-            part="snippet",
-            channelId=channel_id,
-            order="date",
-            maxResults=50,
-            type="video",
-        )
-        .execute()
-    )
-    all_video_items = search_resp.get("items", [])
-
-    # Paginate if there are more results (get up to 50 total)
-    while len(all_video_items) < 50 and "nextPageToken" in search_resp:
+    try:
         search_resp = (
             youtube.search()
             .list(
                 part="snippet",
                 channelId=channel_id,
                 order="date",
-                maxResults=50 - len(all_video_items),
+                maxResults=50,
                 type="video",
-                pageToken=search_resp["nextPageToken"],
             )
             .execute()
         )
-        all_video_items.extend(search_resp.get("items", []))
+        all_video_items = search_resp.get("items", [])
+
+        # Paginate if there are more results (get up to 50 total)
+        while len(all_video_items) < 50 and "nextPageToken" in search_resp:
+            search_resp = (
+                youtube.search()
+                .list(
+                    part="snippet",
+                    channelId=channel_id,
+                    order="date",
+                    maxResults=50 - len(all_video_items),
+                    type="video",
+                    pageToken=search_resp["nextPageToken"],
+                )
+                .execute()
+            )
+            all_video_items.extend(search_resp.get("items", []))
+    except HttpError as exc:
+        if exc.status_code == 429:
+            raise RuntimeError(
+                "YouTube API quota exceeded while searching videos."
+            ) from exc
+        raise RuntimeError(f"YouTube search error: {exc.reason}") from exc
 
     video_ids = [item["id"]["videoId"] for item in all_video_items]
     recent_titles = [item["snippet"]["title"] for item in all_video_items[:15]]
