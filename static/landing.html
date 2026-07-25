@@ -72,6 +72,25 @@
         .btn-primary { background: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+        .hero-input {
+            display: flex; gap: 0; max-width: 520px; margin: 0 auto 32px;
+            border: 2px solid var(--border); border-radius: var(--radius);
+            overflow: hidden; transition: border-color .2s;
+        }
+        .hero-input:focus-within { border-color: var(--accent); }
+        .hero-input input {
+            flex: 1; padding: 12px 16px; background: var(--bg2); border: none;
+            color: var(--text); font-size: .9rem; font-family: inherit;
+            outline: none;
+        }
+        .hero-input input::placeholder { color: var(--text3); }
+        .hero-input button {
+            padding: 12px 24px; background: var(--primary); color: #fff;
+            border: none; font-weight: 600; font-size: .9rem;
+            cursor: pointer; font-family: inherit;
+            transition: background .15s;
+        }
+        .hero-input button:hover { background: var(--primary-hover); }
         .btn-ghost:hover { background: var(--bg4); }
         .section { max-width: 1080px; margin: 0 auto; padding: 60px 24px; }
         .section-header { text-align: center; margin-bottom: 40px; }
@@ -152,6 +171,10 @@
 <section class="hero">
     <h1>Know your <span class="highlight">niche</span>.<br>Beat your <span class="highlight">competitors</span>.<br>Grow your <span class="highlight">channel</span>.</h1>
     <p>Paste your YouTube channel URL and get AI-powered niche profiling, competitor discovery, and trending content ideas from 7+ platforms — YouTube, Reddit, Google Trends, Twitter/X, Twitch, HN, and RSS feeds.</p>
+    <form class="hero-input" action="/app" method="GET" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app';return false}alert('Paste a YouTube URL first')">
+        <input type="text" placeholder="Paste YouTube URL or @handle..." required>
+        <button type="submit">Analyze</button>
+    </form>
     <div class="cta-group">
         <a href="/app" class="btn btn-primary">Try it free</a>
         <a href="#how" class="btn btn-ghost">See how it works</a>
