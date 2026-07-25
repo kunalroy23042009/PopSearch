@@ -171,7 +171,7 @@ class IdeaRequest(BaseModel):
 
 
 @router.post("/ideas/generate")
-def generate_ideas(data: IdeaRequest, user: User = Depends(get_current_user)):
+async def generate_ideas(data: IdeaRequest, user: User = Depends(get_current_user)):
     import asyncio
     from app.topic_search import search_topic_with_insights
     from app.db import get_cached_channel_profile
@@ -181,7 +181,7 @@ def generate_ideas(data: IdeaRequest, user: User = Depends(get_current_user)):
         profile = get_cached_channel_profile(channel_id) if channel_id else None
         if not profile:
             raise HTTPException(status_code=400, detail="Analyze a channel first to generate tailored ideas")
-        _, insight = asyncio.run(search_topic_with_insights(profile, data.topic, [], None))
+        _, insight = await asyncio.to_thread(search_topic_with_insights, profile, data.topic, [], None)
         ideas = []
         for angle in insight.content_angles[:5]:
             ideas.append({
