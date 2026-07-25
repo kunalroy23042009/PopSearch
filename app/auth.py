@@ -13,13 +13,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=Fals
 
 
 def hash_password(password: str) -> str:
-    """Hash a password using bcrypt."""
-    return pwd_context.hash(password)
+    """Hash a password using bcrypt (max 72 bytes)."""
+    return pwd_context.hash(password.encode()[:72].decode(errors="ignore"))
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain password against a hash."""
-    return pwd_context.verify(plain, hashed)
+    """Verify a plain password against a hash (max 72 bytes)."""
+    return pwd_context.verify(plain.encode()[:72].decode(errors="ignore"), hashed)
 
 
 def create_access_token(data: dict) -> str:
