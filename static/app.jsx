@@ -2,6 +2,27 @@
 const { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
 
 const AuthContext = createContext(null);
+const ToastContext = createContext(null);
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const add = useCallback((message, type = 'info', duration = 3500) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
+  }, []);
+  const container = toasts.length ? React.createElement('div', { className: 'toast-container' },
+    ...toasts.map(t => React.createElement('div', { key: t.id, className: `toast ${t.type}` },
+      t.type === 'success' ? '\u2705' : t.type === 'error' ? '\u274C' : '\u2139\uFE0F', ' ', t.message,
+    )),
+  ) : null;
+  return React.createElement(React.Fragment, null,
+    React.createElement(ToastContext.Provider, { value: add }, children),
+    container,
+  );
+}
+
+function useToast() { return useContext(ToastContext); }
 
 function AuthProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ccr_user') || 'null'));
@@ -2419,7 +2440,7 @@ function AppShell({ page, setPage }) {
     ),
     React.createElement('div', { className: 'main-area' },
       React.createElement('header', { className: 'topbar' },
-        React.createElement('button', { className: 'icon-btn menu-toggle', onClick: () => setSidebarOpen(!sidebarOpen), style: { display: 'none' } },
+        React.createElement('button', { className: 'icon-btn menu-toggle', onClick: () => setSidebarOpen(!sidebarOpen) },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, width: 22, height: 22 },
             React.createElement('line', { x1: 3, y1: 6, x2: 21, y2: 6 }),
             React.createElement('line', { x1: 3, y1: 12, x2: 21, y2: 12 }),
@@ -2479,9 +2500,9 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  React.createElement(AuthProvider, null, React.createElement(App))
+  React.createElement(AuthProvider, null,
+    React.createElement(ToastProvider, null,
+      React.createElement(App),
+    ),
+  ),
 );
-
-const style = document.createElement('style');
-style.textContent = `@media(max-width:768px){.menu-toggle{display:flex!important}}`;
-document.head.appendChild(style);
