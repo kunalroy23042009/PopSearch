@@ -208,6 +208,23 @@ class SeoScorecard(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class CommentAnalysis(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    video_id: str = Field(index=True)
+    video_title: str = ""
+    total_comments: int = 0
+    analyzed_count: int = 0
+    sentiment_breakdown: str = ""
+    topics: str = ""
+    content_ideas: str = ""
+    common_requests: str = ""
+    negative_feedback: str = ""
+    summary: str = ""
+    raw_comments: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 def _get_engine():
     global _engine
     if _engine is not None:
@@ -822,3 +839,45 @@ def get_seo_scorecard(user_id: int, channel_id: str) -> SeoScorecard | None:
             SeoScorecard.user_id == user_id, SeoScorecard.channel_id == channel_id
         )
         return session.exec(statement).first()
+
+
+def save_comment_analysis(user_id: int, data: dict) -> CommentAnalysis:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(CommentAnalysis).where(
+                CommentAnalysis.user_id == user_id,
+                CommentAnalysis.video_id == data["video_id"],
+            )
+        ).first()
+        if existing:
+            for k, v in data.items():
+                setattr(existing, k, v)
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        ca = CommentAnalysis(user_id=user_id, **data)
+        session.add(ca)
+        session.commit()
+        session.refresh(ca)
+        return ca
+
+
+def get_comment_analysis(user_id: int, video_id: str) -> CommentAnalysis | None:
+    with Session(_get_engine()) as session:
+        return session.exec(
+            select(CommentAnalysis).where(
+                CommentAnalysis.user_id == user_id,
+                CommentAnalysis.video_id == video_id,
+            )
+        ).first()
+
+
+def list_comment_analyses(user_id: int, limit: int = 20) -> list[CommentAnalysis]:
+    with Session(_get_engine()) as session:
+        return session.exec(
+            select(CommentAnalysis)
+            .where(CommentAnalysis.user_id == user_id)
+            .order_by(CommentAnalysis.created_at.desc())
+            .limit(limit)
+        ).all()

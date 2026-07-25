@@ -764,6 +764,17 @@ function IdeasPage() {
             idea.best_time_to_post ? React.createElement('div', { style: { marginTop: 8, fontSize: '.82rem', color: 'var(--accent)' } },
               '\u23F0 Best time: ', idea.best_time_to_post, ' \u00B7 Predicted: ', idea.predicted_performance,
             ) : null,
+            idea.viral_probability !== undefined ? React.createElement('div', { style: { marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: '.82rem' } },
+              React.createElement('span', { style: { color: idea.viral_probability > 70 ? 'var(--success)' : 'var(--warning)' } },
+                '\uD83D\uDCA5 Viral: ', idea.viral_probability, '%'),
+              React.createElement('span', { style: { color: 'var(--text2)' } },
+                '\uD83D\uDCC8 Views: ', (idea.expected_view_min || 0).toLocaleString(), '\u2013', (idea.expected_view_max || 0).toLocaleString()),
+            ) : null,
+            idea.publish_ready !== undefined ? React.createElement('div', { style: { marginTop: 8, padding: '8px 12px', borderRadius: 'var(--radius)', fontSize: '.82rem', background: idea.publish_ready ? 'rgba(43,166,64,.1)' : 'rgba(255,78,69,.1)', border: `1px solid ${idea.publish_ready ? 'var(--success)' : 'var(--error)'}` } },
+              idea.publish_ready ? React.createElement('span', { style: { color: 'var(--success)', fontWeight: 600 } }, '\u2714\uFE0F Ready to Publish') : React.createElement('span', { style: { color: 'var(--error)', fontWeight: 600 } }, '\u26A0\uFE0F Improve Before Publishing'),
+              idea.publish_reasons?.length ? React.createElement('div', { style: { marginTop: 4, color: 'var(--text2)' } }, idea.publish_reasons.map((r, j) => React.createElement('div', { key: j }, '\u2022 ', r))) : null,
+              idea.improve_reasons?.length ? React.createElement('div', { style: { marginTop: 4, color: 'var(--error)' } }, idea.improve_reasons.map((r, j) => React.createElement('div', { key: j }, '\u2022 ', r))) : null,
+            ) : null,
             React.createElement('button', { className: 'btn btn-ghost', style: { marginTop: 12, width: '100%', justifyContent: 'center', padding: '6px', fontSize: '.8rem' }, onClick: () => saveIdea(idea) }, '\uD83D\uDCBE Save Idea'),
           )
         ),
@@ -1468,6 +1479,221 @@ function TrendAlertsPage() {
   );
 }
 
+// ── Comments Analyzer ─────────────────────────────────────────────────
+function CommentsPage() {
+  const { api } = useAuth();
+  const [url, setUrl] = useState('');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const analyze = async () => {
+    if (!url.trim()) return;
+    setLoading(true); setErr(''); setData(null);
+    try {
+      const res = await api('/api/comments/analyze', { method: 'POST', body: JSON.stringify({ video_url: url }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || 'Analysis failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  const sen = data?.sentiment_breakdown || {};
+  const total = sen.positive + sen.neutral + sen.negative || 1;
+  const pct = (v) => Math.round((v / total) * 100);
+
+  return React.createElement('div', null,
+    React.createElement('h1', null, '\uD83D\uDCAC Comment Analyzer'),
+    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+      'Paste a YouTube video URL to analyze audience comments with AI sentiment and topic extraction'),
+    React.createElement('div', { className: 'card' },
+      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
+        React.createElement('input', { className: 'input', placeholder: 'https://youtube.com/watch?v=...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
+        React.createElement('button', { className: 'btn btn-accent', onClick: analyze, disabled: loading }, loading ? 'Analyzing...' : 'Analyze'),
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err }),
+    ),
+    data ? React.createElement('div', null,
+      React.createElement('div', { className: 'card' },
+        React.createElement('h3', null, data.video_title || 'Untitled Video'),
+        React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem' } }, `${data.total_comments} comments analyzed`),
+      ),
+      React.createElement('div', { className: 'stats', style: { gridTemplateColumns: 'repeat(3, 1fr)' } },
+        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid #2ba640' } },
+          React.createElement('div', { className: 'label' }, 'Positive'),
+          React.createElement('div', { className: 'value' }, `${pct(sen.positive)}%`),
+          React.createElement('div', { className: 'change', style: { color: 'var(--success)' } }, `${sen.positive} comments`),
+        ),
+        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid #ffa73c' } },
+          React.createElement('div', { className: 'label' }, 'Neutral'),
+          React.createElement('div', { className: 'value' }, `${pct(sen.neutral)}%`),
+          React.createElement('div', { className: 'change', style: { color: 'var(--warning)' } }, `${sen.neutral} comments`),
+        ),
+        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid #ff4e45' } },
+          React.createElement('div', { className: 'label' }, 'Negative'),
+          React.createElement('div', { className: 'value' }, `${pct(sen.negative)}%`),
+          React.createElement('div', { className: 'change', style: { color: 'var(--error)' } }, `${sen.negative} comments`),
+        ),
+      ),
+      data.topics?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(62,166,255,.15)' } }, '\uD83D\uDCDD'),
+          React.createElement('h3', null, 'Topics Mentioned'),
+        ),
+        React.createElement('div', null, data.topics.map((t, i) => React.createElement('span', { key: i, className: 'tag' }, t))),
+      ) : null,
+      data.content_ideas?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(43,166,64,.15)' } }, '\uD83D\uDCA1'),
+          React.createElement('h3', null, 'Content Ideas from Comments'),
+        ),
+        React.createElement('ul', { className: 'rec-list' }, data.content_ideas.map((idea, i) =>
+          React.createElement('li', { key: i }, idea))),
+      ) : null,
+      data.common_requests?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(255,167,60,.15)' } }, '\uD83D\uDCE3'),
+          React.createElement('h3', null, 'Common Requests'),
+        ),
+        React.createElement('ul', { className: 'rec-list' }, data.common_requests.map((r, i) =>
+          React.createElement('li', { key: i }, r))),
+      ) : null,
+      data.negative_feedback?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(255,78,69,.15)' } }, '\u26A0\uFE0F'),
+          React.createElement('h3', null, 'Negative Feedback'),
+        ),
+        React.createElement('ul', { className: 'rec-list' }, data.negative_feedback.map((f, i) =>
+          React.createElement('li', { key: i, style: { color: 'var(--error)' } }, f))),
+      ) : null,
+      data.summary ? React.createElement('div', { className: 'insight' },
+        React.createElement('h3', null, '\uD83E\uDD16 AI Summary'),
+        React.createElement('p', null, data.summary),
+      ) : null,
+    ) : !loading ? React.createElement('div', { className: 'empty-state' },
+      React.createElement('div', { className: 'emoji' }, '\uD83D\uDCAC'),
+      React.createElement('p', null, 'Enter a YouTube video URL to analyze audience comments'),
+    ) : null,
+  );
+}
+
+// ── Publishing Assistant ──────────────────────────────────────────────
+function PublishingPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const load = async () => {
+    setLoading(true); setErr(''); setData(null);
+    try {
+      const res = await api('/api/publishing/insights', { method: 'POST', body: JSON.stringify({ topic: '' }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => { load(); }, []);
+
+  const slotColor = (s) => s >= 80 ? 'var(--success)' : s >= 60 ? 'var(--warning)' : 'var(--error)';
+
+  return React.createElement('div', null,
+    React.createElement('h1', null, '\uD83D\uDCE4 Publishing Assistant'),
+    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+      'Optimal posting times, CTR predictions, and A/B slot analysis for your channel'),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    data ? React.createElement('div', null,
+      React.createElement('div', { className: 'stats' },
+        React.createElement('div', { className: 'stat' },
+          React.createElement('div', { className: 'label' }, 'Predicted CTR'),
+          React.createElement('div', { className: 'value' }, `${data.predicted_ctr}%`),
+          React.createElement('div', { className: 'change', style: { color: 'var(--accent)' } }, 'Estimated click-through rate'),
+        ),
+        React.createElement('div', { className: 'stat' },
+          React.createElement('div', { className: 'label' }, 'Niche'),
+          React.createElement('div', { className: 'value', style: { fontSize: '1.1rem' } }, data.niche),
+          React.createElement('div', { className: 'change', style: { color: 'var(--text3)' } }, `${data.subscriber_count?.toLocaleString() || 0} subscribers`),
+        ),
+      ),
+      data.best_time_slots?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(62,166,255,.15)' } }, '\u23F0'),
+          React.createElement('h3', null, 'Best Posting Times'),
+        ),
+        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 } },
+          data.best_time_slots.map((slot, i) =>
+            React.createElement('div', { key: i, className: 'stat', style: { borderLeft: `4px solid ${slotColor(slot.score)}`, padding: 12 } },
+              React.createElement('div', { className: 'label' }, `${slot.day} ${slot.time}`),
+              React.createElement('div', { className: 'value', style: { fontSize: '1.2rem' } }, `${slot.score}/100`),
+            ),
+          ),
+        ),
+      ) : null,
+      data.ab_comparison?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(255,167,60,.15)' } }, '\u2696\uFE0F'),
+          React.createElement('h3', null, 'A/B Time Slot Comparison'),
+        ),
+        data.ab_comparison.map((ab, i) =>
+          React.createElement('div', { key: i, style: { padding: '12px 0', borderBottom: i < data.ab_comparison.length - 1 ? '1px solid var(--border)' : 'none' } },
+            React.createElement('div', { style: { display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' } },
+              React.createElement('span', { style: { background: 'var(--bg3)', padding: '6px 14px', borderRadius: 'var(--radius)', fontSize: '.85rem' } }, ab.slot_a),
+              React.createElement('span', { style: { color: 'var(--text3)' } }, 'vs'),
+              React.createElement('span', { style: { background: 'var(--bg3)', padding: '6px 14px', borderRadius: 'var(--radius)', fontSize: '.85rem' } }, ab.slot_b),
+            ),
+            React.createElement('div', { style: { marginTop: 8, fontSize: '.88rem', color: 'var(--success)' } },
+              `Winner: ${ab.winner} \u2014 ${ab.reason}`),
+          ),
+        ),
+      ) : null,
+      data.heatmap?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(43,166,64,.15)' } }, '\uD83D\uDCCA'),
+          React.createElement('h3', null, 'Optimal Schedule Heatmap'),
+        ),
+        React.createElement('div', { style: { overflowX: 'auto' } },
+          React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '.78rem' } },
+            React.createElement('thead', null,
+              React.createElement('tr', null,
+                React.createElement('th', { style: { padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)' } }, 'Day'),
+                ['8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm'].map(h =>
+                  React.createElement('th', { key: h, style: { padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid var(--border)' } }, h)
+                ),
+              ),
+            ),
+            React.createElement('tbody', null,
+              ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day =>
+                React.createElement('tr', { key: day },
+                  React.createElement('td', { style: { padding: '6px 8px', fontWeight: 600, borderBottom: '1px solid var(--border)' } }, day.slice(0, 3)),
+                  data.heatmap.filter(h => h.day === day).map((h, i) => {
+                    const bg = h.score >= 80 ? 'rgba(43,166,64,.25)' : h.score >= 60 ? 'rgba(255,167,60,.2)' : 'rgba(255,78,69,.15)';
+                    const fg = h.score >= 80 ? 'var(--success)' : h.score >= 60 ? 'var(--warning)' : 'var(--error)';
+                    return React.createElement('td', { key: i, style: { padding: '6px 8px', textAlign: 'center', background: bg, color: fg, borderRadius: 4, borderBottom: '1px solid var(--border)' } }, `${h.score}`);
+                  }),
+                )
+              ),
+            ),
+          ),
+        ),
+      ) : null,
+      data.recommendation ? React.createElement('div', { className: 'insight' },
+        React.createElement('h3', null, '\uD83D\uDCCC Recommendation'),
+        React.createElement('p', null, data.recommendation),
+      ) : null,
+    ) : !loading ? React.createElement('div', { className: 'empty-state' },
+      React.createElement('div', { className: 'emoji' }, '\uD83D\uDCE4'),
+      React.createElement('p', null, 'Loading publishing insights...'),
+    ) : null,
+  );
+}
+
 // ── Onboarding Flow ───────────────────────────────────────────────────
 function OnboardingPage() {
   const { api } = useAuth();
@@ -1543,6 +1769,8 @@ function AppShell({ page, setPage }) {
     { id: 'seo', label: 'SEO Score', icon: '\uD83D\uDD0D', section: 'Content' },
     { id: 'thumbnail-test', label: 'A/B Thumbnails', icon: '\uD83D\uDDBC', section: 'Content' },
     { id: 'trends', label: 'Trend Alerts', icon: '\uD83D\uDD25', section: 'Content' },
+    { id: 'comments', label: 'Comments', icon: '\uD83D\uDCAC', section: 'Content' },
+    { id: 'publishing', label: 'Publishing', icon: '\uD83D\uDCE4', section: 'Content' },
     { id: 'reports', label: 'Reports & Export', icon: '\uD83D\uDCC4', section: 'Content' },
     { id: 'saved-ideas', label: 'Saved Ideas', icon: '\uD83D\uDCBE', section: 'Content' },
     { id: 'pricing', label: 'Pricing', icon: '\uD83D\uDCB0', section: 'Settings' },
@@ -1565,6 +1793,8 @@ function AppShell({ page, setPage }) {
       case 'seo': return React.createElement(SeoPage);
       case 'thumbnail-test': return React.createElement(ThumbnailTestPage);
       case 'trends': return React.createElement(TrendAlertsPage);
+      case 'comments': return React.createElement(CommentsPage);
+      case 'publishing': return React.createElement(PublishingPage);
       case 'pricing': return React.createElement(PricingPage);
       case 'billing': return React.createElement(BillingPage);
       case 'settings': return React.createElement(SettingsPage);
@@ -1631,7 +1861,7 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const hash = window.location.hash.replace('#', '') || 'dashboard';
-      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
+      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'comments', 'publishing', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
       if (valid.includes(hash)) setPage(hash);
     };
     window.addEventListener('hashchange', onHash);
