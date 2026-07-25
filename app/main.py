@@ -602,7 +602,7 @@ async def serve_landing():
 
 
 @app.get("/app")
-async def serve_app(user: User = Depends(get_current_user)):
+async def serve_app():
     return FileResponse(str(static_dir / "index.html"))
 
 
