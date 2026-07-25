@@ -76,14 +76,15 @@ def sample_content_results() -> list[ContentResult]:
 
 @pytest.fixture
 def sample_topic_insight() -> TopicInsight:
+    from app.models import ContentAngle
     return TopicInsight(
         summary="Tech content is trending with focus on AI and laptops.",
         content_angles=[
-            "Create a comparison video of top 5 laptops",
-            "Review the latest AI-powered gadgets",
-            "Make a beginner's guide to choosing tech",
+            ContentAngle(title="Top 5 Laptop Comparison", description="Create a comparison video of top 5 laptops", confidence_score=0.8),
+            ContentAngle(title="AI Gadgets Review", description="Review the latest AI-powered gadgets", confidence_score=0.7),
+            ContentAngle(title="Beginner's Tech Guide", description="Make a beginner's guide to choosing tech", confidence_score=0.6),
         ],
-        content_gap="No one is covering budget AI laptops under $500",
+        confidence_overall=0.7,
     )
 
 

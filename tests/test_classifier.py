@@ -1,6 +1,3 @@
-"""
-Tests for the content classifier.
-"""
 import pytest
 from datetime import datetime, timezone, timedelta
 from app.classifier import classify_results
@@ -15,7 +12,7 @@ def make_result(platform="youtube", views=1000, published_hours_ago=24, title="T
         url="https://example.com/video",
         engagement_score=float(views),
         published_at=published_at,
-        classification="",
+        source="Test Channel",
         raw_metrics={"views": views},
     )
 
@@ -28,11 +25,13 @@ def test_classify_single_result():
     result = make_result(views=5000, published_hours_ago=12)
     classified = classify_results([result])
     assert len(classified) == 1
-    assert classified[0].classification in {"trending", "popular", "underrated", ""}
+    assert classified[0].classification in {"trending", "popular", "underrated", "none"}
+    assert hasattr(classified[0], "trend_velocity")
+    assert hasattr(classified[0], "velocity_direction")
+    assert classified[0].velocity_direction in {"accelerating", "decelerating", "stable"}
 
 
 def test_classify_trending():
-    # Fresh, high engagement content should be trending
     results = [
         make_result(views=100_000, published_hours_ago=6, title="Viral Video"),
         make_result(views=100, published_hours_ago=200, title="Old Video"),
@@ -46,7 +45,7 @@ def test_classify_popular():
     results = [make_result(views=1_000_000, published_hours_ago=500) for _ in range(5)]
     classified = classify_results(results)
     for r in classified:
-        assert r.classification in {"popular", "trending", "underrated", ""}
+        assert r.classification in {"popular", "trending", "underrated", "none"}
 
 
 def test_classify_mixed_platforms():
@@ -57,7 +56,9 @@ def test_classify_mixed_platforms():
     classified = classify_results(results)
     assert len(classified) == 2
     for r in classified:
-        assert r.classification in {"trending", "popular", "underrated", ""}
+        assert r.classification in {"trending", "popular", "underrated", "none"}
+        assert isinstance(r.trend_velocity, float)
+        assert r.velocity_direction in {"accelerating", "decelerating", "stable"}
 
 
 def test_all_results_have_classification():
@@ -65,3 +66,15 @@ def test_all_results_have_classification():
     classified = classify_results(results)
     for r in classified:
         assert r.classification is not None
+
+
+def test_classify_with_historical_snapshots():
+    results = [
+        make_result(views=10_000, published_hours_ago=2, title="Rising Video"),
+    ]
+    historical = [
+        {"source": "Unknown", "engagement_score": 500, "timestamp": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()},
+    ]
+    classified = classify_results(results, historical_snapshots=historical)
+    assert len(classified) == 1
+    assert classified[0].velocity_direction in {"accelerating", "decelerating", "stable"}

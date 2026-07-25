@@ -61,10 +61,14 @@ def _content_result(title: str = "Result") -> ContentResult:
 
 
 def _insight() -> TopicInsight:
+    from app.models import ContentAngle
     return TopicInsight(
         summary="Topic is active.",
-        content_angles=["Angle 1", "Angle 2", "Angle 3"],
-        content_gap="Unclaimed gap.",
+        content_angles=[
+            ContentAngle(title="Angle 1", description="First approach", confidence_score=0.7),
+            ContentAngle(title="Angle 2", description="Second approach", confidence_score=0.6),
+            ContentAngle(title="Angle 3", description="Third approach", confidence_score=0.5),
+        ],
     )
 
 

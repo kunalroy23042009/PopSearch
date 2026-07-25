@@ -1,9 +1,3 @@
-"""Unified content gatherer — aggregates content from all available platforms.
-
-Coordinates YouTube, Reddit, Google Trends, Twitter/X, Twitch, and RSS/HN
-into a single unified feed with deduplication and scoring.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -20,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class ContentGatherer:
-    """Orchestrates content gathering from all available platforms."""
-
     def __init__(self) -> None:
         self.sources = []
         self._init_sources()
@@ -39,6 +31,10 @@ class ContentGatherer:
             sources.append("twitch")
         if settings.GEMINI_API_KEY:
             sources.append("trends")
+        if settings.TIKTOK_API_KEY:
+            sources.append("tiktok")
+        if settings.INSTAGRAM_API_KEY:
+            sources.append("instagram")
         sources.extend(["hn", "rss"])
 
         self.sources = list(set(sources))
@@ -51,35 +47,28 @@ class ContentGatherer:
         max_per_source: int = 10,
         include_trends: bool = True,
     ) -> DashboardData:
-        """Gather content from all available sources for a topic."""
         results: list[ContentResult] = []
-        trending_now: list[ContentResult] = []
         total_sources = 0
         trend_data = None
 
-        # 1. YouTube
         if "youtube" in self.sources:
             try:
                 from app.topic_search import search_youtube
-                yt_results = search_youtube(topic, [c for c in (profile.recent_video_titles if profile else [])])
+                yt_results = search_youtube(topic, [])
                 results.extend(yt_results)
-                trending_now.extend([r for r in yt_results if r.classification == "trending"])
                 total_sources += 1
             except Exception as e:
                 logger.warning("YouTube search failed: %s", e)
 
-        # 2. Reddit (direct via PRAW)
         if "reddit" in self.sources:
             try:
                 from app.topic_search import search_reddit
                 reddit_results = search_reddit(topic)
                 results.extend(reddit_results)
-                trending_now.extend([r for r in reddit_results if r.classification == "trending"])
                 total_sources += 1
             except Exception as e:
                 logger.warning("Reddit search failed: %s", e)
 
-        # 3. Twitter/X
         if "twitter" in self.sources:
             try:
                 from app.services.twitter_client import TwitterClient
@@ -99,7 +88,6 @@ class ContentGatherer:
             except Exception as e:
                 logger.warning("Twitter search failed: %s", e)
 
-        # 4. Twitch
         if "twitch" in self.sources:
             try:
                 from app.services.twitch_client import TwitchClient
@@ -119,7 +107,6 @@ class ContentGatherer:
             except Exception as e:
                 logger.warning("Twitch search failed: %s", e)
 
-        # 5. Hacker News
         if "hn" in self.sources:
             try:
                 from app.services.rss_client import RSSClient
@@ -139,7 +126,6 @@ class ContentGatherer:
             except Exception as e:
                 logger.warning("HN search failed: %s", e)
 
-        # 6. RSS feeds (custom tech/creator feeds)
         if "rss" in self.sources:
             try:
                 from app.services.rss_client import RSSClient
@@ -167,7 +153,6 @@ class ContentGatherer:
             except Exception as e:
                 logger.warning("RSS search failed: %s", e)
 
-        # 7. Google Trends
         if include_trends and "trends" in self.sources:
             try:
                 from app.services.trends_client import TrendsClient
@@ -189,7 +174,56 @@ class ContentGatherer:
             except Exception as e:
                 logger.warning("Trends search failed: %s", e)
 
-        # Classify all results
+        if "tiktok" in self.sources:
+            try:
+                from app.services.tiktok_client import TikTokClient
+                tc = TikTokClient()
+                tik_videos = tc.search(topic, limit=max_per_source)
+                for v in tik_videos:
+                    created = v.get("created_at", datetime.now(timezone.utc))
+                    if isinstance(created, str):
+                        try:
+                            created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        except ValueError:
+                            created = datetime.now(timezone.utc)
+                    results.append(ContentResult(
+                        platform="tiktok",
+                        title=v.get("description", "")[:200],
+                        url=v.get("url", ""),
+                        engagement_score=float(v.get("likes", 0) + v.get("shares", 0) * 3 + v.get("comments", 0) * 2),
+                        published_at=created,
+                        source=v.get("author", "unknown"),
+                        raw_metrics={"likes": v.get("likes", 0), "comments": v.get("comments", 0), "shares": v.get("shares", 0), "views": v.get("views", 0)},
+                    ))
+                total_sources += 1
+            except Exception as e:
+                logger.warning("TikTok search failed: %s", e)
+
+        if "instagram" in self.sources:
+            try:
+                from app.services.instagram_client import InstagramClient
+                ig = InstagramClient()
+                ig_posts = ig.search(topic, limit=max_per_source)
+                for p in ig_posts:
+                    created = p.get("created_at", datetime.now(timezone.utc))
+                    if isinstance(created, str):
+                        try:
+                            created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        except ValueError:
+                            created = datetime.now(timezone.utc)
+                    results.append(ContentResult(
+                        platform="instagram",
+                        title=p.get("caption", "")[:200],
+                        url=p.get("url", ""),
+                        engagement_score=float(p.get("likes", 0) + p.get("comments", 0) * 3),
+                        published_at=created,
+                        source=p.get("author", "unknown"),
+                        raw_metrics={"likes": p.get("likes", 0), "comments": p.get("comments", 0)},
+                    ))
+                total_sources += 1
+            except Exception as e:
+                logger.warning("Instagram search failed: %s", e)
+
         try:
             from app.classifier import classify_results
             classified = classify_results(results)
@@ -199,7 +233,6 @@ class ContentGatherer:
 
         trending_now = [r for r in classified if r.classification == "trending"]
 
-        # Build trend data
         if include_trends and "trends" in self.sources and trend_data is None:
             try:
                 from app.services.trends_client import TrendsClient

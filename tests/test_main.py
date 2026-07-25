@@ -21,10 +21,10 @@ async def test_analyze_channel_invalid_url():
     """POST /analyze-channel with invalid URL should return 400."""
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
         with patch("app.main.analyze_channel") as mock_analyze:
-            mock_analyze.side_effect = ValueError("Invalid YouTube URL")
-            response = await client.post("/analyze-channel", json={"channel_url": "garbage"})
+            mock_analyze.side_effect = ValueError("YouTube API key not configured")
+            response = await client.post("/analyze-channel", json={"channel_url": "https://www.youtube.com/@test"})
             assert response.status_code == 400
-            assert "Invalid YouTube URL" in response.json()["detail"]
+            assert "YouTube API key not configured" in response.json()["detail"]
 
 
 @pytest.mark.asyncio

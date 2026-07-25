@@ -61,5 +61,5 @@ def test_get_me(client):
 
 
 def test_protected_without_token(client):
-    resp = client.post("/analyze-channel", json={"channel_url": "https://youtube.com/@test"})
+    resp = client.get("/api/auth/me")
     assert resp.status_code == 401

@@ -1,5 +1,3 @@
-"""Models — Pydantic/SQLModel definitions for channels, competitors, searches, and cached results."""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -8,13 +6,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-# ---------------------------------------------------------------------------
-# Phase 4 — Channel analysis
-# ---------------------------------------------------------------------------
-
 class VideoPerformance(BaseModel):
-    """Performance data for a single video from the channel."""
-
     title: str
     video_id: str = ""
     views: int = 0
@@ -26,7 +18,6 @@ class VideoPerformance(BaseModel):
 
 
 class PerformanceSummary(BaseModel):
-    """Aggregated performance summary for charts."""
     avg_views_30d: float = 0.0
     avg_views_90d: float = 0.0
     avg_engagement_rate: float = 0.0
@@ -37,14 +28,12 @@ class PerformanceSummary(BaseModel):
 
 
 class ChartDataPoint(BaseModel):
-    """A single data point for a chart (time series)."""
     label: str
     value: float
     secondary_value: float | None = None
 
 
 class ChannelAnalytics(BaseModel):
-    """Rich channel analytics for dashboard visualizations."""
     views_over_time: list[ChartDataPoint] = []
     subs_over_time: list[ChartDataPoint] = []
     engagement_over_time: list[ChartDataPoint] = []
@@ -57,8 +46,6 @@ class ChannelAnalytics(BaseModel):
 
 
 class ChannelProfile(BaseModel):
-    """Structured profile of a YouTube channel produced by the analyzer."""
-
     channel_id: str
     title: str
     description: str
@@ -84,17 +71,11 @@ class ChannelProfile(BaseModel):
     content_gaps: list[str] = []
     best_topics: list[str] = []
     posting_schedule: str = ""
-    # New: Analytics & chart data for dashboard
     performance_summary: PerformanceSummary | None = None
     analytics: ChannelAnalytics | None = None
 
 
-# ---------------------------------------------------------------------------
-# Multi-source content platform models
-# ---------------------------------------------------------------------------
-
 class PlatformSource(BaseModel):
-    """Represents a content platform/source."""
     name: str
     enabled: bool = True
     icon: str = ""
@@ -102,7 +83,6 @@ class PlatformSource(BaseModel):
 
 
 class TrendData(BaseModel):
-    """Google Trends data for a topic."""
     topic: str
     interest_over_time: list[ChartDataPoint] = []
     regional_interest: dict = {}
@@ -112,7 +92,6 @@ class TrendData(BaseModel):
 
 
 class TweetData(BaseModel):
-    """Data from Twitter/X."""
     tweet_id: str = ""
     text: str
     author: str
@@ -126,7 +105,6 @@ class TweetData(BaseModel):
 
 
 class TwitchStreamData(BaseModel):
-    """Data from Twitch."""
     stream_id: str = ""
     title: str
     broadcaster: str
@@ -140,7 +118,6 @@ class TwitchStreamData(BaseModel):
 
 
 class RSSFeedItem(BaseModel):
-    """Item from RSS feed (HN, Product Hunt, blogs)."""
     title: str
     url: str
     source: str
@@ -151,13 +128,33 @@ class RSSFeedItem(BaseModel):
     platform: Literal["rss"] = "rss"
 
 
-# ---------------------------------------------------------------------------
-# Phase 5 — Competitor discovery
-# ---------------------------------------------------------------------------
+class TikTokData(BaseModel):
+    video_id: str = ""
+    description: str
+    author: str
+    author_followers: int = 0
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    views: int = 0
+    created_at: datetime | None = None
+    url: str = ""
+    platform: Literal["tiktok"] = "tiktok"
+
+
+class InstagramData(BaseModel):
+    post_id: str = ""
+    caption: str
+    author: str
+    author_followers: int = 0
+    likes: int = 0
+    comments: int = 0
+    created_at: datetime | None = None
+    url: str = ""
+    platform: Literal["instagram"] = "instagram"
+
 
 class CompetitorChannel(BaseModel):
-    """A competitor channel discovered for a given ChannelProfile."""
-
     channel_id: str
     title: str
     subscriber_count: int
@@ -167,10 +164,14 @@ class CompetitorChannel(BaseModel):
     growth_rate: str = ""
     avg_views: int = 0
     engagement_rate: float = 0.0
+    posting_frequency: str = ""
+    content_overlap_pct: float = 0.0
+    growth_rate_pct: float = 0.0
+    what_they_do_better: str = ""
+    what_you_do_better: str = ""
 
 
 class CompetitorAnalysis(BaseModel):
-    """Competitive landscape analysis."""
     competitors: list[CompetitorChannel] = []
     market_position: str = ""
     competitive_advantage: str = ""
@@ -178,14 +179,8 @@ class CompetitorAnalysis(BaseModel):
     untapped_niches: list[str] = []
 
 
-# ---------------------------------------------------------------------------
-# Phase 6 — Topic search
-# ---------------------------------------------------------------------------
-
 class ContentResult(BaseModel):
-    """A single piece of content discovered from any platform."""
-
-    platform: Literal["youtube", "reddit", "twitter", "twitch", "trends", "rss"]
+    platform: Literal["youtube", "reddit", "twitter", "twitch", "trends", "rss", "tiktok", "instagram"]
     title: str
     url: str
     engagement_score: float
@@ -193,35 +188,51 @@ class ContentResult(BaseModel):
     source: str
     raw_metrics: dict
     classification: Literal["trending", "popular", "underrated", "none"] = "none"
-    # Visualization data
     thumbnail_url: str = ""
     duration_seconds: int = 0
     platform_icon: str = ""
+    trend_velocity: float = 0.0
+    velocity_direction: Literal["accelerating", "decelerating", "stable"] = "stable"
 
 
-# ---------------------------------------------------------------------------
-# Phase 8 — AI reasoning
-# ---------------------------------------------------------------------------
-
-class TopicInsight(BaseModel):
-    """AI-generated insights and content angles for a topic search."""
-
-    summary: str
-    content_angles: list[str]
-    content_gap: str | None = None
-    # Extended insights
+class ContentAngle(BaseModel):
+    title: str
+    description: str
+    confidence_score: float
     predicted_performance: str = ""
-    best_time_to_post: str = ""
     seo_keywords: list[str] = []
     thumbnail_ideas: list[str] = []
+    best_time_to_post: str = ""
+    platform_focus: list[str] = []
 
 
-# ---------------------------------------------------------------------------
-# Dashboard / Analytics response
-# ---------------------------------------------------------------------------
+class ContentGapAnalysis(BaseModel):
+    gap_description: str
+    opportunity_score: float
+    competitor_coverage: list[str] = []
+    audience_overlap_pct: float = 0.0
+    suggested_approach: str = ""
+
+
+class TrendVelocity(BaseModel):
+    topic: str
+    current_velocity: float
+    previous_velocity: float
+    week_over_week_change: float
+    direction: Literal["accelerating", "decelerating", "stable"]
+    momentum_score: float
+
+
+class TopicInsight(BaseModel):
+    summary: str
+    content_angles: list[ContentAngle] = []
+    content_gaps: list[ContentGapAnalysis] = []
+    trend_velocities: list[TrendVelocity] = []
+    platform_summary: dict[str, int] = {}
+    confidence_overall: float = 0.0
+
 
 class DashboardData(BaseModel):
-    """Aggregated dashboard data for the frontend."""
     profile: ChannelProfile
     competitors: CompetitorAnalysis
     trends: TrendData | None = None
@@ -229,3 +240,24 @@ class DashboardData(BaseModel):
     market_insights: str = ""
     trending_now: list[ContentResult] = []
     total_sources_checked: int = 0
+
+
+class JobProgress(BaseModel):
+    job_id: str
+    status: Literal["pending", "running", "completed", "failed"]
+    progress_pct: int = 0
+    step: str = ""
+    result: DashboardData | None = None
+    error: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class SavedReport(BaseModel):
+    report_id: str
+    user_id: int
+    channel_url: str
+    channel_title: str = ""
+    topic: str = ""
+    created_at: datetime
+    dashboard_data: DashboardData | None = None

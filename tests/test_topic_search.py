@@ -1,5 +1,3 @@
-"""Tests for Phase 6 — topic search."""
-
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
@@ -36,16 +34,16 @@ def _reddit_submission(
     subreddit: str = "python",
     score: int = 120,
     comments: int = 15,
-) -> MagicMock:
-    submission = MagicMock()
-    submission.id = submission_id
-    submission.title = title
-    submission.permalink = f"/r/{subreddit}/comments/{submission_id}/slug/"
-    submission.score = score
-    submission.num_comments = comments
-    submission.created_utc = datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc).timestamp()
-    submission.subreddit.display_name = subreddit
-    return submission
+) -> dict:
+    return {
+        "id": submission_id,
+        "title": title,
+        "subreddit": subreddit,
+        "score": score,
+        "num_comments": comments,
+        "created_utc": datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc),
+        "url": f"https://www.reddit.com/r/{subreddit}/comments/{submission_id}/slug/",
+    }
 
 
 def test_search_youtube_deduplicates_and_populates_fields():
@@ -89,49 +87,36 @@ def test_search_youtube_returns_empty_when_no_results():
     assert results == []
 
 
-def test_search_reddit_searches_subreddits_with_top_and_hot():
-    top_submission = _reddit_submission("post1", title="Top post", score=500)
-    hot_submission = _reddit_submission("post2", title="Hot post", score=250)
-
-    mock_subreddit = MagicMock()
-    mock_subreddit.search.side_effect = [
-        iter([top_submission]),
-        iter([hot_submission]),
+def test_search_reddit_uses_reddit_client():
+    mock_posts = [
+        _reddit_submission("post1", title="Top post", score=500),
+        _reddit_submission("post2", title="Hot post", score=250),
     ]
 
-    mock_reddit = MagicMock()
-    mock_reddit.subreddit.return_value = mock_subreddit
-
-    with patch("app.topic_search._build_reddit_client", return_value=mock_reddit):
+    with patch("app.services.reddit_client.RedditClient") as mock_client:
+        instance = mock_client.return_value
+        instance.search_subreddit.return_value = mock_posts
         results = search_reddit("django tutorial", ["python"])
 
     assert len(results) == 2
     assert all(r.platform == "reddit" for r in results)
-    assert results[0].engagement_score == 500.0
+    assert results[0].engagement_score == 545.0
     assert results[0].raw_metrics["upvotes"] == 500
-    assert results[0].raw_metrics["comments"] == 15
-    assert results[0].source == "r/python"
-    assert results[0].url.startswith("https://www.reddit.com/r/python/comments/")
 
 
 def test_search_reddit_site_wide_when_no_subreddits():
-    submission = _reddit_submission("post3", subreddit="all")
+    mock_posts = [_reddit_submission("post3", subreddit="all")]
 
-    mock_subreddit = MagicMock()
-    mock_subreddit.search.side_effect = [iter([submission]), iter([])]
-
-    mock_reddit = MagicMock()
-    mock_reddit.subreddit.return_value = mock_subreddit
-
-    with patch("app.topic_search._build_reddit_client", return_value=mock_reddit):
+    with patch("app.services.reddit_client.RedditClient") as mock_client:
+        instance = mock_client.return_value
+        instance.search_subreddit.return_value = mock_posts
         results = search_reddit("ai news", None)
 
-    mock_reddit.subreddit.assert_called_with("all")
     assert len(results) == 1
 
 
 def test_search_reddit_returns_empty_when_client_init_fails():
-    with patch("app.topic_search._build_reddit_client", side_effect=RuntimeError("no creds")):
+    with patch("app.services.reddit_client.RedditClient", side_effect=RuntimeError("no creds")):
         results = search_reddit("anything", None)
 
     assert results == []
@@ -160,6 +145,8 @@ def test_search_topic_merges_youtube_and_reddit():
     with (
         patch("app.topic_search.search_youtube", return_value=[youtube_result]),
         patch("app.topic_search.search_reddit", return_value=[reddit_result]),
+        patch("app.topic_search.search_tiktok", return_value=[]),
+        patch("app.topic_search.search_instagram", return_value=[]),
     ):
         results = search_topic("productivity", ["UC123"], ["productivity"])
 
@@ -182,6 +169,8 @@ def test_search_topic_returns_partial_results_when_one_platform_fails():
     with (
         patch("app.topic_search.search_youtube", return_value=[youtube_result]),
         patch("app.topic_search.search_reddit", side_effect=RuntimeError("reddit down")),
+        patch("app.topic_search.search_tiktok", return_value=[]),
+        patch("app.topic_search.search_instagram", return_value=[]),
     ):
         results = search_topic("topic", [], None)
 

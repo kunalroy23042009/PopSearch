@@ -1,9 +1,3 @@
-"""Topic search — queries YouTube and Reddit for content matching a given topic.
-
-Combines global and competitor-scoped YouTube search plus Reddit subreddit
-search into a unified ``ContentResult`` feed.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -21,34 +15,17 @@ _YOUTUBE_GLOBAL_LIMIT = 20
 _YOUTUBE_COMPETITOR_LIMIT = 5
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def _build_youtube_client():
-    """Construct an authenticated YouTube Data API client."""
     if not settings.YOUTUBE_API_KEY:
         raise ValueError("YOUTUBE_API_KEY is not configured")
     return build("youtube", "v3", developerKey=settings.YOUTUBE_API_KEY)
 
 
 def _parse_youtube_timestamp(value: str) -> datetime:
-    """Parse an ISO-8601 timestamp from the YouTube API."""
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-# ---------------------------------------------------------------------------
-# YouTube
-# ---------------------------------------------------------------------------
-
-
 def search_youtube(topic: str, competitor_channel_ids: list[str]) -> list[ContentResult]:
-    """Search YouTube globally and within competitor channels for *topic*.
-
-    Deduplicates by video ID, fetches view/like counts, and returns
-    ``ContentResult`` objects.  Individual search failures are logged and skipped.
-    """
     youtube = _build_youtube_client()
     snippets: dict[str, dict] = {}
 
@@ -115,17 +92,7 @@ def search_youtube(topic: str, competitor_channel_ids: list[str]) -> list[Conten
     return results
 
 
-# ---------------------------------------------------------------------------
-# Reddit
-# ---------------------------------------------------------------------------
-
-
 def search_reddit(topic: str, subreddits: list[str] | None = None) -> list[ContentResult]:
-    """Search Reddit for posts matching *topic* via PRAW.
-
-    Returns ContentResult objects with platform='reddit'.
-    Failures are logged and an empty list is returned (graceful degradation).
-    """
     results: list[ContentResult] = []
 
     try:
@@ -154,26 +121,96 @@ def search_reddit(topic: str, subreddits: list[str] | None = None) -> list[Conte
                 )
             )
     except Exception as exc:
-        logger.warning("Reddit search failed (continuing with YouTube only): %s", exc)
+        logger.warning("Reddit search failed: %s", exc)
 
     return results
 
 
-# ---------------------------------------------------------------------------
-# Unified feed
-# ---------------------------------------------------------------------------
+def search_tiktok(topic: str) -> list[ContentResult]:
+    results: list[ContentResult] = []
+
+    try:
+        from app.services.tiktok_client import TikTokClient
+        client = TikTokClient()
+        videos = client.search(topic, limit=15)
+        for v in videos:
+            created = v.get("created_at", datetime.now(timezone.utc))
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except ValueError:
+                    created = datetime.now(timezone.utc)
+
+            results.append(
+                ContentResult(
+                    platform="tiktok",
+                    title=v.get("description", "")[:200],
+                    url=v.get("url", ""),
+                    engagement_score=float(v.get("likes", 0) + v.get("shares", 0) * 3 + v.get("comments", 0) * 2),
+                    published_at=created,
+                    source=f"@{v.get('author', 'unknown')}",
+                    raw_metrics={
+                        "likes": v.get("likes", 0),
+                        "comments": v.get("comments", 0),
+                        "shares": v.get("shares", 0),
+                        "views": v.get("views", 0),
+                        "followers": v.get("author_followers", 0),
+                    },
+                )
+            )
+    except ImportError:
+        logger.debug("TikTok client not available — skipping")
+    except Exception as exc:
+        logger.warning("TikTok search failed: %s", exc)
+
+    return results
+
+
+def search_instagram(topic: str) -> list[ContentResult]:
+    results: list[ContentResult] = []
+
+    try:
+        from app.services.instagram_client import InstagramClient
+        client = InstagramClient()
+        posts = client.search(topic, limit=15)
+        for p in posts:
+            created = p.get("created_at", datetime.now(timezone.utc))
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except ValueError:
+                    created = datetime.now(timezone.utc)
+
+            results.append(
+                ContentResult(
+                    platform="instagram",
+                    title=p.get("caption", "")[:200],
+                    url=p.get("url", ""),
+                    engagement_score=float(p.get("likes", 0) + p.get("comments", 0) * 3),
+                    published_at=created,
+                    source=f"@{p.get('author', 'unknown')}",
+                    raw_metrics={
+                        "likes": p.get("likes", 0),
+                        "comments": p.get("comments", 0),
+                        "followers": p.get("author_followers", 0),
+                    },
+                )
+            )
+    except ImportError:
+        logger.debug("Instagram client not available — skipping")
+    except Exception as exc:
+        logger.warning("Instagram search failed: %s", exc)
+
+    return results
 
 
 def search_topic(
     topic: str,
     competitor_channel_ids: list[str],
     subreddits: list[str] | None = None,
+    include_tiktok: bool = True,
+    include_instagram: bool = True,
 ) -> list[ContentResult]:
-    """Search YouTube and Reddit for *topic* and return a unified result list.
-
-    Returns partial results if either platform fails (graceful degradation).
-    This function does not use the cache — see ``search_topic_with_insights``.
-    """
     results: list[ContentResult] = []
 
     try:
@@ -186,6 +223,18 @@ def search_topic(
     except Exception as exc:
         logger.warning("Reddit topic search failed: %s", exc)
 
+    if include_tiktok:
+        try:
+            results.extend(search_tiktok(topic))
+        except Exception as exc:
+            logger.warning("TikTok topic search failed: %s", exc)
+
+    if include_instagram:
+        try:
+            results.extend(search_instagram(topic))
+        except Exception as exc:
+            logger.warning("Instagram topic search failed: %s", exc)
+
     return results
 
 
@@ -197,13 +246,9 @@ def search_topic_with_insights(
     *,
     max_age_hours: int = 24,
     use_cache: bool = True,
+    include_tiktok: bool = True,
+    include_instagram: bool = True,
 ) -> tuple[list[ContentResult], TopicInsight]:
-    """Search a topic, classify results, and generate AI insights with caching.
-
-    On a cache hit within *max_age_hours*, returns stored results and insights
-    without calling YouTube or Gemini.
-    """
-    # Lazy imports avoid circular dependencies at module load time.
     from app.ai_reasoning import generate_insights
     from app.classifier import classify_results
 
@@ -214,23 +259,26 @@ def search_topic_with_insights(
         cached = get_cached_topic_search(channel_id, normalized_topic, max_age_hours)
         if cached is not None:
             logger.info(
-                "Topic search cache HIT for channel_id=%s topic=%r "
-                "(external APIs skipped)",
+                "Topic search cache HIT for channel_id=%s topic=%r",
                 channel_id,
                 normalized_topic,
             )
             return cached
 
     logger.info(
-        "Topic search cache MISS for channel_id=%s topic=%r — "
-        "calling YouTube/Gemini APIs",
+        "Topic search cache MISS for channel_id=%s topic=%r — calling APIs",
         channel_id,
         normalized_topic,
     )
 
-    results = classify_results(
-        search_topic(normalized_topic, competitor_channel_ids, subreddits)
+    raw_results = search_topic(
+        normalized_topic,
+        competitor_channel_ids,
+        subreddits,
+        include_tiktok=include_tiktok,
+        include_instagram=include_instagram,
     )
+    results = classify_results(raw_results)
     insight = generate_insights(profile, normalized_topic, results)
 
     if use_cache:

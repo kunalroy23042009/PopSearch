@@ -1,18 +1,12 @@
-"""
-Creator Content Radar — FastAPI application entry point.
-
-Integrates channel analysis, competitor discovery, topic search,
-JWT authentication, Stripe billing, rate limiting, and monitoring.
-"""
-
 from __future__ import annotations
 
+import json
 import logging
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -24,33 +18,22 @@ from starlette.requests import Request
 
 from app.channel_analyzer import analyze_channel
 from app.competitor_finder import find_competitors
-from app.db import get_cached_channel_profile, get_session, init_db
+from app.db import get_cached_channel_profile, get_session, get_user_reports, get_report, init_db, get_job
 from app.models import (
     ChannelProfile, CompetitorChannel, CompetitorAnalysis,
-    ContentResult, DashboardData, TopicInsight,
+    ContentResult, DashboardData, SavedReport,
 )
+from app.tasks import submit_analysis_sync
 from app.topic_search import search_topic_with_insights
 
-# Auth
 from app.auth import get_current_user
 from app.db import User
-
-# Routers
 from app.routers.auth import router as auth_router
 from app.routers.billing import router as billing_router
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Rate Limiter
-# ---------------------------------------------------------------------------
-
 limiter = Limiter(key_func=get_remote_address)
-
-
-# ---------------------------------------------------------------------------
-# URL Validation
-# ---------------------------------------------------------------------------
 
 _VALID_YOUTUBE_RE = re.compile(
     r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+|@[\w.-]+|UC[\w-]{22}$",
@@ -59,7 +42,6 @@ _VALID_YOUTUBE_RE = re.compile(
 
 
 def _validate_youtube_url(url: str) -> None:
-    """Raise ValueError if *url* is not a valid YouTube channel URL or ID."""
     if not url or not url.strip():
         raise ValueError("Channel URL is required")
     if not _VALID_YOUTUBE_RE.match(url.strip()):
@@ -71,26 +53,15 @@ def _validate_youtube_url(url: str) -> None:
         )
 
 
-# ---------------------------------------------------------------------------
-# Request/Response Models
-# ---------------------------------------------------------------------------
-
-
 class AnalyzeChannelRequest(BaseModel):
-    """Request body for POST /analyze-channel."""
-
     channel_url: str = Field(..., description="YouTube channel URL or ID")
 
 
 class FindCompetitorsRequest(BaseModel):
-    """Request body for POST /find-competitors."""
-
     channel_id: str = Field(..., description="YouTube channel ID")
 
 
 class SearchTopicRequest(BaseModel):
-    """Request body for POST /search-topic."""
-
     channel_id: str = Field(..., description="YouTube channel ID")
     topic: str = Field(..., description="Topic to search for")
     competitor_channel_ids: list[str] = Field(
@@ -100,15 +71,11 @@ class SearchTopicRequest(BaseModel):
 
 
 class SearchTopicResponse(BaseModel):
-    """Response body for POST /search-topic."""
-
     results: list[ContentResult]
-    insight: TopicInsight
+    insight: dict
 
 
 class MultiSourceSearchRequest(BaseModel):
-    """Request body for POST /multi-source-search."""
-
     channel_id: str
     topic: str
     include_trends: bool = True
@@ -116,23 +83,27 @@ class MultiSourceSearchRequest(BaseModel):
     include_twitch: bool = True
     include_hn: bool = True
     include_rss: bool = True
+    include_tiktok: bool = True
+    include_instagram: bool = True
 
 
 class DashboardRequest(BaseModel):
-    """Request body for POST /dashboard."""
-
     channel_url: str
     topic: str = ""
 
 
-# ---------------------------------------------------------------------------
-# FastAPI App
-# ---------------------------------------------------------------------------
+class AnalyzeRequest(BaseModel):
+    channel_url: str
+    topic: str = ""
+
+
+class AnalyzeResponse(BaseModel):
+    job_id: str
+    status_url: str = ""
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize the database on startup."""
     init_db()
     yield
 
@@ -140,39 +111,36 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Creator Content Radar",
     description="AI-powered YouTube channel analyzer and cross-platform content discovery tool",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
-# Rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS
+ALLOWED_ORIGINS = [
+    "https://creator-content-radar.onrender.com",
+    "https://www.creatorcontentradar.com",
+    "http://localhost:8000",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Lock down in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
 )
 
-# Include API routers
 app.include_router(auth_router)
 app.include_router(billing_router)
 
-# Prometheus monitoring (optional — fails gracefully if not installed)
 try:
     from prometheus_fastapi_instrumentator import Instrumentator
-
     Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 except ImportError:
     logger.info("prometheus-fastapi-instrumentator not installed — /metrics disabled")
-
-
-# ---------------------------------------------------------------------------
-# API Endpoints
-# ---------------------------------------------------------------------------
 
 
 @app.post("/analyze-channel", response_model=ChannelProfile)
@@ -181,11 +149,6 @@ async def analyze_channel_endpoint(
     request: Request,
     body: AnalyzeChannelRequest,
 ) -> ChannelProfile:
-    """Analyze a YouTube channel and return its niche profile.
-
-    Accepts a YouTube channel URL or ID, fetches channel data via the YouTube Data API,
-    and uses AI to determine niche, topics, content style, and target audience.
-    """
     try:
         _validate_youtube_url(body.channel_url)
     except ValueError as exc:
@@ -229,7 +192,6 @@ async def find_competitors_endpoint(
     request: Request,
     body: FindCompetitorsRequest,
 ) -> list[CompetitorChannel]:
-    """Find competitor channels for a given YouTube channel."""
     logger.info("POST /find-competitors - channel_id=%s", body.channel_id)
 
     try:
@@ -270,11 +232,6 @@ async def search_topic_endpoint(
     request: Request,
     body: SearchTopicRequest,
 ) -> SearchTopicResponse:
-    """Search for content on YouTube and Reddit for a given topic.
-
-    Returns a unified feed of trending/popular/underrated content from both platforms,
-    along with AI-generated content angle suggestions tailored to the channel.
-    """
     logger.info(
         "POST /search-topic - channel_id=%s, topic=%s, competitors=%d",
         body.channel_id,
@@ -304,7 +261,10 @@ async def search_topic_endpoint(
             body.topic,
             len(classified_results),
         )
-        return SearchTopicResponse(results=classified_results, insight=insight)
+        return SearchTopicResponse(
+            results=classified_results,
+            insight=insight.model_dump(),
+        )
     except HTTPException:
         raise
     except ValueError as exc:
@@ -323,7 +283,6 @@ async def search_topic_endpoint(
 
 @app.get("/health")
 async def health_check():
-    """Simple liveness probe."""
     return {"status": "ok"}
 
 
@@ -333,11 +292,6 @@ async def multi_source_search_endpoint(
     request: Request,
     body: MultiSourceSearchRequest,
 ) -> DashboardData:
-    """Search across ALL available content platforms for a topic.
-
-    Gathers from YouTube, Reddit, Google Trends, Twitter/X, Twitch, HN, RSS.
-    Returns a unified DashboardData with cross-platform results and trends.
-    """
     logger.info(
         "POST /multi-source-search - channel_id=%s, topic=%s",
         body.channel_id, body.topic,
@@ -382,7 +336,6 @@ async def dashboard_endpoint(
     request: Request,
     body: DashboardRequest,
 ) -> DashboardData:
-    """Get a full dashboard with channel analysis, competitors, trends, and cross-platform content."""
     logger.info("POST /dashboard - channel_url=%s, topic=%s", body.channel_url, body.topic)
 
     try:
@@ -393,7 +346,6 @@ async def dashboard_endpoint(
         topic = body.topic or profile.niche or profile.topics[0] if profile.topics else "content creation"
         dashboard = gatherer.gather_all(topic=topic, profile=profile)
 
-        # Add competitor analysis
         from app.competitor_finder import find_competitors
         competitors = find_competitors(profile, exclude_channel_id=profile.channel_id)
         dashboard.competitors = CompetitorAnalysis(
@@ -419,9 +371,81 @@ async def dashboard_endpoint(
         ) from exc
 
 
-# ---------------------------------------------------------------------------
-# Export Endpoints (Pro+ plan)
-# ---------------------------------------------------------------------------
+@app.post("/api/analyze/async", response_model=AnalyzeResponse)
+async def analyze_async(
+    body: AnalyzeRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+):
+    """Submit an async analysis job with progress tracking."""
+    try:
+        _validate_youtube_url(body.channel_url)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+
+    job_id = submit_analysis_sync(
+        background_tasks,
+        body.channel_url,
+        body.topic,
+        user.id if user else 0,
+    )
+
+    return AnalyzeResponse(
+        job_id=job_id,
+        status_url=f"/api/jobs/{job_id}",
+    )
+
+
+@app.get("/api/jobs/{job_id}")
+async def get_job_status(job_id: str):
+    """Get the status and result of an analysis job."""
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {
+        "job_id": job.job_id,
+        "status": job.status,
+        "progress_pct": job.progress_pct,
+        "step": job.step,
+        "error": job.error or None,
+        "created_at": job.created_at.isoformat(),
+        "updated_at": job.updated_at.isoformat(),
+    }
+
+
+@app.get("/api/reports")
+async def list_reports(user: User = Depends(get_current_user)):
+    """List saved analysis reports for the current user."""
+    reports = get_user_reports(user.id)
+    return [
+        {
+            "report_id": r.report_id,
+            "channel_url": r.channel_url,
+            "channel_title": r.channel_title,
+            "topic": r.topic,
+            "created_at": r.created_at.isoformat(),
+        }
+        for r in reports
+    ]
+
+
+@app.get("/api/reports/{report_id}")
+async def get_report_detail(report_id: str, user: User = Depends(get_current_user)):
+    """Get a saved analysis report."""
+    report = get_report(report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {
+        "report_id": report.report_id,
+        "channel_url": report.channel_url,
+        "channel_title": report.channel_title,
+        "topic": report.topic,
+        "data": json.loads(report.dashboard_json) if report.dashboard_json else None,
+        "created_at": report.created_at.isoformat(),
+    }
 
 
 @app.get("/api/analyze/{channel_id}/export")
@@ -430,7 +454,6 @@ async def export_analysis(
     format: str = "csv",
     user: User = Depends(get_current_user),
 ):
-    """Export analysis data as CSV or PDF (Pro+ plan required)."""
     if user.plan not in ("pro", "business"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -454,6 +477,7 @@ async def export_analysis(
         writer.writerow(["Niche", profile.niche])
         writer.writerow(["Content Style", profile.content_style])
         writer.writerow(["Target Audience", profile.target_audience])
+        writer.writerow(["Engagement Rate", f"{profile.engagement_rate:.2f}%"])
         for i, rec in enumerate(profile.content_recommendations, 1):
             writer.writerow([f"Recommendation {i}", rec])
 
@@ -485,6 +509,7 @@ async def export_analysis(
             story.append(Paragraph(f"<b>Content Style:</b> {profile.content_style}", styles["Normal"]))
             story.append(Paragraph(f"<b>Target Audience:</b> {profile.target_audience}", styles["Normal"]))
             story.append(Paragraph(f"<b>AI Summary:</b> {profile.ai_summary}", styles["Normal"]))
+            story.append(Paragraph(f"<b>Engagement Rate:</b> {profile.engagement_rate:.2f}%", styles["Normal"]))
             story.append(Spacer(1, 12))
 
             if profile.content_recommendations:
@@ -510,18 +535,12 @@ async def export_analysis(
         raise HTTPException(status_code=400, detail="Format must be 'csv' or 'pdf'")
 
 
-# ---------------------------------------------------------------------------
-# Static File Serving — Landing page at /, App at /app
-# ---------------------------------------------------------------------------
-
 static_dir = Path(__file__).parent.parent / "static"
 
 
 @app.get("/app")
 async def serve_app():
-    """Serve the main application UI."""
     return FileResponse(str(static_dir / "index.html"))
 
 
-# Serve landing page and other static files at root
 app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")

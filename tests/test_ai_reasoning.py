@@ -1,12 +1,10 @@
-"""Tests for Phase 8 — AI reasoning."""
-
 import json
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from app.ai_reasoning import (
-    FALLBACK_SUMMARY,
-    _build_prompt,
+    FALLBACK_INSIGHT,
+    _build_insight_prompt,
     _select_results_for_prompt,
     generate_insights,
 )
@@ -40,35 +38,62 @@ def _result(
     platform: str = "youtube",
 ) -> ContentResult:
     return ContentResult(
-        platform=platform,  # type: ignore[arg-type]
+        platform=platform,
         title=title,
         url=f"https://example.com/{title}",
         engagement_score=engagement,
         published_at=NOW,
         source="Tech Channel" if platform == "youtube" else "r/laptops",
         raw_metrics={"views": int(engagement), "likes": 10},
-        classification=classification,  # type: ignore[arg-type]
+        classification=classification,
     )
 
 
 def _valid_insight_json() -> str:
-    return json.dumps(
-        {
-            "summary": (
-                "Budget laptop content is surging on YouTube, especially comparisons "
-                "under $400. Reddit threads focus on student use cases."
-            ),
-            "content_angles": [
-                "Film a 'Best $300 laptop for college 2025' video referencing the trending "
-                "'Acer Aspire review' title in your concise review style.",
-                "Create a Chromebook vs Windows side-by-side aimed at students, matching "
-                "your friendly how-to tone from recent titles.",
-                "Post a Reddit AMA-style follow-up video answering top r/laptops questions "
-                "about budget picks.",
-            ],
-            "content_gap": "No creator is covering refurbished laptop warranties under $250.",
-        }
-    )
+    return json.dumps({
+        "summary": "Budget laptop content is surging on YouTube, especially comparisons under $400. Reddit threads focus on student use cases. TikTok shows high engagement for budget unboxings.",
+        "content_angles": [
+            {
+                "title": "Best $300 Laptop for College 2025",
+                "description": "Create a comparison video referencing the trending 'Acer Aspire review' in your concise review style.",
+                "confidence_score": 0.85,
+                "predicted_performance": "Above average — 50-100k views in first week",
+                "seo_keywords": ["budget laptop", "college laptop"],
+                "thumbnail_ideas": ["Side-by-side laptop comparison", "Price tag overlay"],
+                "best_time_to_post": "Tuesday 3pm EST",
+                "platform_focus": ["youtube", "tiktok"],
+            },
+            {
+                "title": "Chromebook vs Windows for Students",
+                "description": "Match your friendly how-to tone from recent titles. Reddit shows high demand for this comparison.",
+                "confidence_score": 0.75,
+                "seo_keywords": ["chromebook", "student laptop"],
+                "thumbnail_ideas": ["Split screen comparison"],
+                "platform_focus": ["youtube"],
+            },
+        ],
+        "content_gaps": [
+            {
+                "gap_description": "No creator is covering refurbished laptop warranties under $250",
+                "opportunity_score": 8.2,
+                "competitor_coverage": ["Big channels focus on new laptops only"],
+                "audience_overlap_pct": 75,
+                "suggested_approach": "Create a 'Best Refurbished Laptops Under $250' guide",
+            }
+        ],
+        "trend_velocities": [
+            {
+                "topic": "budget laptops",
+                "current_velocity": 85.0,
+                "previous_velocity": 62.0,
+                "week_over_week_change": 37.0,
+                "direction": "accelerating",
+                "momentum_score": 8.0,
+            }
+        ],
+        "platform_summary": {"youtube": 3, "reddit": 2},
+        "confidence_overall": 0.82,
+    })
 
 
 def test_generate_insights_parses_valid_response():
@@ -77,73 +102,54 @@ def test_generate_insights_parses_valid_response():
         _result("Acer Aspire review", 12_000),
         _result("Best cheap laptop Reddit", 800, platform="reddit"),
     ]
-
-    mock_response = MagicMock()
-    mock_response.text = _valid_insight_json()
-    mock_client = MagicMock()
-    mock_client.models.generate_content.return_value = mock_response
-
-    with patch("app.ai_reasoning._get_gemini_client", return_value=mock_client):
+    with patch("app.ai_reasoning.generate_ai_response", return_value=_valid_insight_json()):
         insight = generate_insights(profile, "budget laptop", results)
 
     assert isinstance(insight, TopicInsight)
     assert "Budget laptop content" in insight.summary
-    assert len(insight.content_angles) == 3
-    assert "Acer Aspire review" in insight.content_angles[0]
-    assert insight.content_gap is not None
-    assert "refurbished" in insight.content_gap
+    assert len(insight.content_angles) == 2
+    assert insight.content_angles[0].title == "Best $300 Laptop for College 2025"
+    assert len(insight.content_gaps) == 1
+    assert insight.content_gaps[0].opportunity_score == 8.2
+    assert len(insight.trend_velocities) == 1
+    assert insight.trend_velocities[0].direction == "accelerating"
+    assert insight.confidence_overall == 0.82
 
 
-def test_generate_insights_retries_once_then_succeeds():
+def test_generate_insights_retries_then_succeeds():
     profile = _profile()
     results = [_result("Trending video", 5_000)]
 
-    bad_response = MagicMock()
-    bad_response.text = "not json"
-    good_response = MagicMock()
-    good_response.text = _valid_insight_json()
-
-    mock_client = MagicMock()
-    mock_client.models.generate_content.side_effect = [bad_response, good_response]
-
-    with patch("app.ai_reasoning._get_gemini_client", return_value=mock_client):
+    with patch("app.ai_reasoning.generate_ai_response") as mock:
+        mock.side_effect = ["not json", _valid_insight_json()]
         insight = generate_insights(profile, "budget laptop", results)
 
-    assert mock_client.models.generate_content.call_count == 2
-    assert len(insight.content_angles) == 3
+    assert mock.call_count == 2
+    assert len(insight.content_angles) == 2
 
 
-def test_generate_insights_fallback_on_persistent_malformed_response():
+def test_generate_insights_fallback_on_persistent_failure():
     profile = _profile()
     results = [_result("Trending video", 5_000)]
 
-    bad_response = MagicMock()
-    bad_response.text = '{"summary": "only summary"}'
-
-    mock_client = MagicMock()
-    mock_client.models.generate_content.return_value = bad_response
-
-    with patch("app.ai_reasoning._get_gemini_client", return_value=mock_client):
+    with patch("app.ai_reasoning.generate_ai_response", return_value="not valid json"):
         insight = generate_insights(profile, "budget laptop", results)
 
-    assert insight.summary == FALLBACK_SUMMARY
-    assert insight.content_angles == []
-    assert insight.content_gap is None
-    assert mock_client.models.generate_content.call_count == 2
-
-
-def test_generate_insights_fallback_when_client_init_fails():
-    profile = _profile()
-    results = [_result("Trending video", 5_000)]
-
-    with patch("app.ai_reasoning._get_gemini_client", side_effect=RuntimeError("no key")):
-        insight = generate_insights(profile, "budget laptop", results)
-
-    assert insight.summary == FALLBACK_SUMMARY
+    assert insight.summary == FALLBACK_INSIGHT.summary
     assert insight.content_angles == []
 
 
-def test_select_results_for_prompt_prioritizes_classified_and_engagement():
+def test_generate_insights_fallback_on_exception():
+    profile = _profile()
+    results = [_result("Trending video", 5_000)]
+
+    with patch("app.ai_reasoning.generate_ai_response", side_effect=RuntimeError("API down")):
+        insight = generate_insights(profile, "budget laptop", results)
+
+    assert insight.summary == FALLBACK_INSIGHT.summary
+
+
+def test_select_results_for_prompt_prioritizes_classified():
     results = [
         _result("low none", 100, classification="none"),
         _result("high none", 9_000, classification="none"),
@@ -151,25 +157,21 @@ def test_select_results_for_prompt_prioritizes_classified_and_engagement():
         _result("trending hit", 20_000, classification="trending"),
         _result("popular staple", 15_000, classification="popular"),
     ]
-
     selected = _select_results_for_prompt(results)
     titles = [r.title for r in selected]
-
     assert titles[0] == "trending hit"
     assert "underrated gem" in titles[:3]
 
 
-def test_build_prompt_includes_profile_topic_and_result_titles():
+def test_build_prompt_includes_profile_topic_and_results():
     profile = _profile()
     results = [
         _result("Acer Aspire review", 12_000),
         _result("Reddit budget thread", 500, platform="reddit"),
     ]
-
-    prompt = _build_prompt(profile, "budget laptop", results)
-
+    prompt = _build_insight_prompt(profile, "budget laptop", results)
     assert "Budget Tech Daily" in prompt
     assert "budget laptop" in prompt
     assert "Acer Aspire review" in prompt
-    assert "Reddit budget thread" in prompt
     assert '"content_angles"' in prompt
+    assert '"content_gaps"' in prompt

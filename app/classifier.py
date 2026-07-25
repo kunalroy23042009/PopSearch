@@ -1,10 +1,3 @@
-"""Classifier — labels content as trending, popular, or underrated.
-
-Improved classification using engagement velocity (engagement per hour since publish)
-combined with recency to identify trending content. Popular = high absolute engagement.
-Underrated = high engagement relative to audience size but low absolute reach.
-"""
-
 from __future__ import annotations
 
 import math
@@ -12,33 +5,24 @@ from datetime import datetime, timezone
 
 from app.models import ContentResult
 
-# ---------------------------------------------------------------------------
-# Tunable thresholds
-# ---------------------------------------------------------------------------
+TRENDING_MAX_AGE_HOURS = 168
+TRENDING_MIN_ENGAGEMENT = 100.0
+TRENDING_VELOCITY_PERCENTILE = 60
 
-TRENDING_MAX_AGE_HOURS = 168          # 7 days (was 72h — too strict)
-TRENDING_MIN_ENGAGEMENT = 100.0       # floor to avoid noise
-TRENDING_VELOCITY_PERCENTILE = 60    # top 40% by velocity → trending candidate
+POPULAR_TOP_PERCENT = 25
+POPULAR_MIN_ENGAGEMENT = 500.0
 
-POPULAR_TOP_PERCENT = 25             # top 25% by engagement → popular
-POPULAR_MIN_ENGAGEMENT = 500.0       # must have meaningful reach
+UNDERRATED_TOP_PERCENT = 30
+UNDERRATED_MIN_ENGAGEMENT = 5.0
 
-UNDERRATED_TOP_PERCENT = 30          # top 30% by engagement ratio → underrated
-UNDERRATED_MIN_ENGAGEMENT = 5.0      # floor
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+HISTORICAL_VELOCITY_WINDOW_HOURS = 24
 
 
 def _percentile(values: list[float], pct: float) -> float:
-    """Return the *pct*-th percentile of *values* (linear interpolation)."""
     if not values:
         return 0.0
     if len(values) == 1:
         return values[0]
-
     ordered = sorted(values)
     rank = (pct / 100.0) * (len(ordered) - 1)
     low = math.floor(rank)
@@ -61,76 +45,87 @@ def _age_hours(published_at: datetime, now: datetime) -> float:
 
 
 def _engagement_velocity(result: ContentResult, now: datetime) -> float:
-    """Engagement per hour since publish — higher = faster-growing.
-
-    Returns 0 for content published in the future or with 0 engagement.
-    """
     age_h = _age_hours(result.published_at, now)
-    if age_h < 1:  # Less than 1 hour old — treat as 1h to avoid div-by-zero explosion
+    if age_h < 1:
         age_h = 1.0
     return result.engagement_score / age_h
 
 
 def _engagement_ratio(result: ContentResult) -> float | None:
-    """Engagement relative to audience size, or None if unavailable."""
     metrics = result.raw_metrics or {}
-
     if result.platform == "youtube":
         engagement = float(metrics.get("views", result.engagement_score))
         audience = metrics.get("channel_subscriber_count") or metrics.get("subscriber_count")
     else:
         engagement = float(metrics.get("upvotes", result.engagement_score))
         audience = metrics.get("subreddit_subscriber_count") or metrics.get("subscribers")
-
     if audience is not None and float(audience) > 0:
         return engagement / float(audience)
-
     if result.engagement_score < UNDERRATED_MIN_ENGAGEMENT:
         return None
     return float(result.engagement_score)
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+def _compute_velocity_direction(
+    result: ContentResult,
+    now: datetime,
+    historical_snapshots: list[dict] | None = None,
+) -> tuple[float, str]:
+    current_velocity = _engagement_velocity(result, now)
+
+    if not historical_snapshots:
+        return current_velocity, "stable"
+
+    channel_id = result.source
+    matching = [s for s in historical_snapshots if s.get("source") == channel_id]
+    if not matching:
+        return current_velocity, "stable"
+
+    recent_snapshot = matching[-1]
+    snapshot_time_str = recent_snapshot.get("timestamp", "")
+    try:
+        snapshot_time = datetime.fromisoformat(snapshot_time_str.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return current_velocity, "stable"
+
+    age_h = _age_hours(result.published_at, snapshot_time)
+    if age_h < 1:
+        age_h = 1.0
+    previous_velocity = recent_snapshot.get("engagement_score", 0) / age_h
+
+    if current_velocity > previous_velocity * 1.15:
+        direction = "accelerating"
+    elif current_velocity < previous_velocity * 0.85:
+        direction = "decelerating"
+    else:
+        direction = "stable"
+
+    return current_velocity, direction
 
 
 def classify_results(
     results: list[ContentResult],
     *,
     now: datetime | None = None,
+    historical_snapshots: list[dict] | None = None,
 ) -> list[ContentResult]:
-    """Label each result as trending, popular, underrated, or none.
-
-    Classification priority: trending → popular → underrated → none.
-
-    **Trending**: Published within 7 days AND has high engagement velocity
-    (engagement per hour) relative to the set. This catches recently-published
-    content that is gaining traction fast.
-
-    **Popular**: High absolute engagement (top 25% of the set) regardless of age.
-    This catches established, well-performing content.
-
-    **Underrated**: High engagement-to-audience ratio but low absolute reach.
-    This catches content that punches above its weight in small channels/subreddits.
-    """
     if not results:
         return []
 
     now = now or datetime.now(timezone.utc)
 
-    # Compute velocity for all results
-    velocities = [_engagement_velocity(r, now) for r in results]
+    velocities_and_directions = [
+        _compute_velocity_direction(r, now, historical_snapshots) for r in results
+    ]
+    velocities = [v for v, _ in velocities_and_directions]
     scores = [r.engagement_score for r in results]
 
-    # Thresholds
     trending_velocity_floor = _percentile(
         [v for v in velocities if v > 0],
         TRENDING_VELOCITY_PERCENTILE,
     )
     popular_floor = _percentile(scores, 100 - POPULAR_TOP_PERCENT)
 
-    # Compute ratios for underrated
     ratios: list[float | None] = [_engagement_ratio(r) for r in results]
 
     labeled: list[ContentResult] = []
@@ -138,16 +133,14 @@ def classify_results(
 
     for i, result in enumerate(results):
         age_h = _age_hours(result.published_at, now)
-        velocity = velocities[i]
+        velocity, direction = velocities_and_directions[i]
 
-        # Trending: recent + high velocity
         is_trending = (
             age_h <= TRENDING_MAX_AGE_HOURS
             and result.engagement_score >= TRENDING_MIN_ENGAGEMENT
             and velocity >= trending_velocity_floor
         )
 
-        # Popular: high absolute engagement (regardless of age)
         is_popular = result.engagement_score >= max(popular_floor, POPULAR_MIN_ENGAGEMENT)
 
         if is_trending:
@@ -160,9 +153,12 @@ def classify_results(
             if ratio is not None and ratio > 0:
                 pending_underrated.append((i, ratio))
 
-        labeled.append(result.model_copy(update={"classification": classification}))
+        labeled.append(result.model_copy(update={
+            "classification": classification,
+            "trend_velocity": velocity,
+            "velocity_direction": direction,
+        }))
 
-    # Underrated: top UNDERRATED_TOP_PERCENT of ratios among non-trending/non-popular
     if pending_underrated:
         ratio_values = [r for _, r in pending_underrated]
         underrated_floor = _percentile(ratio_values, 100 - UNDERRATED_TOP_PERCENT)
@@ -173,3 +169,23 @@ def classify_results(
                 )
 
     return labeled
+
+
+def compute_velocity_delta(
+    current_results: list[ContentResult],
+    previous_results: list[ContentResult],
+) -> dict[str, float]:
+    deltas: dict[str, float] = {}
+    prev_lookup: dict[str, float] = {}
+    for r in previous_results:
+        if r.engagement_score > 0:
+            prev_lookup[r.title] = r.engagement_score
+
+    for r in current_results:
+        prev = prev_lookup.get(r.title)
+        if prev is not None and prev > 0:
+            deltas[r.title] = (r.engagement_score - prev) / prev * 100.0
+        else:
+            deltas[r.title] = 0.0
+
+    return deltas
