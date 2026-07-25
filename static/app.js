@@ -127,17 +127,24 @@ function LoginPage() {
     setErr("");
     setLoading(true);
     try {
+      console.log("Login attempt:", email);
       const res = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-      if (!res) return;
+      if (!res) {
+        setErr("Session expired. Please refresh.");
+        setLoading(false);
+        return;
+      }
       const d = await res.json();
       if (res.ok) {
+        console.log("Login OK");
         login(d.access_token, d.user);
       } else {
         setErr(d.detail || "Login failed");
+        setLoading(false);
       }
     } catch (ex) {
-      setErr("Network error");
-    } finally {
+      console.error("Login error:", ex);
+      setErr("Network error \u2014 check console");
       setLoading(false);
     }
   };
@@ -191,7 +198,7 @@ function LoginPage() {
       { onSubmit: handleSubmit, className: "auth-card" },
       React.createElement("h1", null, "Creator Content Radar"),
       React.createElement("p", { className: "subtitle" }, "Sign in to your account"),
-      err ? React.createElement("div", { className: "error", style: { display: "block" } }, err) : null,
+      err ? React.createElement("div", { className: "error" }, err) : null,
       React.createElement(
         "div",
         { className: "form-group" },
@@ -258,17 +265,24 @@ function RegisterPage() {
     setErr("");
     setLoading(true);
     try {
+      console.log("Register attempt:", email);
       const res = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) });
-      if (!res) return;
+      if (!res) {
+        setErr("Session expired. Please refresh.");
+        setLoading(false);
+        return;
+      }
       const d = await res.json();
       if (res.ok) {
+        console.log("Register OK");
         login(d.access_token, d.user);
       } else {
         setErr(d.detail || "Registration failed");
+        setLoading(false);
       }
     } catch (ex) {
-      setErr("Network error");
-    } finally {
+      console.error("Register error:", ex);
+      setErr("Network error \u2014 check console");
       setLoading(false);
     }
   };
@@ -280,7 +294,7 @@ function RegisterPage() {
       { onSubmit: handleSubmit, className: "auth-card" },
       React.createElement("h1", null, "Create Account"),
       React.createElement("p", { className: "subtitle" }, "Join Creator Content Radar"),
-      err ? React.createElement("div", { className: "error", style: { display: "block" } }, err) : null,
+      err ? React.createElement("div", { className: "error" }, err) : null,
       React.createElement(
         "div",
         { className: "form-group" },

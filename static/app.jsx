@@ -121,13 +121,13 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
+      console.log('Login attempt:', email);
       const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-      if (!res) return;
+      if (!res) { setErr('Session expired. Please refresh.'); setLoading(false); return; }
       const d = await res.json();
-      if (res.ok) { login(d.access_token, d.user); }
-      else { setErr(d.detail || 'Login failed'); }
-    } catch (ex) { setErr('Network error'); }
-    finally { setLoading(false); }
+      if (res.ok) { console.log('Login OK'); login(d.access_token, d.user); }
+      else { setErr(d.detail || 'Login failed'); setLoading(false); }
+    } catch (ex) { console.error('Login error:', ex); setErr('Network error — check console'); setLoading(false); }
   };
 
   const handleGoogleSignIn = () => {
@@ -168,7 +168,7 @@ function LoginPage() {
     React.createElement('form', { onSubmit: handleSubmit, className: 'auth-card' },
       React.createElement('h1', null, 'Creator Content Radar'),
       React.createElement('p', { className: 'subtitle' }, 'Sign in to your account'),
-      err ? React.createElement('div', { className: 'error', style: { display: 'block' } }, err) : null,
+      err ? React.createElement('div', { className: 'error' }, err) : null,
       React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Email'),
         React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
@@ -217,20 +217,20 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
+      console.log('Register attempt:', email);
       const res = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
-      if (!res) return;
+      if (!res) { setErr('Session expired. Please refresh.'); setLoading(false); return; }
       const d = await res.json();
-      if (res.ok) { login(d.access_token, d.user); }
-      else { setErr(d.detail || 'Registration failed'); }
-    } catch (ex) { setErr('Network error'); }
-    finally { setLoading(false); }
+      if (res.ok) { console.log('Register OK'); login(d.access_token, d.user); }
+      else { setErr(d.detail || 'Registration failed'); setLoading(false); }
+    } catch (ex) { console.error('Register error:', ex); setErr('Network error — check console'); setLoading(false); }
   };
 
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('form', { onSubmit: handleSubmit, className: 'auth-card' },
       React.createElement('h1', null, 'Create Account'),
       React.createElement('p', { className: 'subtitle' }, 'Join Creator Content Radar'),
-      err ? React.createElement('div', { className: 'error', style: { display: 'block' } }, err) : null,
+      err ? React.createElement('div', { className: 'error' }, err) : null,
       React.createElement('div', { className: 'form-group' },
         React.createElement('label', null, 'Email'),
         React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
