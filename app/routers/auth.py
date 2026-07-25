@@ -42,29 +42,35 @@ class AuthResponse(BaseModel):
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def register(data: RegisterRequest, session: Session = Depends(get_session)):
     """Register a new user with email and password."""
-    statement = select(User).where(User.email == data.email)
-    existing_user = session.exec(statement).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already registered",
+    try:
+        statement = select(User).where(User.email == data.email)
+        existing_user = session.exec(statement).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already registered",
+            )
+
+        # Create new user
+        new_user = User(
+            email=data.email,
+            hashed_password=hash_password(data.password),
+            plan="free",
+            analyses_this_month=0,
+            created_date=datetime.now(timezone.utc),
         )
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
 
-    # Create new user
-    new_user = User(
-        email=data.email,
-        hashed_password=hash_password(data.password),
-        plan="free",
-        analyses_this_month=0,
-        created_date=datetime.now(timezone.utc),
-    )
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
-
-    # Generate token
-    token = create_access_token(data={"sub": new_user.email})
-    return {"access_token": token, "token_type": "bearer", "user": new_user}
+        # Generate token
+        token = create_access_token(data={"sub": new_user.email})
+        return {"access_token": token, "token_type": "bearer", "user": new_user}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Registration failed: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/login", response_model=AuthResponse)
