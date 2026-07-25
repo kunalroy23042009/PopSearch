@@ -12,12 +12,13 @@ FROM python:3.11-slim
 RUN groupadd -r app && useradd -r -g app -d /app -s /bin/false app
 
 WORKDIR /app
-COPY --from=builder /root/.local /home/app/.local
+COPY --from=builder /root/.local /app/.local
 COPY . .
 
-RUN mkdir -p data && chown -R app:app /app /home/app/.local
+RUN mkdir -p data && chown -R app:app /app
 
-ENV PATH=/home/app/.local/bin:$PATH
+ENV PATH=/app/.local/bin:$PATH
+ENV PYTHONPATH=/app/.local/lib/python3.11/site-packages:$PYTHONPATH
 
 EXPOSE 8000
 
