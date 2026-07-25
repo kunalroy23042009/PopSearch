@@ -62,9 +62,11 @@ def _build_youtube_client():
 
 def _iso_to_seconds(duration: str) -> int:
     """Parse ISO 8601 duration (PT1H2M3S) to seconds."""
-    import isodate
     try:
+        import isodate
         return int(isodate.parse_duration(duration).total_seconds())
+    except ImportError:
+        return 0
     except Exception:
         return 0
 
