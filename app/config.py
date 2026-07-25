@@ -43,10 +43,15 @@ class Settings(BaseSettings):
     STRIPE_PRICE_BUSINESS_ANNUAL: str = ""
 
     APP_URL: str = "http://localhost:8000"
+    DEBUG: bool = False
 
+    SCHEDULER_ENABLED: bool = False
     SENTRY_DSN: str = ""
     POSTHOG_API_KEY: str = ""
+    POSTHOG_HOST: str = ""
     SENDGRID_API_KEY: str = ""
+
+    GOOGLE_CLIENT_ID: str = ""
 
     @field_validator("YOUTUBE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_BEARER_TOKEN", "TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET", "TIKTOK_API_KEY", "INSTAGRAM_API_KEY")
     @classmethod

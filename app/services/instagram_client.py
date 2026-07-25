@@ -7,6 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class InstagramClient:
+    """Instagram content client powered by Apify Instagram Scraper.
+
+    Requires INSTAGRAM_API_KEY in .env (Apify API token).
+    Returns empty list gracefully when unconfigured or on error.
+    """
+
     def __init__(self):
         self.api_key = settings.INSTAGRAM_API_KEY or ""
         self.base_url = "https://api.apify.com/v2"

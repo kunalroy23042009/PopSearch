@@ -143,7 +143,46 @@ class AnalyzeResponse(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+
+    scheduler = None
+    if settings.SCHEDULER_ENABLED:
+        try:
+            from apscheduler.schedulers.asyncio import AsyncIOScheduler
+            from app.scheduler import run_daily_snapshots, run_weekly_email_reports
+
+            scheduler = AsyncIOScheduler()
+            scheduler.add_job(run_daily_snapshots, "cron", hour=2, minute=0, id="daily_snapshots")
+            scheduler.add_job(run_weekly_email_reports, "cron", day_of_week="mon", hour=8, minute=0, id="weekly_reports")
+            scheduler.start()
+            logger.info("APScheduler started — daily snapshots + weekly reports")
+        except ImportError:
+            logger.info("APScheduler not installed — scheduler disabled")
+
+    if settings.SENTRY_DSN:
+        try:
+            import sentry_sdk
+            sentry_sdk.init(
+                dsn=settings.SENTRY_DSN,
+                traces_sample_rate=0.1,
+                environment="production" if not settings.DEBUG else "development",
+            )
+            logger.info("Sentry initialized")
+        except ImportError:
+            logger.info("sentry_sdk not installed — Sentry disabled")
+
+    if settings.POSTHOG_API_KEY:
+        try:
+            import posthog
+            posthog.api_key = settings.POSTHOG_API_KEY
+            posthog.host = settings.POSTHOG_HOST or "https://app.posthog.com"
+            logger.info("PostHog initialized")
+        except ImportError:
+            logger.info("posthog not installed — PostHog disabled")
+
     yield
+
+    if scheduler:
+        scheduler.shutdown()
 
 
 app = FastAPI(

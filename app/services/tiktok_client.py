@@ -7,6 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class TikTokClient:
+    """TikTok content client powered by Apify TikTok Scraper.
+
+    Requires TIKTOK_API_KEY in .env (Apify API token).
+    Returns empty list gracefully when unconfigured or on error.
+    """
+
     def __init__(self):
         self.api_key = settings.TIKTOK_API_KEY or ""
         self.base_url = "https://api.apify.com/v2"
