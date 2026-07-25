@@ -112,7 +112,7 @@ function ContentItem({ item }) {
 
 // ── Auth Pages ─────────────────────────────────────────────────────────
 function LoginPage() {
-  const { login, api } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
@@ -121,13 +121,15 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
-      console.log('Login attempt:', email);
-      const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-      if (!res) { setErr('Session expired. Please refresh.'); setLoading(false); return; }
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
       const d = await res.json();
-      if (res.ok) { console.log('Login OK'); login(d.access_token, d.user); }
+      if (res.ok) { login(d.access_token, d.user); }
       else { setErr(d.detail || 'Login failed'); setLoading(false); }
-    } catch (ex) { console.error('Login error:', ex); setErr('Network error — check console'); setLoading(false); }
+    } catch (ex) { setErr('Network error — check console'); console.error(ex); setLoading(false); }
   };
 
   const handleGoogleSignIn = () => {
@@ -140,11 +142,11 @@ function LoginPage() {
       callback: async (response) => {
         setLoading(true); setErr('');
         try {
-          const res = await api('/api/auth/google', {
+          const res = await fetch('/api/auth/google', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_token: response.credential }),
           });
-          if (!res) return;
           const d = await res.json();
           if (res.ok) login(d.access_token, d.user);
           else setErr(d.detail || 'Google sign-in failed');
@@ -208,7 +210,7 @@ function LoginPage() {
 }
 
 function RegisterPage() {
-  const { login, api } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
@@ -217,13 +219,15 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
-      console.log('Register attempt:', email);
-      const res = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) });
-      if (!res) { setErr('Session expired. Please refresh.'); setLoading(false); return; }
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
       const d = await res.json();
-      if (res.ok) { console.log('Register OK'); login(d.access_token, d.user); }
+      if (res.ok) { login(d.access_token, d.user); }
       else { setErr(d.detail || 'Registration failed'); setLoading(false); }
-    } catch (ex) { console.error('Register error:', ex); setErr('Network error — check console'); setLoading(false); }
+    } catch (ex) { setErr('Network error — check console'); console.error(ex); setLoading(false); }
   };
 
   return React.createElement('div', { className: 'auth-page' },
