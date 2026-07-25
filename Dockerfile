@@ -4,19 +4,20 @@ RUN pip install --no-cache-dir pip==24.2
 
 WORKDIR /app
 COPY pyproject.toml .
-RUN pip install --no-cache-dir --user .
+RUN pip install --no-cache-dir --user . && \
+    find /root/.local/bin -type f -exec chmod +x {} \;
 
 FROM python:3.11-slim
 
 RUN groupadd -r app && useradd -r -g app -d /app -s /bin/false app
 
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /root/.local /home/app/.local
 COPY . .
 
-RUN mkdir -p data static && chown -R app:app /app
+RUN mkdir -p data && chown -R app:app /app /home/app/.local
 
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/app/.local/bin:$PATH
 
 EXPOSE 8000
 
