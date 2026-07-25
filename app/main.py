@@ -596,9 +596,14 @@ async def export_analysis(
 static_dir = Path(__file__).parent.parent / "static"
 
 
+@app.get("/")
+async def serve_landing():
+    return FileResponse(str(static_dir / "landing.html"))
+
+
 @app.get("/app")
 async def serve_app(user: User = Depends(get_current_user)):
     return FileResponse(str(static_dir / "index.html"))
 
 
-app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
