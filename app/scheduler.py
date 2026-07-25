@@ -8,6 +8,7 @@ from sqlmodel import Session, select
 
 from app import db
 from app.config import settings
+from app.email_templates import render_weekly_report, render_alert_email
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,7 @@ async def run_weekly_email_reports() -> None:
             _send_email(
                 to_email=user.email,
                 subject="Your Weekly Creator Content Radar Report",
-                template="weekly_report",
-                data={"reports": email_data, "plan": user.plan},
+                html_body=render_weekly_report({"reports": email_data, "plan": user.plan}),
             )
         except Exception as exc:
             logger.warning("Weekly report failed for user %d: %s", user.id, exc)
@@ -75,7 +75,19 @@ async def run_weekly_email_reports() -> None:
     logger.info("Weekly email reports sent to %d users", len(users))
 
 
-def _send_email(to_email: str, subject: str, template: str, data: dict) -> None:
+def send_alert_email(to_email: str, alert_type: str, message: str) -> None:
+    if not settings.SENDGRID_API_KEY:
+        logger.info("Alert email not sent (SendGrid not configured): %s", alert_type)
+        return
+    html = render_alert_email(alert_type, message)
+    _send_email(
+        to_email=to_email,
+        subject=f"Alert: {alert_type.replace('_', ' ').title()}",
+        html_body=html,
+    )
+
+
+def _send_email(to_email: str, subject: str, html_body: str) -> None:
     if not settings.SENDGRID_API_KEY:
         logger.info("Email not sent (SendGrid not configured): %s -> %s", subject, to_email)
         return
@@ -89,9 +101,9 @@ def _send_email(to_email: str, subject: str, template: str, data: dict) -> None:
             },
             json={
                 "personalizations": [{"to": [{"email": to_email}]}],
-                "from": {"email": "noreply@creatorcontentradar.com", "name": "Creator Content Radar"},
+                "from": {"email": settings.FROM_EMAIL, "name": settings.FROM_NAME},
                 "subject": subject,
-                "content": [{"type": "text/html", "value": f"<h1>{subject}</h1><pre>{json.dumps(data, indent=2)}</pre>"}],
+                "content": [{"type": "text/html", "value": html_body}],
             },
             timeout=15.0,
         )

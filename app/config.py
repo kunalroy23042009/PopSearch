@@ -50,8 +50,15 @@ class Settings(BaseSettings):
     POSTHOG_API_KEY: str = ""
     POSTHOG_HOST: str = ""
     SENDGRID_API_KEY: str = ""
+    FROM_EMAIL: str = "noreply@creatorcontentradar.com"
+    FROM_NAME: str = "Creator Content Radar"
+
+    CACHE_BACKEND: str = "memory"
+    REDIS_URL: str = ""
 
     GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    YOUTUBE_ANALYTICS_SCOPES: str = "https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.readonly"
 
     @field_validator("YOUTUBE_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY", "TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_BEARER_TOKEN", "TWITCH_CLIENT_ID", "TWITCH_CLIENT_SECRET", "TIKTOK_API_KEY", "INSTAGRAM_API_KEY")
     @classmethod

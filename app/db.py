@@ -16,8 +16,24 @@ from app.models import ChannelProfile, ContentResult, DashboardData, JobProgress
 logger = logging.getLogger(__name__)
 
 
-class MemoryCache:
-    """Thread-safe in-memory TTL cache layer on top of DB cache."""
+class CacheBackend:
+    """Abstract TTL cache interface. Supports memory and optional Redis backends."""
+
+    def get(self, key: str):
+        raise NotImplementedError
+
+    def set(self, key: str, value, ttl_seconds: int = 0):
+        raise NotImplementedError
+
+    def invalidate(self, key: str):
+        raise NotImplementedError
+
+    def clear(self):
+        raise NotImplementedError
+
+
+class MemoryCacheBackend(CacheBackend):
+    """Thread-safe in-memory TTL cache."""
 
     def __init__(self, default_ttl_seconds: int = 300):
         self._store: dict[str, tuple[float, object]] = {}
@@ -49,7 +65,67 @@ class MemoryCache:
             self._store.clear()
 
 
-_mem_cache = MemoryCache()
+class RedisCacheBackend(CacheBackend):
+    """Optional Redis-backed TTL cache. Falls back to memory if Redis unavailable."""
+
+    def __init__(self, redis_url: str = "", default_ttl_seconds: int = 300):
+        self._default_ttl = default_ttl_seconds
+        self._fallback = MemoryCacheBackend(default_ttl_seconds)
+        self._redis = None
+        if redis_url:
+            try:
+                import redis as _redis
+                self._redis = _redis.from_url(redis_url, decode_responses=True)
+            except Exception:
+                pass
+
+    def get(self, key: str):
+        if self._redis:
+            try:
+                val = self._redis.get(key)
+                if val is not None:
+                    import pickle
+                    return pickle.loads(val)
+            except Exception:
+                pass
+        return self._fallback.get(key)
+
+    def set(self, key: str, value, ttl_seconds: int = 0):
+        ttl = ttl_seconds or self._default_ttl
+        if self._redis:
+            try:
+                import pickle
+                self._redis.setex(key, ttl, pickle.dumps(value))
+                return
+            except Exception:
+                pass
+        self._fallback.set(key, value, ttl)
+
+    def invalidate(self, key: str):
+        if self._redis:
+            try:
+                self._redis.delete(key)
+            except Exception:
+                pass
+        self._fallback.invalidate(key)
+
+    def clear(self):
+        if self._redis:
+            try:
+                self._redis.flushdb()
+            except Exception:
+                pass
+        self._fallback.clear()
+
+
+def _create_cache():
+    backend = settings.CACHE_BACKEND or "memory"
+    if backend == "redis" and settings.REDIS_URL:
+        return RedisCacheBackend(settings.REDIS_URL)
+    return MemoryCacheBackend()
+
+
+_mem_cache = _create_cache()
 
 DB_DIR = Path("data")
 DB_PATH = DB_DIR / "cache.db"
@@ -90,6 +166,7 @@ class User(SQLModel, table=True):
     stripe_customer_id: str | None = Field(default=None)
     created_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     google_id: str | None = Field(default=None)
+    youtube_token_json: str | None = Field(default=None)
 
 
 class ApiKey(SQLModel, table=True):
@@ -299,7 +376,21 @@ def _get_engine():
 def init_db() -> None:
     DB_DIR.mkdir(parents=True, exist_ok=True)
     SQLModel.metadata.create_all(_get_engine())
+
+    # Schema migrations for new columns added after initial deploy
+    _migrate_add_column("user", "youtube_token_json", "TEXT")
+    _migrate_add_column("user", "youtube_refresh_token", "TEXT")
+
     logger.info("Database initialized")
+
+
+def _migrate_add_column(table: str, column: str, col_type: str) -> None:
+    try:
+        with Session(_get_engine()) as session:
+            session.exec(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+            session.commit()
+    except Exception:
+        pass  # Column already exists
 
 
 def reset_engine() -> None:
@@ -735,6 +826,25 @@ def mark_alerts_read(user_id: int) -> None:
             alert.read = True
             session.add(alert)
         session.commit()
+
+
+def get_youtube_token(user_id: int) -> dict | None:
+    with Session(_get_engine()) as session:
+        user = session.get(User, user_id)
+        if user and user.youtube_token_json:
+            import json
+            return json.loads(user.youtube_token_json)
+        return None
+
+
+def set_youtube_token(user_id: int, token_data: dict) -> None:
+    import json
+    with Session(_get_engine()) as session:
+        user = session.get(User, user_id)
+        if user:
+            user.youtube_token_json = json.dumps(token_data)
+            session.add(user)
+            session.commit()
 
 
 def save_competitor_alert(user_id: int, competitor_channel_id: str, alert_type: str, message: str) -> CompetitorAlert:

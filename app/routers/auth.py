@@ -158,3 +158,57 @@ def google_auth(data: GoogleAuthRequest, session: Session = Depends(get_session)
 def get_me(current_user: User = Depends(get_current_user)):
     """Get the currently authenticated user's profile."""
     return current_user
+
+
+# ── YouTube OAuth (for Editing Assistant) ─────────────────────────────
+
+@router.get("/youtube/url")
+def get_youtube_oauth_url(user: User = Depends(get_current_user)):
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=501, detail="YouTube OAuth not configured")
+    import urllib.parse
+    params = urllib.parse.urlencode({
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": f"{settings.APP_URL}/api/auth/youtube/callback",
+        "response_type": "code",
+        "scope": settings.YOUTUBE_ANALYTICS_SCOPES,
+        "access_type": "offline",
+        "state": str(user.id),
+        "prompt": "consent",
+    })
+    return {"url": f"https://accounts.google.com/o/oauth2/v2/auth?{params}"}
+
+
+class YoutubeCallbackRequest(BaseModel):
+    code: str
+    state: str = ""
+
+
+@router.post("/youtube/callback")
+def youtube_oauth_callback(data: YoutubeCallbackRequest, user: User = Depends(get_current_user)):
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=501, detail="YouTube OAuth not configured")
+    try:
+        import httpx
+        resp = httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": data.code,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": f"{settings.APP_URL}/api/auth/youtube/callback",
+                "grant_type": "authorization_code",
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=400, detail=f"Token exchange failed: {resp.text}")
+
+        token_data = resp.json()
+        from app.db import set_youtube_token
+        set_youtube_token(user.id, token_data)
+        return {"status": "connected"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"OAuth failed: {exc}")

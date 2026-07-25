@@ -8,7 +8,7 @@ import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -504,6 +504,51 @@ async def get_job_status(job_id: str, user: User = Depends(get_current_user)):
     }
 
 
+@app.websocket("/api/jobs/{job_id}/ws")
+async def job_progress_ws(websocket: WebSocket, job_id: str):
+    from app.auth import verify_token
+
+    token = websocket.query_params.get("token", "")
+    user = verify_token(token) if token else None
+    if not user:
+        await websocket.close(code=4001)
+        return
+
+    await websocket.accept()
+    try:
+        last_pct = -1
+        while True:
+            job = get_job(job_id)
+            if job is None:
+                await websocket.send_json({"error": "Job not found"})
+                break
+
+            payload = {
+                "job_id": job.job_id,
+                "status": job.status,
+                "progress_pct": job.progress_pct,
+                "step": job.step,
+                "error": job.error or None,
+            }
+            if job.progress_pct != last_pct or job.status in ("completed", "failed"):
+                await websocket.send_json(payload)
+                last_pct = job.progress_pct
+
+            if job.status in ("completed", "failed"):
+                break
+
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+
 @app.get("/api/reports")
 async def list_reports(user: User = Depends(get_current_user)):
     reports = get_user_reports(user.id)
@@ -630,7 +675,13 @@ async def serve_landing():
 
 @app.get("/app")
 async def serve_app():
-    return FileResponse(str(static_dir / "index.html"))
+    from pathlib import Path
+    html = (static_dir / "index.html").read_text(encoding="utf-8")
+    google_id = settings.GOOGLE_CLIENT_ID or ""
+    script = f'<script>window.CCR_GOOGLE_CLIENT_ID={json.dumps(google_id)};</script>'
+    html = html.replace('<script src="/static/app.js"></script>', script + '<script src="/static/app.js"></script>')
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(html)
 
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")

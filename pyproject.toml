@@ -37,6 +37,9 @@ dev = [
     "black>=24.10.0",
     "ruff>=0.7.0",
 ]
+redis = [
+    "redis>=5.0.0",
+]
 
 [build-system]
 requires = ["hatchling"]

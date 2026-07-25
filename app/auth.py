@@ -42,6 +42,22 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
+def verify_token(token: str) -> User | None:
+    """Decode a JWT token and return the user, or None on failure."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str | None = payload.get("sub")
+        if email is None:
+            return None
+        from app.db import get_session, User
+        from sqlmodel import select
+        with next(get_session()) as session:
+            user = session.exec(select(User).where(User.email == email)).first()
+            return user
+    except Exception:
+        return None
+
+
 def get_current_user(
     token: str | None = Depends(oauth2_scheme), session: Session = Depends(get_session)
 ) -> User:

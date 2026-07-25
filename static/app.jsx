@@ -130,6 +130,40 @@ function LoginPage() {
     finally { setLoading(false); }
   };
 
+  const handleGoogleSignIn = () => {
+    if (typeof google === 'undefined' || !google.accounts) {
+      setErr('Google Sign-In is not available. Try email login instead.');
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: window.CCR_GOOGLE_CLIENT_ID || '',
+      callback: async (response) => {
+        setLoading(true); setErr('');
+        try {
+          const res = await api('/api/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ id_token: response.credential }),
+          });
+          if (!res) return;
+          const d = await res.json();
+          if (res.ok) login(d.access_token, d.user);
+          else setErr(d.detail || 'Google sign-in failed');
+        } catch { setErr('Network error'); }
+        finally { setLoading(false); }
+      },
+    });
+    google.accounts.id.prompt();
+  };
+
+  React.useEffect(() => {
+    if (!window.CCR_GOOGLE_CLIENT_ID) return;
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true; s.defer = true;
+    document.body.appendChild(s);
+    return () => { try { document.body.removeChild(s); } catch {} };
+  }, []);
+
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('form', { onSubmit: handleSubmit, className: 'auth-card' },
       React.createElement('h1', null, 'Creator Content Radar'),
@@ -146,6 +180,22 @@ function LoginPage() {
       React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center' }, disabled: loading },
         loading ? 'Signing in...' : 'Sign In',
       ),
+      window.CCR_GOOGLE_CLIENT_ID ? React.createElement('div', { style: { marginTop: 16, textAlign: 'center' } },
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 } },
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+          React.createElement('span', { style: { fontSize: '.8rem', color: 'var(--text3)' } }, 'or'),
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+        ),
+        React.createElement('button', { type: 'button', className: 'btn btn-ghost', style: { width: '100%', justifyContent: 'center', gap: 8 }, onClick: handleGoogleSignIn, disabled: loading },
+          React.createElement('svg', { width: 18, height: 18, viewBox: '0 0 48 48' },
+            React.createElement('path', { fill: '#EA4335', d: 'M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' }),
+            React.createElement('path', { fill: '#4285F4', d: 'M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' }),
+            React.createElement('path', { fill: '#FBBC05', d: 'M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z' }),
+            React.createElement('path', { fill: '#34A853', d: 'M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z' }),
+          ),
+          'Sign in with Google',
+        ),
+      ) : null,
       React.createElement('p', { style: { textAlign: 'center', marginTop: 16, fontSize: '.85rem', color: 'var(--text3)' } },
         "Don't have an account? ",
         React.createElement('a', { href: '#register', style: { color: 'var(--accent)', textDecoration: 'none' } }, 'Register'),
@@ -400,22 +450,45 @@ function AnalyzePage() {
     finally { setLoading(false); }
   };
 
+  const wsRef = useRef(null);
   const pollJob = (jobId) => {
+    if (wsRef.current) { try { wsRef.current.close(); } catch {} }
     if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(async () => {
-      try {
-        const res = await api(`/api/jobs/${jobId}`);
-        if (!res) { clearInterval(intervalRef.current); return; }
-        const j = await res.json();
+    const token = localStorage.getItem('ccr_token');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/api/jobs/${jobId}/ws?token=${token}`;
+    let usePolling = true;
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      ws.onmessage = (ev) => {
+        usePolling = false;
+        const j = JSON.parse(ev.data);
         setJob(j);
-        if (j.status === 'completed' || j.status === 'failed') {
-          clearInterval(intervalRef.current);
-        }
-      } catch { /* ignore */ }
-    }, 2000);
+        if (j.status === 'completed' || j.status === 'failed') ws.close();
+      };
+      ws.onopen = () => { usePolling = false; };
+      ws.onerror = () => { usePolling = false; startPolling(jobId); };
+    } catch { startPolling(jobId); }
+    function startPolling(jid) {
+      intervalRef.current = setInterval(async () => {
+        try {
+          const res = await api(`/api/jobs/${jid}`);
+          if (!res) { clearInterval(intervalRef.current); return; }
+          const j = await res.json();
+          setJob(j);
+          if (j.status === 'completed' || j.status === 'failed') clearInterval(intervalRef.current);
+        } catch { /* ignore */ }
+      }, 2000);
+    }
   };
 
-  useEffect(() => { return () => { if (intervalRef.current) clearInterval(intervalRef.current); }; }, []);
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (wsRef.current) try { wsRef.current.close(); } catch {}
+    };
+  }, []);
 
   const steps = [
     { pct: 5, label: 'Queued...' },
@@ -1895,6 +1968,96 @@ function AgentPage() {
   );
 }
 
+// ── Editing Assistant ─────────────────────────────────────────────────
+function EditingPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const load = async () => {
+    setLoading(true); setErr(''); setData(null);
+    try {
+      const res = await api('/api/editing/analyze', { method: 'POST', body: JSON.stringify({}) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => { load(); }, []);
+
+  const gradeColor = (g) => g === 'A' ? 'var(--success)' : g === 'B' ? 'var(--accent)' : g === 'C' ? 'var(--warning)' : 'var(--error)';
+
+  return React.createElement('div', null,
+    React.createElement('h1', null, '\uD83D\uDD79\uFE0F Editing Assistant'),
+    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+      'Analyze your video performance and get AI-powered editing recommendations'),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    data?.needs_auth ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 40 } },
+      React.createElement('div', { style: { fontSize: '3rem', marginBottom: 12 } }, '\uD83D\uDD17'),
+      React.createElement('h3', null, 'Connect YouTube Account'),
+      React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16, fontSize: '.88rem' } },
+        data.message || 'Connect your YouTube account to access video analytics and editing insights'),
+      React.createElement('button', { className: 'btn btn-primary', onClick: async () => {
+        try {
+          const res = await api('/api/auth/youtube/url');
+          if (!res) return;
+          const d = await res.json();
+          if (d.url) window.location.href = d.url;
+          else setErr('Failed to get OAuth URL');
+        } catch { setErr('Network error'); }
+      } }, 'Connect YouTube'),
+    ) : data ? React.createElement('div', null,
+      React.createElement('div', { className: 'stats' },
+        React.createElement('div', { className: 'stat' },
+          React.createElement('div', { className: 'label' }, 'Retention Rate'),
+          React.createElement('div', { className: 'value' }, `${data.avg_retention_pct?.toFixed(1) || '-'}%`),
+          React.createElement('div', { className: 'change', style: { color: gradeColor(data.retention_grade), fontWeight: 700, fontSize: '1.2rem' } }, `Grade: ${data.retention_grade || '-'}`),
+        ),
+        React.createElement('div', { className: 'stat' },
+          React.createElement('div', { className: 'label' }, 'Views (7 days)'),
+          React.createElement('div', { className: 'value' }, fmtNum(data.total_views_7d)),
+        ),
+      ),
+      data.editing_tips?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(62,166,255,.15)' } }, '\u2702\uFE0F'),
+          React.createElement('h3', null, 'Editing Tips'),
+        ),
+        data.editing_tips.map((tip, i) =>
+          React.createElement('div', { key: i, style: { padding: '8px 0', fontSize: '.88rem', borderBottom: i < data.editing_tips.length - 1 ? '1px solid var(--border)' : 'none' } },
+            `${i + 1}. ${tip}`),
+        ),
+      ) : null,
+      data.pacing_advice ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(255,167,60,.15)' } }, '\u23F1\uFE0F'),
+          React.createElement('h3', null, 'Pacing Advice'),
+        ),
+        React.createElement('p', { style: { color: 'var(--text2)', fontSize: '.88rem', lineHeight: 1.6 } }, data.pacing_advice),
+      ) : null,
+      data.hook_suggestion ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(43,166,64,.15)' } }, '\uD83C\uDFA3'),
+          React.createElement('h3', null, 'Hook Suggestion'),
+        ),
+        React.createElement('p', { style: { color: 'var(--text2)', fontSize: '.88rem', lineHeight: 1.6 } }, data.hook_suggestion),
+      ) : null,
+      data.recommendation ? React.createElement('div', { className: 'insight' },
+        React.createElement('h3', null, '\uD83D\uDCCC Recommendation'),
+        React.createElement('p', null, data.recommendation),
+      ) : null,
+    ) : !loading ? React.createElement('div', { className: 'empty-state' },
+      React.createElement('div', { className: 'emoji' }, '\uD83D\uDD79\uFE0F'),
+      React.createElement('p', null, 'Connect your YouTube account to get started.'),
+    ) : null,
+  );
+}
+
 // ── Onboarding Flow ───────────────────────────────────────────────────
 function OnboardingPage() {
   const { api } = useAuth();
@@ -1973,6 +2136,7 @@ function AppShell({ page, setPage }) {
     { id: 'comments', label: 'Comments', icon: '\uD83D\uDCAC', section: 'Content' },
     { id: 'publishing', label: 'Publishing', icon: '\uD83D\uDCE4', section: 'Content' },
     { id: 'algo-shift', label: 'Algo Shifts', icon: '\uD83D\uDCC8', section: 'Content' },
+    { id: 'editing', label: 'Editing Coach', icon: '\uD83D\uDD79', section: 'Content' },
     { id: 'agent', label: 'Growth Agent', icon: '\uD83E\uDD16', section: 'Content' },
     { id: 'reports', label: 'Reports & Export', icon: '\uD83D\uDCC4', section: 'Content' },
     { id: 'saved-ideas', label: 'Saved Ideas', icon: '\uD83D\uDCBE', section: 'Content' },
@@ -1999,6 +2163,7 @@ function AppShell({ page, setPage }) {
       case 'comments': return React.createElement(CommentsPage);
       case 'publishing': return React.createElement(PublishingPage);
       case 'algo-shift': return React.createElement(AlgoShiftPage);
+      case 'editing': return React.createElement(EditingPage);
       case 'agent': return React.createElement(AgentPage);
       case 'pricing': return React.createElement(PricingPage);
       case 'billing': return React.createElement(BillingPage);
@@ -2066,7 +2231,7 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const hash = window.location.hash.replace('#', '') || 'dashboard';
-      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'comments', 'publishing', 'algo-shift', 'agent', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
+      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'comments', 'publishing', 'algo-shift', 'editing', 'agent', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
       if (valid.includes(hash)) setPage(hash);
     };
     window.addEventListener('hashchange', onHash);

@@ -1013,3 +1013,128 @@ def onboarding_status(user: User = Depends(get_current_user)):
         "has_analysis": has_analysis,
         "step": "done" if has_analysis else ("channel" if has_channel else "welcome"),
     }
+
+
+# ── Editing Assistant (YouTube Analytics) ──────────────────────────────
+
+class EditingRequest(BaseModel):
+    channel_id: str = ""
+
+
+@router.post("/editing/analyze")
+async def editing_analyze(data: EditingRequest, user: User = Depends(get_current_user)):
+    import json
+    from app.db import get_youtube_token, get_cached_channel_profile
+    from app.ai_provider import generate_ai_response
+
+    token_data = get_youtube_token(user.id)
+    if not token_data:
+        return {
+            "needs_auth": True,
+            "auth_url": f"/api/auth/youtube/url",
+            "message": "Connect your YouTube account to get editing insights",
+        }
+
+    access_token = token_data.get("access_token", "")
+    if not access_token:
+        return {"needs_auth": True, "message": "Token expired. Reconnect your YouTube account."}
+
+    cid = data.channel_id or (get_user_channels(user.id)[0].channel_id if get_user_channels(user.id) else "")
+    profile = get_cached_channel_profile(cid) if cid else None
+    niche = profile.niche if profile else "content creation"
+
+    try:
+        import httpx
+        now = datetime.now(timezone.utc)
+        start_date = (now - _td(days=30)).strftime("%Y-%m-%d")
+        end_date = now.strftime("%Y-%m-%d")
+
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        ana_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained",
+                "dimensions": "day",
+                "maxResults": 30,
+            },
+            headers=headers,
+            timeout=15,
+        )
+
+        video_resp = httpx.get(
+            "https://www.googleapis.com/youtube/v3/search",
+            params={
+                "part": "snippet",
+                "forMine": "true",
+                "type": "video",
+                "order": "date",
+                "maxResults": 10,
+            },
+            headers=headers,
+            timeout=15,
+        )
+
+        analytics_data = ana_resp.json() if ana_resp.status_code == 200 else {}
+        videos_data = video_resp.json() if video_resp.status_code == 200 else {}
+
+        rows = analytics_data.get("rows", [])
+        avg_retention = 0
+        total_views = 0
+        if rows:
+            for r in rows[-7:]:
+                if len(r) >= 5:
+                    total_views += r[1] or 0
+            retention_rows = [r for r in rows if len(r) >= 4 and r[3]]
+            if retention_rows:
+                avg_retention = sum(r[3] for r in retention_rows) / len(retention_rows)
+
+        top_videos = []
+        for item in videos_data.get("items", [])[:5]:
+            top_videos.append(item["snippet"]["title"])
+
+        prompt = f"""You are a YouTube editing coach. Channel niche: {niche}.
+Analytics (last 7 days): avg_view_retention={avg_retention:.1f}%, total_views={total_views}.
+Recent videos: {json.dumps(top_videos)}.
+
+Return STRICT JSON:
+{{
+  "avg_retention_pct": {avg_retention:.1f},
+  "total_views_7d": {total_views},
+  "retention_grade": "A|B|C|D",
+  "editing_tips": ["tip1", "tip2", "tip3"],
+  "pacing_advice": "string",
+  "hook_suggestion": "string",
+  "recommendation": "string"
+}}"""
+
+        try:
+            ai_result = json.loads(await asyncio.to_thread(
+                generate_ai_response, prompt, response_format="json_object",
+            ))
+        except Exception:
+            ai_result = {}
+
+        return {
+            "needs_auth": False,
+            "avg_retention_pct": ai_result.get("avg_retention_pct", avg_retention),
+            "total_views_7d": ai_result.get("total_views_7d", total_views),
+            "retention_grade": ai_result.get("retention_grade", "B"),
+            "editing_tips": ai_result.get("editing_tips", [
+                "Cut intro length to under 5 seconds",
+                "Use pattern interrupts every 60-90 seconds",
+                "Add captions for the first 30 seconds",
+            ]),
+            "pacing_advice": ai_result.get("pacing_advice",
+                "Your audience drops off around the 2-minute mark. Try shorter, punchier edits."),
+            "hook_suggestion": ai_result.get("hook_suggestion",
+                "Start with the most interesting moment and re-contextualize."),
+            "recommendation": ai_result.get("recommendation",
+                "Focus on improving retention in the first 30 seconds."),
+        }
+
+    except Exception as exc:
+        return {"needs_auth": True, "message": f"YouTube Analytics API error: {exc}. Reconnect your account."}
