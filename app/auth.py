@@ -1,25 +1,37 @@
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlmodel import Session, select
 
 from app.config import settings
 from app.db import User, get_session
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def hash_password(password: str) -> str:
-    """Hash a password using bcrypt (max 72 bytes)."""
-    return pwd_context.hash(password.encode()[:72].decode(errors="ignore"))
+    """Hash a password using PBKDF2-SHA256 (no bcrypt dependency issues)."""
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+    return f"pbkdf2:sha256:100000:{salt}:{dk.hex()}"
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain password against a hash (max 72 bytes)."""
-    return pwd_context.verify(plain.encode()[:72].decode(errors="ignore"), hashed)
+    """Verify a password against a PBKDF2-SHA256 hash."""
+    try:
+        parts = hashed.split(":")
+        if len(parts) != 5 or parts[0] != "pbkdf2" or parts[1] != "sha256":
+            return False
+        iterations = int(parts[2])
+        salt = parts[3]
+        expected = parts[4]
+        dk = hashlib.pbkdf2_hmac("sha256", plain.encode(), salt.encode(), iterations)
+        return dk.hex() == expected
+    except (ValueError, IndexError):
+        return False
 
 
 def create_access_token(data: dict) -> str:
