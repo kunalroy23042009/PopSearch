@@ -75,6 +75,14 @@ settings = Settings()
 
 _critical_missing = settings.validate_critical_keys()
 if _critical_missing:
+    import os
+    in_test = bool(os.getenv("PYTEST_VERSION")) or bool(os.getenv("CCR_TEST_MODE"))
+    secret_missing = any("SECRET_KEY" in m for m in _critical_missing)
+    if secret_missing and not in_test:
+        raise RuntimeError(
+            "Server cannot start: SECRET_KEY must be set to a strong random value in .env. "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
     import logging
     logging.warning(
         "Critical environment variables missing: %s. "

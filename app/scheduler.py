@@ -4,6 +4,8 @@ import json
 import logging
 from datetime import datetime, timezone
 
+from sqlmodel import Session, select
+
 from app import db
 from app.config import settings
 
@@ -14,10 +16,8 @@ async def run_daily_snapshots() -> None:
     logger.info("Running daily channel snapshots...")
 
     channels = []
-    with db.Session(db._get_engine()) as session:
-        statement = db.select(db.Channel).where(
-            db.Channel.analyzed_at >= datetime.now(timezone.utc)
-        )
+    with Session(db._get_engine()) as session:
+        statement = select(db.Channel)
         channels = list(session.exec(statement).all())[:50]
 
     for channel in channels:
@@ -44,8 +44,8 @@ async def run_weekly_email_reports() -> None:
         return
 
     users = []
-    with db.Session(db._get_engine()) as session:
-        statement = db.select(db.User).where(db.User.plan.in_(["pro", "business"]))
+    with Session(db._get_engine()) as session:
+        statement = select(db.User).where(db.User.plan.in_(["pro", "business"]))
         users = list(session.exec(statement).all())
 
     for user in users:

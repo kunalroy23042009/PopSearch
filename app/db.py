@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select, text
 
 from app.config import settings
 from app.models import ChannelProfile, ContentResult, DashboardData, JobProgress, SavedReport, TopicInsight
@@ -117,7 +117,7 @@ def _get_engine():
                 from sqlalchemy import create_engine as _ce
                 test_engine = _ce(db_url, pool_pre_ping=True)
                 with test_engine.connect() as conn:
-                    conn.execute(test_engine.dialect.statement_compiler(test_engine.dialect, None).__class__.__module__ and True)
+                    conn.execute(text("SELECT 1"))
                 _engine = test_engine
                 logger.info("Using PostgreSQL")
             except Exception as pg_exc:

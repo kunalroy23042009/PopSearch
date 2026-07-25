@@ -78,8 +78,16 @@ def submit_analysis(
     user_id: int = 0,
 ) -> str:
     job = db.create_job(user_id)
-    import asyncio
-    asyncio.create_task(run_analysis_job(job.job_id, channel_url, topic, user_id))
+    try:
+        import asyncio
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(run_analysis_job(job.job_id, channel_url, topic, user_id))
+        else:
+            loop.run_until_complete(run_analysis_job(job.job_id, channel_url, topic, user_id))
+    except RuntimeError:
+        import asyncio
+        asyncio.run(run_analysis_job(job.job_id, channel_url, topic, user_id))
     return job.job_id
 
 
