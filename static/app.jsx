@@ -111,12 +111,40 @@ function ContentItem({ item }) {
 }
 
 // ── Auth Pages ─────────────────────────────────────────────────────────
+function GoogleBtn({ onClick, label, loading }) {
+  const [hover, setHover] = useState(false);
+  return React.createElement('button', {
+    type: 'button',
+    onClick,
+    disabled: loading,
+    onMouseEnter: () => setHover(true),
+    onMouseLeave: () => setHover(false),
+    style: {
+      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 10, padding: '11px 20px', borderRadius: 'var(--radius)',
+      border: '1px solid var(--border)', background: hover ? 'var(--bg3)' : 'var(--bg2)',
+      color: 'var(--text)', cursor: loading ? 'not-allowed' : 'pointer',
+      fontFamily: 'inherit', fontSize: '.88rem', fontWeight: 600,
+      transition: 'all .2s', opacity: loading ? .6 : 1,
+    },
+  },
+    React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 48 48' },
+      React.createElement('path', { fill: '#EA4335', d: 'M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' }),
+      React.createElement('path', { fill: '#4285F4', d: 'M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' }),
+      React.createElement('path', { fill: '#FBBC05', d: 'M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z' }),
+      React.createElement('path', { fill: '#34A853', d: 'M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z' }),
+    ),
+    loading ? 'Please wait...' : label,
+  );
+}
+
 function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
@@ -137,10 +165,10 @@ function LoginPage() {
       setErr('Google Sign-In is not available. Try email login instead.');
       return;
     }
+    setGLoading(true); setErr('');
     google.accounts.id.initialize({
       client_id: window.CCR_GOOGLE_CLIENT_ID || '',
       callback: async (response) => {
-        setLoading(true); setErr('');
         try {
           const res = await fetch('/api/auth/google', {
             method: 'POST',
@@ -149,9 +177,8 @@ function LoginPage() {
           });
           const d = await res.json();
           if (res.ok) login(d.access_token, d.user);
-          else setErr(d.detail || 'Google sign-in failed');
-        } catch { setErr('Network error'); }
-        finally { setLoading(false); }
+          else { setErr(d.detail || 'Google sign-in failed'); setGLoading(false); }
+        } catch { setErr('Network error'); setGLoading(false); }
       },
     });
     google.accounts.id.prompt();
@@ -167,43 +194,42 @@ function LoginPage() {
   }, []);
 
   return React.createElement('div', { className: 'auth-page' },
-    React.createElement('form', { onSubmit: handleSubmit, className: 'auth-card' },
-      React.createElement('h1', null, 'Creator Content Radar'),
-      React.createElement('p', { className: 'subtitle' }, 'Sign in to your account'),
-      err ? React.createElement('div', { className: 'error' }, err) : null,
-      React.createElement('div', { className: 'form-group' },
-        React.createElement('label', null, 'Email'),
-        React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
-      ),
-      React.createElement('div', { className: 'form-group' },
-        React.createElement('label', null, 'Password'),
-        React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', required: true }),
-      ),
-      React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center' }, disabled: loading },
-        loading ? 'Signing in...' : 'Sign In',
-      ),
-      window.CCR_GOOGLE_CLIENT_ID ? React.createElement('div', { style: { marginTop: 16, textAlign: 'center' } },
-        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 } },
-          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
-          React.createElement('span', { style: { fontSize: '.8rem', color: 'var(--text3)' } }, 'or'),
-          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
-        ),
-        React.createElement('button', { type: 'button', className: 'btn btn-ghost', style: { width: '100%', justifyContent: 'center', gap: 8 }, onClick: handleGoogleSignIn, disabled: loading },
-          React.createElement('svg', { width: 18, height: 18, viewBox: '0 0 48 48' },
-            React.createElement('path', { fill: '#EA4335', d: 'M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' }),
-            React.createElement('path', { fill: '#4285F4', d: 'M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' }),
-            React.createElement('path', { fill: '#FBBC05', d: 'M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z' }),
-            React.createElement('path', { fill: '#34A853', d: 'M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z' }),
+    React.createElement('div', { className: 'auth-card' },
+      React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
+        React.createElement('div', { style: { width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,68,68,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '1.5rem' } },
+          React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--primary)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            React.createElement('circle', { cx: 12, cy: 12, r: 10 }),
+            React.createElement('path', { d: 'M12 6v6l4 2' }),
           ),
-          'Sign in with Google',
+        ),
+        React.createElement('h1', { style: { fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 } }, 'Welcome back'),
+        React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem' } }, 'Sign in to Creator Content Radar'),
+      ),
+      err ? React.createElement('div', { className: 'error', style: { marginBottom: 16 } }, err) : null,
+      window.CCR_GOOGLE_CLIENT_ID ? React.createElement(React.Fragment, null,
+        React.createElement(GoogleBtn, { onClick: handleGoogleSignIn, label: 'Continue with Google', loading: gLoading }),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' } },
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+          React.createElement('span', { style: { fontSize: '.78rem', color: 'var(--text3)' } }, 'or sign in with email'),
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
         ),
       ) : null,
-      React.createElement('p', { style: { textAlign: 'center', marginTop: 16, fontSize: '.85rem', color: 'var(--text3)' } },
-        "Don't have an account? ",
-        React.createElement('a', { href: '#register', style: { color: 'var(--accent)', textDecoration: 'none' } }, 'Register'),
+      React.createElement('form', { onSubmit: handleSubmit },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Email'),
+          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
+        ),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Password'),
+          React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', required: true }),
+        ),
+        React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center', marginTop: 4 }, disabled: loading },
+          loading ? 'Signing in...' : 'Sign In',
+        ),
       ),
-      React.createElement('p', { style: { textAlign: 'center', marginTop: 12, fontSize: '.85rem', color: 'var(--text3)' } },
-        React.createElement('a', { href: '#pricing', style: { color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 } }, 'View Pricing & Plans'),
+      React.createElement('p', { style: { textAlign: 'center', marginTop: 20, fontSize: '.85rem', color: 'var(--text3)' } },
+        "Don't have an account? ",
+        React.createElement('a', { href: '#register', style: { color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 } }, 'Create one'),
       ),
     ),
   );
@@ -215,6 +241,7 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
@@ -230,25 +257,79 @@ function RegisterPage() {
     } catch (ex) { setErr('Network error — check console'); console.error(ex); setLoading(false); }
   };
 
+  const handleGoogleSignUp = () => {
+    if (typeof google === 'undefined' || !google.accounts) {
+      setErr('Google Sign-In is not available. Try email instead.');
+      return;
+    }
+    setGLoading(true); setErr('');
+    google.accounts.id.initialize({
+      client_id: window.CCR_GOOGLE_CLIENT_ID || '',
+      callback: async (response) => {
+        try {
+          const res = await fetch('/api/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token: response.credential }),
+          });
+          const d = await res.json();
+          if (res.ok) login(d.access_token, d.user);
+          else { setErr(d.detail || 'Google sign-up failed'); setGLoading(false); }
+        } catch { setErr('Network error'); setGLoading(false); }
+      },
+    });
+    google.accounts.id.prompt();
+  };
+
+  React.useEffect(() => {
+    if (!window.CCR_GOOGLE_CLIENT_ID) return;
+    if (!document.querySelector('script[src*="gsi/client"]')) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true;
+      document.body.appendChild(s);
+    }
+  }, []);
+
   return React.createElement('div', { className: 'auth-page' },
-    React.createElement('form', { onSubmit: handleSubmit, className: 'auth-card' },
-      React.createElement('h1', null, 'Create Account'),
-      React.createElement('p', { className: 'subtitle' }, 'Join Creator Content Radar'),
-      err ? React.createElement('div', { className: 'error' }, err) : null,
-      React.createElement('div', { className: 'form-group' },
-        React.createElement('label', null, 'Email'),
-        React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
+    React.createElement('div', { className: 'auth-card' },
+      React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
+        React.createElement('div', { style: { width: 48, height: 48, borderRadius: '50%', background: 'rgba(62,166,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '1.5rem' } },
+          React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--accent)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            React.createElement('path', { d: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+            React.createElement('circle', { cx: 8.5, cy: 7, r: 4 }),
+            React.createElement('line', { x1: 20, y1: 8, x2: 20, y2: 14 }),
+            React.createElement('line', { x1: 23, y1: 11, x2: 17, y2: 11 }),
+          ),
+        ),
+        React.createElement('h1', { style: { fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 } }, 'Create your account'),
+        React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem' } }, 'Join Creator Content Radar for free'),
       ),
-      React.createElement('div', { className: 'form-group' },
-        React.createElement('label', null, 'Password'),
-        React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: 'Minimum 8 characters', required: true, minLength: 8 }),
+      err ? React.createElement('div', { className: 'error', style: { marginBottom: 16 } }, err) : null,
+      window.CCR_GOOGLE_CLIENT_ID ? React.createElement(React.Fragment, null,
+        React.createElement(GoogleBtn, { onClick: handleGoogleSignUp, label: 'Sign up with Google', loading: gLoading }),
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' } },
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+          React.createElement('span', { style: { fontSize: '.78rem', color: 'var(--text3)' } }, 'or register with email'),
+          React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+        ),
+      ) : null,
+      React.createElement('form', { onSubmit: handleSubmit },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Email'),
+          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
+        ),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Password'),
+          React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: 'Minimum 8 characters', required: true, minLength: 8 }),
+        ),
+        React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center', marginTop: 4 }, disabled: loading },
+          loading ? 'Creating account...' : 'Create Account',
+        ),
       ),
-      React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center' }, disabled: loading },
-        loading ? 'Creating account...' : 'Create Account',
-      ),
-      React.createElement('p', { style: { textAlign: 'center', marginTop: 16, fontSize: '.85rem', color: 'var(--text3)' } },
+      React.createElement('p', { style: { textAlign: 'center', marginTop: 20, fontSize: '.85rem', color: 'var(--text3)' } },
         'Already have an account? ',
-        React.createElement('a', { href: '#login', style: { color: 'var(--accent)', textDecoration: 'none' } }, 'Sign In'),
+        React.createElement('a', { href: '#login', style: { color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 } }, 'Sign in'),
       ),
     ),
   );
