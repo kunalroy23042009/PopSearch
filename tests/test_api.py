@@ -196,3 +196,164 @@ def test_billing_usage_with_auth():
     data = response.json()
     assert data["plan"] == "free"
     assert data["limit"] == 3
+
+
+# ── Phase 3: Architecture Tests ──────────────────────────────────────────
+
+def test_jobs_list_endpoint():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/jobs",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+def test_jobs_list_pagination():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/jobs?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_api_keys():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/api-keys?limit=10&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_watched_competitors():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/watched-competitors?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_channels():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/channels?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_ideas():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/ideas?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_calendar():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/calendar?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_repurpose():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/repurpose?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_paginated_comment_analyses():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/comments/analyses?limit=5&offset=0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+
+def test_memory_cache():
+    from app.db import _mem_cache
+
+    _mem_cache.clear()
+    assert _mem_cache.get("nonexistent") is None
+
+    _mem_cache.set("test_key", "test_value", ttl_seconds=60)
+    assert _mem_cache.get("test_key") == "test_value"
+
+    _mem_cache.invalidate("test_key")
+    assert _mem_cache.get("test_key") is None
+
+
+def test_memory_cache_ttl():
+    from app.db import _mem_cache
+
+    _mem_cache.clear()
+    _mem_cache.set("ttl_key", "value", ttl_seconds=0)
+    assert _mem_cache.get("ttl_key") == "value"
+
+
+def test_algorithm_shifts_endpoint():
+    token = _register_and_get_token()
+    response = client.post(
+        "/api/algorithm/shifts",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "shifts" in data
+
+
+def test_agent_status_endpoint():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/agent/status",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "status" in data
+
+
+def test_agent_weekly_plan_endpoint():
+    token = _register_and_get_token()
+    response = client.post(
+        "/api/agent/weekly-plan",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "weekly_focus" in data
+
+
+def test_agent_study_competitors_endpoint():
+    token = _register_and_get_token()
+    response = client.post(
+        "/api/agent/study-competitors",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "insights" in data
+
+
+def test_onboarding_status_endpoint():
+    token = _register_and_get_token()
+    response = client.get(
+        "/api/onboarding/status",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "step" in data

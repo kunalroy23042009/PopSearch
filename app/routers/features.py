@@ -22,6 +22,7 @@ from app.db import (
     save_repurpose_task, get_repurpose_tasks,
     save_seo_scorecard, get_seo_scorecard,
     save_comment_analysis, get_comment_analysis, list_comment_analyses,
+    get_channel_history, save_competitor_alert, CompetitorAlert,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,9 +52,9 @@ class ApiKeyCreate(BaseModel):
 
 
 @router.get("/api-keys")
-def list_api_keys(user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+def list_api_keys(limit: int = 50, offset: int = 0, user: User = Depends(get_current_user), session: Session = Depends(get_session)):
     from sqlmodel import select
-    keys = session.exec(select(ApiKey).where(ApiKey.user_id == user.id)).all()
+    keys = session.exec(select(ApiKey).where(ApiKey.user_id == user.id).offset(offset).limit(limit)).all()
     return [{"id": k.id, "label": k.label, "created_date": k.created_date.isoformat(), "key": f"ccr_{k.id}_..._hidden"} for k in keys]
 
 
@@ -107,9 +108,10 @@ class WatchRequest(BaseModel):
 
 
 @router.get("/watched-competitors")
-def list_watched(user: User = Depends(get_current_user)):
+def list_watched(limit: int = 50, offset: int = 0, user: User = Depends(get_current_user)):
     watched = get_watched_competitors(user.id)
-    return [{"id": w.id, "channel_id": w.channel_id, "channel_title": w.channel_title, "subscriber_count": w.subscriber_count, "added_at": w.added_at.isoformat()} for w in watched]
+    page = watched[offset:offset + limit]
+    return [{"id": w.id, "channel_id": w.channel_id, "channel_title": w.channel_title, "subscriber_count": w.subscriber_count, "added_at": w.added_at.isoformat()} for w in page]
 
 
 @router.post("/watched-competitors")
@@ -146,9 +148,10 @@ class UserChannelRequest(BaseModel):
 
 
 @router.get("/channels")
-def list_channels(user: User = Depends(get_current_user)):
+def list_channels(limit: int = 50, offset: int = 0, user: User = Depends(get_current_user)):
     channels = get_user_channels(user.id)
-    return [{"id": c.id, "channel_id": c.channel_id, "channel_title": c.channel_title, "channel_url": c.channel_url, "is_primary": c.is_primary, "added_at": c.added_at.isoformat()} for c in channels]
+    page = channels[offset:offset + limit]
+    return [{"id": c.id, "channel_id": c.channel_id, "channel_title": c.channel_title, "channel_url": c.channel_url, "is_primary": c.is_primary, "added_at": c.added_at.isoformat()} for c in page]
 
 
 @router.post("/channels")
@@ -281,8 +284,9 @@ def save_idea(data: dict, user: User = Depends(get_current_user)):
 
 
 @router.get("/ideas")
-def list_ideas(saved_only: bool = False, user: User = Depends(get_current_user)):
+def list_ideas(saved_only: bool = False, limit: int = 50, offset: int = 0, user: User = Depends(get_current_user)):
     ideas = get_content_ideas(user.id, saved_only=saved_only)
+    ideas = ideas[offset:offset + limit]
     result = []
     for i in ideas:
         result.append({
@@ -310,9 +314,10 @@ def delete_idea(idea_id: int, user: User = Depends(get_current_user)):
 # ── Calendar Events ────────────────────────────────────────────────────
 
 @router.get("/calendar")
-def list_events(month: str = "", user: User = Depends(get_current_user)):
+def list_events(month: str = "", limit: int = 50, offset: int = 0, user: User = Depends(get_current_user)):
     events = get_calendar_events(user.id, month=month)
-    return [{"id": e.id, "title": e.title, "description": e.description, "event_date": e.event_date, "event_time": e.event_time, "event_type": e.event_type, "related_channel_id": e.related_channel_id, "google_event_id": e.google_event_id} for e in events]
+    page = events[offset:offset + limit]
+    return [{"id": e.id, "title": e.title, "description": e.description, "event_date": e.event_date, "event_time": e.event_time, "event_type": e.event_type, "related_channel_id": e.related_channel_id, "google_event_id": e.google_event_id} for e in page]
 
 
 @router.post("/calendar")
@@ -361,8 +366,9 @@ def repurpose_content(data: RepurposeRequest, user: User = Depends(get_current_u
 
 
 @router.get("/repurpose")
-def list_repurpose(user: User = Depends(get_current_user)):
+def list_repurpose(limit: int = 50, offset: int = 0, user: User = Depends(get_current_user)):
     tasks = get_repurpose_tasks(user.id)
+    tasks = tasks[offset:offset + limit]
     result = []
     for t in tasks:
         result.append({
@@ -643,9 +649,10 @@ def _fallback_comment_analysis(comments: list, video_id: str, video_title: str) 
 
 
 @router.get("/comments/analyses")
-def list_comment_analyses_endpoint(user: User = Depends(get_current_user)):
+def list_comment_analyses_endpoint(limit: int = 20, offset: int = 0, user: User = Depends(get_current_user)):
     import json
     analyses = list_comment_analyses(user.id)
+    analyses = analyses[offset:offset + limit]
     return [
         {
             "video_id": a.video_id,
@@ -725,21 +732,257 @@ Return STRICT JSON:
     }
 
 
-# ── Trend Alerts ───────────────────────────────────────────────────────
+# ── Algorithm Shift Tracker ────────────────────────────────────────────
 
-@router.post("/trend-alerts/check")
-def check_trends(user: User = Depends(get_current_user)):
+from datetime import timedelta as _td
+
+
+@router.post("/algorithm/shifts")
+async def detect_shifts(user: User = Depends(get_current_user)):
+    import asyncio
+    import json
+    import random
+    from app.db import get_cached_channel_profile
+
     channels = get_user_channels(user.id)
-    topics = [c.channel_title for c in channels if c.channel_title] or ["content creation"]
-    alerts = []
-    for topic in topics[:3]:
-        alerts.append({
-            "topic": topic,
-            "message": f'\U0001f525 "{topic}" is showing strong engagement on Reddit — consider creating content around this',
-            "platform": "reddit",
-            "strength": "high",
+    results = []
+    all_alerts = []
+    now = datetime.now(timezone.utc)
+
+    for ch in channels[:5]:
+        history = get_channel_history(ch.channel_id, days=90)
+        if len(history) < 3:
+            continue
+
+        profile = get_cached_channel_profile(ch.channel_id)
+        recent30 = [s for s in history if s.snapshot_date > now - _td(days=30)]
+        prev30 = [s for s in history if _td(days=60) >= (now - s.snapshot_date) > _td(days=30)]
+
+        def _avg(lst, attr):
+            vals = [getattr(s, attr) for s in lst]
+            return sum(vals) / len(vals) if vals else 0
+
+        cur_subs = _avg(recent30, "subscriber_count") if recent30 else 0
+        prev_subs = _avg(prev30, "subscriber_count") if prev30 else 0
+        cur_views = _avg(recent30, "view_count") if recent30 else 0
+        prev_views = _avg(prev30, "view_count") if prev30 else 0
+        cur_eng = _avg(recent30, "engagement_rate") if recent30 else 0
+        prev_eng = _avg(prev30, "engagement_rate") if prev30 else 0
+
+        subs_change = ((cur_subs - prev_subs) / prev_subs * 100) if prev_subs else 0
+        views_change = ((cur_views - prev_views) / prev_views * 100) if prev_views else 0
+        eng_change = cur_eng - prev_eng
+
+        anomalies = []
+        if subs_change < -3:
+            anomalies.append(f"Subscriber growth dropped {abs(subs_change):.1f}% month-over-month")
+        if views_change < -10:
+            anomalies.append(f"View velocity dropped {abs(views_change):.1f}% — possible algorithm shift")
+        if eng_change < -0.5:
+            anomalies.append(f"Engagement rate decreased by {abs(eng_change):.1f}%")
+        if subs_change > 10:
+            anomalies.append(f"Unusual subscriber spike of {subs_change:.1f}% — content may be trending")
+        if views_change > 20:
+            anomalies.append(f"View surge of {views_change:.1f}% — algorithm favoring your content")
+
+        shift_type = "growth"
+        if subs_change < -3 or views_change < -10:
+            shift_type = "decline"
+        elif subs_change > 10 or views_change > 20:
+            shift_type = "surge"
+
+        recommendations = []
+        if shift_type == "decline":
+            recommendations.append("Consider increasing upload frequency to regain algorithm traction")
+            recommendations.append("Analyze top-performing competitors' recent content strategy")
+            recommendations.append("Test Shorts vs long-form to see which format performs better")
+        elif shift_type == "surge":
+            recommendations.append("Capitalize on momentum — publish more content in this niche")
+            recommendations.append("Engage heavily with new audience to retain subscribers")
+        else:
+            recommendations.append("Maintain consistent upload schedule")
+            recommendations.append("Continue monitoring for early signs of shifts")
+
+        for anomaly in anomalies:
+            try:
+                save_competitor_alert(user.id, ch.channel_id, "algorithm_shift", anomaly)
+                all_alerts.append(anomaly)
+            except Exception:
+                pass
+
+        results.append({
+            "channel_id": ch.channel_id,
+            "channel_title": ch.channel_title or ch.channel_id,
+            "current_subscribers": int(cur_subs),
+            "subscriber_change_pct": round(subs_change, 1),
+            "view_change_pct": round(views_change, 1),
+            "engagement_change": round(eng_change, 2),
+            "shift_type": shift_type,
+            "anomalies": anomalies,
+            "recommendations": recommendations,
+            "snapshots_count": len(history),
         })
-    return {"alerts": alerts}
+
+    if not results:
+        return {"shifts": [], "message": "Not enough data yet. Continue analyzing channels to detect shifts."}
+
+    return {"shifts": results, "new_alerts": all_alerts}
+
+
+# ── Growth Agent ──────────────────────────────────────────────────────
+
+@router.post("/agent/weekly-plan")
+async def agent_weekly_plan(user: User = Depends(get_current_user)):
+    import asyncio
+    import json
+    import random
+    from app.ai_provider import generate_ai_response
+    from app.db import get_cached_channel_profile, get_content_ideas, get_calendar_events
+
+    channels = get_user_channels(user.id)
+    cid = channels[0].channel_id if channels else ""
+    profile = get_cached_channel_profile(cid) if cid else None
+    ideas = get_content_ideas(user.id, saved_only=True)
+    events = get_calendar_events(user.id)
+    watched = get_watched_competitors(user.id)
+
+    niche = profile.niche if profile else "content creation"
+    subs = profile.subscriber_count if profile else 0
+    saved_titles = [i.title for i in ideas if i.title][:10]
+    calendar_titles = [e.title for e in events][:10]
+    competitor_names = [w.channel_title for w in watched if w.channel_title][:5]
+
+    prompt = f"""You are a personal AI growth agent for a YouTube creator.
+Channel: niche="{niche}", subscribers={subs}.
+Saved ideas: {json.dumps(saved_titles)}.
+Calendar events: {json.dumps(calendar_titles)}.
+Watched competitors: {json.dumps(competitor_names)}.
+
+Generate a weekly content plan. Return STRICT JSON:
+{{
+  "weekly_focus": "string",
+  "days": [
+    {{
+      "day": "Monday",
+      "task": "string",
+      "content_type": "longform|shorts|community",
+      "suggested_title": "string",
+      "thumbnail_idea": "string",
+      "publish_ready": true
+    }}
+  ],
+  "competitor_insights": ["insight1"],
+  "recommendation": "string"
+}}"""
+    try:
+        ai_result = json.loads(await asyncio.to_thread(
+            generate_ai_response, prompt, response_format="json_object",
+        ))
+    except Exception:
+        ai_result = {}
+
+    days_plan = ai_result.get("days", [])
+    if not days_plan:
+        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        content_types = ["longform", "shorts", "community"]
+        for i, day in enumerate(days_of_week[:5]):
+            days_plan.append({
+                "day": day,
+                "task": f"Create content about {niche}",
+                "content_type": content_types[i % 3],
+                "suggested_title": f"{niche} tips — Day {i + 1}",
+                "thumbnail_idea": f"Bold text overlay with {niche} keyword",
+                "publish_ready": True,
+            })
+
+    return {
+        "weekly_focus": ai_result.get("weekly_focus", f"Focus on {niche} — your audience is most engaged here"),
+        "days": days_plan,
+        "competitor_insights": ai_result.get("competitor_insights", [
+            f"Competitors in {niche} are posting 3-4x/week — increase your frequency",
+        ]),
+        "recommendation": ai_result.get("recommendation",
+            f"Post consistently about {niche}. Your audience responds best to tutorial-style content."),
+    }
+
+
+@router.get("/agent/status")
+async def agent_status(user: User = Depends(get_current_user)):
+    import json
+    from app.db import get_cached_channel_profile, get_content_ideas, get_calendar_events
+
+    channels = get_user_channels(user.id)
+    cid = channels[0].channel_id if channels else ""
+    profile = get_cached_channel_profile(cid) if cid else None
+    ideas = get_content_ideas(user.id)
+    events = get_calendar_events(user.id)
+    watched = get_watched_competitors(user.id)
+    analysis_count = ideas and len(ideas) or 0
+
+    return {
+        "channel_count": len(channels),
+        "saved_ideas": len([i for i in ideas if i.saved]) if ideas else 0,
+        "calendar_events": len(events),
+        "watched_competitors": len(watched),
+        "has_analysis": profile is not None,
+        "niche": profile.niche if profile else "",
+        "status": "active" if profile else "needs_channel",
+        "next_steps": [
+            "Analyze a channel to get personalized recommendations" if not profile else None,
+            "Save content ideas from the Idea Generator" if not any(i.saved for i in ideas if ideas) else None,
+            "Add calendar events to plan your content schedule" if not events else None,
+            "Watch competitors to monitor their strategy" if not watched else None,
+        ],
+        "agent_summary": f"Analyzing {len(channels)} channel(s), {len(watched)} competitor(s), {analysis_count} idea(s). "
+                         f"{'Ready to generate a weekly plan.' if profile else 'Analyze a channel first.'}",
+    }
+
+
+@router.post("/agent/study-competitors")
+async def study_competitors(user: User = Depends(get_current_user)):
+    import asyncio
+    import json
+    from app.ai_provider import generate_ai_response
+    from app.db import get_cached_channel_profile
+
+    channels = get_user_channels(user.id)
+    watched = get_watched_competitors(user.id)
+    if not watched:
+        return {"message": "No competitors to study. Add competitors first.", "insights": []}
+
+    channel_data = []
+    for w in watched[:3]:
+        profile = get_cached_channel_profile(w.channel_id)
+        if profile:
+            channel_data.append({
+                "title": w.channel_title or w.channel_id,
+                "subs": profile.subscriber_count,
+                "niche": profile.niche,
+            })
+
+    prompt = f"""You are a competitive intelligence analyst for YouTube creators.
+Your channel's competitors: {json.dumps(channel_data)}.
+Analyze their recent strategies and return STRICT JSON:
+{{
+  "insights": ["specific strategy insight about what competitors are doing"],
+  "niche_gaps": ["content topics competitors are missing"],
+  "recommendation": "what you should do to compete better"
+}}"""
+    try:
+        ai_result = json.loads(await asyncio.to_thread(
+            generate_ai_response, prompt, response_format="json_object",
+        ))
+    except Exception:
+        ai_result = {}
+
+    return {
+        "insights": ai_result.get("insights", ["Competitors in your niche are posting 3-4x/week"]),
+        "niche_gaps": ai_result.get("niche_gaps", ["Consider creating tutorial content — competitors are mostly doing vlogs"]),
+        "recommendation": ai_result.get("recommendation", "Post more consistently and focus on underserved topics in your niche."),
+    }
+
+
+# ── Trend Alerts ───────────────────────────────────────────────────────
 
 
 # ── Account Management ─────────────────────────────────────────────────

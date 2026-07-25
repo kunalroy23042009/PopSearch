@@ -24,7 +24,7 @@ from app.channel_analyzer import analyze_channel
 from app.competitor_finder import find_competitors
 from app.db import (
     get_cached_channel_profile, get_session, get_user_reports,
-    get_report, init_db, get_job, track_user_event, update_user_usage,
+    get_report, init_db, get_job, get_user_jobs, track_user_event, update_user_usage,
 )
 from app.models import (
     ChannelProfile, CompetitorChannel, CompetitorAnalysis,
@@ -465,6 +465,27 @@ async def analyze_async(
         job_id=job_id,
         status_url=f"/api/jobs/{job_id}",
     )
+
+
+@app.get("/api/jobs")
+async def list_jobs(
+    limit: int = 10,
+    offset: int = 0,
+    user: User = Depends(get_current_user),
+):
+    jobs = get_user_jobs(user.id, limit=limit)
+    return [
+        {
+            "job_id": j.job_id,
+            "status": j.status,
+            "progress_pct": j.progress_pct,
+            "step": j.step,
+            "error": j.error or None,
+            "created_at": j.created_at.isoformat(),
+            "updated_at": j.updated_at.isoformat(),
+        }
+        for j in jobs[offset:offset + limit]
+    ]
 
 
 @app.get("/api/jobs/{job_id}")

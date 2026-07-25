@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import threading
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -13,6 +14,42 @@ from app.config import settings
 from app.models import ChannelProfile, ContentResult, DashboardData, JobProgress, SavedReport, TopicInsight
 
 logger = logging.getLogger(__name__)
+
+
+class MemoryCache:
+    """Thread-safe in-memory TTL cache layer on top of DB cache."""
+
+    def __init__(self, default_ttl_seconds: int = 300):
+        self._store: dict[str, tuple[float, object]] = {}
+        self._lock = threading.Lock()
+        self._default_ttl = default_ttl_seconds
+
+    def get(self, key: str):
+        with self._lock:
+            entry = self._store.get(key)
+            if entry is None:
+                return None
+            expires_at, value = entry
+            if time.monotonic() > expires_at:
+                del self._store[key]
+                return None
+            return value
+
+    def set(self, key: str, value, ttl_seconds: int = 0):
+        ttl = ttl_seconds or self._default_ttl
+        with self._lock:
+            self._store[key] = (time.monotonic() + ttl, value)
+
+    def invalidate(self, key: str):
+        with self._lock:
+            self._store.pop(key, None)
+
+    def clear(self):
+        with self._lock:
+            self._store.clear()
+
+
+_mem_cache = MemoryCache()
 
 DB_DIR = Path("data")
 DB_PATH = DB_DIR / "cache.db"
@@ -331,11 +368,17 @@ def get_cached_channel_profile(
     channel_id: str,
     max_age_hours: int = 24,
 ) -> ChannelProfile | None:
+    cache_key = f"profile:{channel_id}"
+    cached = _mem_cache.get(cache_key)
+    if cached is not None:
+        return cached
     with Session(_get_engine()) as session:
         row = session.get(Channel, channel_id)
         if row is None or not _is_fresh(row.analyzed_at, max_age_hours):
             return None
-        return _deserialize_profile(row.profile_json)
+        profile = _deserialize_profile(row.profile_json)
+        _mem_cache.set(cache_key, profile, ttl_seconds=min(max_age_hours * 3600, 3600))
+        return profile
 
 
 def get_cached_channel_profile_by_url(
@@ -371,6 +414,7 @@ def save_channel_profile(profile: ChannelProfile, url: str) -> None:
             existing.analyzed_at = now
             session.add(existing)
         session.commit()
+    _mem_cache.invalidate(f"profile:{profile.channel_id}")
 
 
 def get_cached_topic_search(
@@ -379,6 +423,10 @@ def get_cached_topic_search(
     max_age_hours: int = 24,
 ) -> tuple[list[ContentResult], TopicInsight] | None:
     normalized = topic.strip()
+    cache_key = f"topic:{channel_id}:{normalized}"
+    cached = _mem_cache.get(cache_key)
+    if cached is not None:
+        return cached
     with Session(_get_engine()) as session:
         statement = (
             select(TopicSearch)
@@ -389,10 +437,12 @@ def get_cached_topic_search(
         row = session.exec(statement).first()
         if row is None or not _is_fresh(row.searched_at, max_age_hours):
             return None
-        return (
+        result = (
             _deserialize_results(row.results_json),
             _deserialize_insight(row.insight_json),
         )
+        _mem_cache.set(cache_key, result, ttl_seconds=min(max_age_hours * 3600, 3600))
+        return result
 
 
 def save_topic_search(
@@ -685,6 +735,21 @@ def mark_alerts_read(user_id: int) -> None:
             alert.read = True
             session.add(alert)
         session.commit()
+
+
+def save_competitor_alert(user_id: int, competitor_channel_id: str, alert_type: str, message: str) -> CompetitorAlert:
+    with Session(_get_engine()) as session:
+        ca = CompetitorAlert(
+            user_id=user_id,
+            competitor_channel_id=competitor_channel_id,
+            alert_type=alert_type,
+            message=message,
+            read=False,
+        )
+        session.add(ca)
+        session.commit()
+        session.refresh(ca)
+        return ca
 
 
 def get_user_channels(user_id: int) -> list[UserChannel]:

@@ -1694,6 +1694,207 @@ function PublishingPage() {
   );
 }
 
+// ── Algorithm Shift Tracker ──────────────────────────────────────────
+function AlgoShiftPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const load = async () => {
+    setLoading(true); setErr(''); setData(null);
+    try {
+      const res = await api('/api/algorithm/shifts', { method: 'POST' });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => { load(); }, []);
+
+  const changeColor = (pct) => pct > 0 ? 'var(--success)' : pct < 0 ? 'var(--error)' : 'var(--text2)';
+  const shiftIcon = (t) => t === 'decline' ? '\u2B07' : t === 'surge' ? '\u2B06' : '\u27A1';
+
+  return React.createElement('div', null,
+    React.createElement('h1', null, '\uD83D\uDCC8 Algorithm Shift Tracker'),
+    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+      'Detect algorithm shifts, view velocity changes, and get adaptation recommendations'),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    data?.shifts?.length ? data.shifts.map((ch, i) =>
+      React.createElement('div', { key: i, className: 'card', style: { marginBottom: 16 } },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(62,166,255,.15)' } }, shiftIcon(ch.shift_type)),
+          React.createElement('h3', null, ch.channel_title),
+          React.createElement('span', { className: 'tag', style: {
+            background: ch.shift_type === 'decline' ? 'rgba(255,78,69,.15)' : ch.shift_type === 'surge' ? 'rgba(43,166,64,.15)' : 'rgba(128,128,128,.15)',
+            color: ch.shift_type === 'decline' ? 'var(--error)' : ch.shift_type === 'surge' ? 'var(--success)' : 'var(--text2)',
+          } }, ch.shift_type.toUpperCase()),
+        ),
+        React.createElement('div', { className: 'stats', style: { marginBottom: 12 } },
+          React.createElement(StatCard, { label: 'Subscribers', value: ch.current_subscribers, change: `${ch.subscriber_change_pct > 0 ? '+' : ''}${ch.subscriber_change_pct}%`, changeDir: ch.subscriber_change_pct >= 0 ? 'up' : 'down' }),
+          React.createElement(StatCard, { label: 'Views', value: '-', change: `${ch.view_change_pct > 0 ? '+' : ''}${ch.view_change_pct}%`, changeDir: ch.view_change_pct >= 0 ? 'up' : 'down' }),
+          React.createElement(StatCard, { label: 'Engagement', value: ch.engagement_change.toFixed(2), change: `${ch.engagement_change > 0 ? '+' : ''}${ch.engagement_change.toFixed(2)}%`, changeDir: ch.engagement_change >= 0 ? 'up' : 'down' }),
+        ),
+        ch.anomalies?.length ? React.createElement('div', { style: { marginBottom: 12 } },
+          React.createElement('h4', { style: { fontSize: '.85rem', marginBottom: 8, color: 'var(--error)' } }, '\u26A0\uFE0F Anomalies Detected'),
+          ch.anomalies.map((a, j) =>
+            React.createElement('div', { key: j, style: { padding: '6px 10px', background: 'rgba(255,78,69,.08)', borderRadius: 'var(--radius)', marginBottom: 4, fontSize: '.85rem', color: 'var(--error)' } }, a),
+          ),
+        ) : null,
+        React.createElement('div', null,
+          React.createElement('h4', { style: { fontSize: '.85rem', marginBottom: 8, color: 'var(--accent)' } }, '\uD83D\uDCCC Recommendations'),
+          ch.recommendations.map((r, j) =>
+            React.createElement('div', { key: j, style: { padding: '6px 10px', background: 'rgba(62,166,255,.08)', borderRadius: 'var(--radius)', marginBottom: 4, fontSize: '.85rem' } }, r),
+          ),
+        ),
+      )
+    ) : !loading && data ? React.createElement('div', { className: 'empty-state' },
+      React.createElement('div', { className: 'emoji' }, '\uD83D\uDCC8'),
+      React.createElement('p', null, data.message || 'Analyze more channels to detect algorithm shifts.'),
+    ) : null,
+  );
+}
+
+// ── Growth Agent ──────────────────────────────────────────────────────
+function AgentPage() {
+  const { api } = useAuth();
+  const [tab, setTab] = useState('plan');
+  const [plan, setPlan] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const loadPlan = async () => {
+    setLoading(true); setErr('');
+    try {
+      const res = await api('/api/agent/weekly-plan', { method: 'POST' });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setPlan(d);
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  const loadStatus = async () => {
+    setLoading(true); setErr('');
+    try {
+      const res = await api('/api/agent/status');
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setStatus(d);
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  const studyCompetitors = async () => {
+    setLoading(true); setErr('');
+    try {
+      const res = await api('/api/agent/study-competitors', { method: 'POST' });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) { alert('Competitor study complete! Check the plan tab for insights.'); loadPlan(); }
+      else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => {
+    if (tab === 'plan') loadPlan();
+    else loadStatus();
+  }, [tab]);
+
+  const dayColor = (day) => ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].indexOf(day);
+
+  return React.createElement('div', null,
+    React.createElement('h1', null, '\uD83E\uDD16 Growth Agent'),
+    React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
+      React.createElement('button', { className: `btn ${tab === 'plan' ? 'btn-primary' : 'btn-ghost'}`, onClick: () => setTab('plan') }, 'Weekly Plan'),
+      React.createElement('button', { className: `btn ${tab === 'status' ? 'btn-primary' : 'btn-ghost'}`, onClick: () => setTab('status') }, 'Status & Insights'),
+      React.createElement('button', { className: 'btn btn-secondary', onClick: studyCompetitors, disabled: loading }, '\uD83D\uDD0D Study Competitors'),
+    ),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    tab === 'plan' && plan ? React.createElement('div', null,
+      plan.weekly_focus ? React.createElement('div', { className: 'insight', style: { marginBottom: 16 } },
+        React.createElement('h3', null, '\uD83C\uDF1F Weekly Focus'),
+        React.createElement('p', null, plan.weekly_focus),
+      ) : null,
+      plan.competitor_insights?.length ? React.createElement('div', { className: 'card', style: { marginBottom: 16 } },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(255,167,60,.15)' } }, '\uD83D\uDC65'),
+          React.createElement('h3', null, 'Competitor Insights'),
+        ),
+        plan.competitor_insights.map((ci, i) =>
+          React.createElement('div', { key: i, style: { padding: '6px 0', fontSize: '.88rem', borderBottom: i < plan.competitor_insights.length - 1 ? '1px solid var(--border)' : 'none' } }, ci),
+        ),
+      ) : null,
+      plan.days?.length ? React.createElement('div', null,
+        React.createElement('h3', { style: { marginBottom: 12 } }, '\uD83D\uDCC5 7-Day Content Plan'),
+        plan.days.map((d, i) =>
+          React.createElement('div', { key: i, className: 'card', style: { marginBottom: 8, borderLeft: `4px solid ${d.publish_ready ? 'var(--success)' : 'var(--warning)'}` } },
+            React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
+              React.createElement('h4', { style: { margin: 0, fontSize: '.95rem' } }, d.day),
+              React.createElement('span', { className: 'tag', style: {
+                background: d.publish_ready ? 'rgba(43,166,64,.15)' : 'rgba(255,167,60,.15)',
+                color: d.publish_ready ? 'var(--success)' : 'var(--warning)',
+                fontSize: '.7rem',
+              } }, d.publish_ready ? 'PUBLISH' : 'IMPROVE'),
+            ),
+            React.createElement('div', { style: { color: 'var(--text2)', fontSize: '.85rem', marginBottom: 4 } },
+              React.createElement('span', { className: 'tag', style: { marginRight: 6 } }, d.content_type),
+              d.task,
+            ),
+            d.suggested_title ? React.createElement('div', { style: { fontWeight: 600, fontSize: '.88rem', marginBottom: 4 } }, d.suggested_title) : null,
+            d.thumbnail_idea ? React.createElement('div', { style: { color: 'var(--text3)', fontSize: '.82rem' } }, '\uD83D\uDDBC ' + d.thumbnail_idea) : null,
+          ),
+        ),
+      ) : null,
+      plan.recommendation ? React.createElement('div', { className: 'insight', style: { marginTop: 12 } },
+        React.createElement('h3', null, '\uD83D\uDCCC Recommendation'),
+        React.createElement('p', null, plan.recommendation),
+      ) : null,
+    ) : null,
+    tab === 'status' && status ? React.createElement('div', null,
+      React.createElement('div', { className: 'stats' },
+        React.createElement(StatCard, { label: 'Channels', value: status.channel_count }),
+        React.createElement(StatCard, { label: 'Ideas Saved', value: status.saved_ideas }),
+        React.createElement(StatCard, { label: 'Events', value: status.calendar_events }),
+        React.createElement(StatCard, { label: 'Competitors', value: status.watched_competitors }),
+      ),
+      status.agent_summary ? React.createElement('div', { className: 'card', style: { marginTop: 16 } },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(62,166,255,.15)' } }, '\uD83E\uDD16'),
+          React.createElement('h3', null, 'Agent Summary'),
+        ),
+        React.createElement('p', { style: { fontSize: '.9rem' } }, status.agent_summary),
+      ) : null,
+      status.next_steps?.length ? React.createElement('div', { className: 'card', style: { marginTop: 16 } },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(43,166,64,.15)' } }, '\uD83D\uDCE5'),
+          React.createElement('h3', null, 'Next Steps'),
+        ),
+        status.next_steps.filter(Boolean).map((ns, i) =>
+          React.createElement('div', { key: i, style: { padding: '8px 0', fontSize: '.88rem', borderBottom: i < status.next_steps.filter(Boolean).length - 1 ? '1px solid var(--border)' : 'none' } },
+            '\u27A1 ', ns),
+        ),
+      ) : null,
+      status.niche ? React.createElement('div', { className: 'tag', style: { marginTop: 12, fontSize: '.85rem', padding: '8px 16px' } },
+        '\uD83C\uDF1F Niche: ', status.niche,
+      ) : null,
+    ) : null,
+    !loading && !plan && !status ? React.createElement('div', { className: 'empty-state' },
+      React.createElement('div', { className: 'emoji' }, '\uD83E\uDD16'),
+      React.createElement('p', null, 'Let the Growth Agent analyze your channel to generate a personalized plan.'),
+    ) : null,
+  );
+}
+
 // ── Onboarding Flow ───────────────────────────────────────────────────
 function OnboardingPage() {
   const { api } = useAuth();
@@ -1771,6 +1972,8 @@ function AppShell({ page, setPage }) {
     { id: 'trends', label: 'Trend Alerts', icon: '\uD83D\uDD25', section: 'Content' },
     { id: 'comments', label: 'Comments', icon: '\uD83D\uDCAC', section: 'Content' },
     { id: 'publishing', label: 'Publishing', icon: '\uD83D\uDCE4', section: 'Content' },
+    { id: 'algo-shift', label: 'Algo Shifts', icon: '\uD83D\uDCC8', section: 'Content' },
+    { id: 'agent', label: 'Growth Agent', icon: '\uD83E\uDD16', section: 'Content' },
     { id: 'reports', label: 'Reports & Export', icon: '\uD83D\uDCC4', section: 'Content' },
     { id: 'saved-ideas', label: 'Saved Ideas', icon: '\uD83D\uDCBE', section: 'Content' },
     { id: 'pricing', label: 'Pricing', icon: '\uD83D\uDCB0', section: 'Settings' },
@@ -1795,6 +1998,8 @@ function AppShell({ page, setPage }) {
       case 'trends': return React.createElement(TrendAlertsPage);
       case 'comments': return React.createElement(CommentsPage);
       case 'publishing': return React.createElement(PublishingPage);
+      case 'algo-shift': return React.createElement(AlgoShiftPage);
+      case 'agent': return React.createElement(AgentPage);
       case 'pricing': return React.createElement(PricingPage);
       case 'billing': return React.createElement(BillingPage);
       case 'settings': return React.createElement(SettingsPage);
@@ -1861,7 +2066,7 @@ function App() {
   useEffect(() => {
     const onHash = () => {
       const hash = window.location.hash.replace('#', '') || 'dashboard';
-      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'comments', 'publishing', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
+      const valid = ['dashboard', 'analyze', 'competitors', 'discover', 'ideas', 'watch', 'calendar', 'reports', 'saved-ideas', 'repurpose', 'seo', 'thumbnail-test', 'trends', 'comments', 'publishing', 'algo-shift', 'agent', 'pricing', 'billing', 'settings', 'onboarding', 'login', 'register'];
       if (valid.includes(hash)) setPage(hash);
     };
     window.addEventListener('hashchange', onHash);

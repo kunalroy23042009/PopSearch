@@ -1,1 +1,2760 @@
-(()=>{var{useState:c,useEffect:S,useRef:Q,createContext:Z,useContext:ee,useCallback:I}=React,O=Z(null);function te({children:t}){let[a,s]=c(()=>JSON.parse(localStorage.getItem("ccr_user")||"null")),[r,g]=c(()=>localStorage.getItem("ccr_token")||""),o=I((u,i)=>{g(u),s(i),localStorage.setItem("ccr_token",u),localStorage.setItem("ccr_user",JSON.stringify(i))},[]),l=I(()=>{g(""),s(null),localStorage.removeItem("ccr_token"),localStorage.removeItem("ccr_user")},[]),m=I(async(u,i={})=>{let n={"Content-Type":"application/json",...i.headers};r&&(n.Authorization=`Bearer ${r}`);let e=await fetch(u,{...i,headers:n});return e.status===401?(l(),null):e},[r,l]);return React.createElement(O.Provider,{value:{user:a,token:r,login:o,logout:l,api:m}},t)}function x(){return ee(O)}function T(t){return t==null?"\u2014":t>=1e6?(t/1e6).toFixed(1)+"M":t>=1e3?(t/1e3).toFixed(1)+"K":t.toLocaleString()}var ae={youtube:{icon:"\u25B6",color:"#ff0000",bg:"rgba(255,0,0,.15)"},reddit:{icon:"R",color:"#ff4500",bg:"rgba(255,69,0,.15)"},twitter:{icon:"X",color:"#1da1f2",bg:"rgba(29,161,242,.15)"},twitch:{icon:"\u{1F3AE}",color:"#a970ff",bg:"rgba(169,112,255,.15)"},hn:{icon:"Y",color:"#f60",bg:"rgba(255,102,0,.15)"},trends:{icon:"\u{1F4C8}",color:"#4285f4",bg:"rgba(66,133,244,.15)"},rss:{icon:"\u{1F4E1}",color:"#ffa500",bg:"rgba(255,165,0,.15)"},instagram:{icon:"\u{1F4F7}",color:"#e1306c",bg:"rgba(225,48,108,.15)"},tiktok:{icon:"\u{1F3A7}",color:"#00f2ea",bg:"rgba(0,242,234,.15)"}};function A(t){return ae[t]||{icon:"?",color:"#888",bg:"rgba(128,128,128,.15)"}}function F(){return(document.documentElement.getAttribute("data-theme")||"dark")==="dark"}var j={};function U(t,a){j[t]&&j[t].destroy();let s=document.getElementById(t);s&&(j[t]=new Chart(s,a))}function P({count:t=3}){return React.createElement("div",null,Array.from({length:t},(a,s)=>React.createElement("div",{key:s,className:"card"},React.createElement("div",{className:"skeleton",style:{height:24,width:"60%",marginBottom:8}}),React.createElement("div",{className:"skeleton",style:{height:24,width:"80%",marginBottom:8}}),React.createElement("div",{className:"skeleton",style:{height:100,width:"100%"}}))))}function _({active:t}){return React.createElement("div",{className:`loading-bar${t?" active":""}`})}function z({message:t}){return t?React.createElement("div",{className:"error-box",style:{display:"block"}},t):null}function w({label:t,value:a,change:s,changeDir:r="up"}){return React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},t),React.createElement("div",{className:"value"},T(a)),s?React.createElement("div",{className:`change ${r}`,style:{fontSize:".78rem",fontWeight:600,marginTop:4}},s):null)}function M({item:t}){let a=A(t.platform),s=t.raw_metrics||{};return React.createElement("a",{href:t.url,target:"_blank",className:"content-item"},React.createElement("div",{className:"platform-badge",style:{background:a.bg,color:a.color}},a.icon),React.createElement("div",{style:{flex:1,minWidth:0}},React.createElement("div",{style:{fontWeight:600,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontSize:".9rem"}},t.title),React.createElement("div",{style:{display:"flex",gap:12,fontSize:".8rem",color:"var(--text3)",flexWrap:"wrap"}},React.createElement("span",null,`\u{1F4CD} ${t.source||t.platform}`),React.createElement("span",null,`\u{1F4CA} ${T(t.engagement_score)}`),s.views?React.createElement("span",null,`\u{1F441} ${T(s.views)}`):null,s.likes?React.createElement("span",null,`\u{1F44D} ${T(s.likes)}`):null,React.createElement("span",{className:"tag"},t.classification||"new"))))}function ne(){let{login:t,api:a}=x(),[s,r]=c(""),[g,o]=c(""),[l,m]=c(""),[u,i]=c(!1),n=async e=>{e.preventDefault(),m(""),i(!0);try{let y=await a("/api/auth/login",{method:"POST",body:JSON.stringify({email:s,password:g})});if(!y)return;let p=await y.json();y.ok?t(p.access_token,p.user):m(p.detail||"Login failed")}catch{m("Network error")}finally{i(!1)}};return React.createElement("div",{className:"auth-page"},React.createElement("form",{onSubmit:n,className:"auth-card"},React.createElement("h1",null,"Creator Content Radar"),React.createElement("p",{className:"subtitle"},"Sign in to your account"),l?React.createElement("div",{className:"error",style:{display:"block"}},l):null,React.createElement("div",{className:"form-group"},React.createElement("label",null,"Email"),React.createElement("input",{className:"input",type:"email",value:s,onChange:e=>r(e.target.value),placeholder:"you@example.com",required:!0})),React.createElement("div",{className:"form-group"},React.createElement("label",null,"Password"),React.createElement("input",{className:"input",type:"password",value:g,onChange:e=>o(e.target.value),placeholder:"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",required:!0})),React.createElement("button",{type:"submit",className:"btn btn-primary",style:{width:"100%",justifyContent:"center"},disabled:u},u?"Signing in...":"Sign In"),React.createElement("p",{style:{textAlign:"center",marginTop:16,fontSize:".85rem",color:"var(--text3)"}},"Don't have an account? ",React.createElement("a",{href:"#register",style:{color:"var(--accent)",textDecoration:"none"}},"Register")),React.createElement("p",{style:{textAlign:"center",marginTop:12,fontSize:".85rem",color:"var(--text3)"}},React.createElement("a",{href:"#pricing",style:{color:"var(--primary)",textDecoration:"none",fontWeight:600}},"View Pricing & Plans"))))}function re(){let{login:t,api:a}=x(),[s,r]=c(""),[g,o]=c(""),[l,m]=c(""),[u,i]=c(!1),n=async e=>{e.preventDefault(),m(""),i(!0);try{let y=await a("/api/auth/register",{method:"POST",body:JSON.stringify({email:s,password:g})});if(!y)return;let p=await y.json();y.ok?t(p.access_token,p.user):m(p.detail||"Registration failed")}catch{m("Network error")}finally{i(!1)}};return React.createElement("div",{className:"auth-page"},React.createElement("form",{onSubmit:n,className:"auth-card"},React.createElement("h1",null,"Create Account"),React.createElement("p",{className:"subtitle"},"Join Creator Content Radar"),l?React.createElement("div",{className:"error",style:{display:"block"}},l):null,React.createElement("div",{className:"form-group"},React.createElement("label",null,"Email"),React.createElement("input",{className:"input",type:"email",value:s,onChange:e=>r(e.target.value),placeholder:"you@example.com",required:!0})),React.createElement("div",{className:"form-group"},React.createElement("label",null,"Password"),React.createElement("input",{className:"input",type:"password",value:g,onChange:e=>o(e.target.value),placeholder:"Minimum 8 characters",required:!0,minLength:8})),React.createElement("button",{type:"submit",className:"btn btn-primary",style:{width:"100%",justifyContent:"center"},disabled:u},u?"Creating account...":"Create Account"),React.createElement("p",{style:{textAlign:"center",marginTop:16,fontSize:".85rem",color:"var(--text3)"}},"Already have an account? ",React.createElement("a",{href:"#login",style:{color:"var(--accent)",textDecoration:"none"}},"Sign In"))))}function J(){let{api:t,user:a}=x(),[s,r]=c(null);S(()=>{a&&(async()=>{let l=await t("/api/billing/usage");if(!l)return;let m=await l.json();l.ok&&r(m)})()},[t,a]);let g=async l=>{let m=await t("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:l})});if(!m)return;let u=await m.json();u.url&&(window.location.href=u.url)},o=[{id:"free",name:"Free",price:"$0",desc:"Perfect for getting started",analyses:"3 analyses/mo",exports:"No",api:"No",support:"Community",features:["Basic channel analysis","Competitor discovery","Cross-platform content search","Email support"]},{id:"pro",name:"Pro",price:"$19",desc:"For serious creators",analyses:"50 analyses/mo",exports:"CSV + PDF",api:"No",support:"Priority email",features:["Everything in Free","Export reports (CSV/PDF)","Content idea generator","Competitor monitoring alerts","Email digests","Content calendar"]},{id:"business",name:"Business",price:"$49",desc:"For teams & agencies",analyses:"Unlimited",exports:"CSV + PDF + Shareable links",api:"Full API access",support:"Dedicated support",features:["Everything in Pro","Unlimited analyses","API keys for integrations","Multi-channel management","SEO scorecards","A/B thumbnail testing","Trend alerts","White-label reports"]}];return React.createElement("div",null,React.createElement("div",{style:{textAlign:"center",marginBottom:32}},React.createElement("h1",{style:{fontSize:"2rem",fontWeight:800,marginBottom:8}},"Choose Your Plan"),React.createElement("p",{style:{color:"var(--text3)",fontSize:"1rem",maxWidth:500,margin:"0 auto"}},"Unlock the full power of Creator Content Radar. Scale your content strategy with AI-powered insights.")),React.createElement("div",{className:"stats",style:{gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:16}},o.map(l=>{let m=s?.plan===l.id;return React.createElement("div",{key:l.id,className:"card",style:{display:"flex",flexDirection:"column",position:"relative",overflow:"hidden",border:m?"2px solid var(--primary)":"1px solid var(--border)"}},l.id==="pro"?React.createElement("div",{style:{position:"absolute",top:12,right:12,background:"var(--primary)",color:"#fff",padding:"4px 12px",borderRadius:999,fontSize:".7rem",fontWeight:700,textTransform:"uppercase"}},"Popular"):null,React.createElement("h2",{style:{fontSize:"1.2rem",fontWeight:700,marginBottom:4}},l.name),React.createElement("div",{style:{fontSize:"2.5rem",fontWeight:800,marginBottom:4}},l.price,React.createElement("span",{style:{fontSize:"1rem",fontWeight:400,color:"var(--text3)"}},"/mo")),React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem",marginBottom:16}},l.desc),React.createElement("div",{style:{fontSize:".9rem",color:"var(--text2)",marginBottom:16,padding:"8px 12px",background:"var(--bg3)",borderRadius:"var(--radius)",textAlign:"center",fontWeight:600}},l.analyses),React.createElement("div",{style:{flex:1}},l.features.map((u,i)=>React.createElement("div",{key:i,style:{padding:"6px 0",fontSize:".85rem",color:"var(--text2)",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:8}},React.createElement("span",{style:{color:"var(--success)"}},"\u2713"),u))),React.createElement("div",{style:{marginTop:16,display:"flex",gap:8,flexWrap:"wrap"}},m?React.createElement("button",{className:"btn btn-ghost",style:{flex:1,justifyContent:"center"},disabled:!0},"Current Plan"):l.id==="free"?React.createElement("button",{className:"btn btn-ghost",style:{flex:1,justifyContent:"center"},onClick:()=>window.location.hash="login"},"Get Started"):React.createElement("button",{className:l.id==="pro"?"btn btn-primary":"btn btn-accent",style:{flex:1,justifyContent:"center"},onClick:()=>g(l.id)},"Subscribe")),React.createElement("div",{style:{marginTop:8,fontSize:".75rem",color:"var(--text3)",textAlign:"center"}},l.exports!=="No"?`\u2713 ${l.exports}`:null,l.api!=="No"?` \xB7 ${l.api}`:null,` \xB7 ${l.support}`))})),a?null:React.createElement("div",{className:"card",style:{textAlign:"center",padding:24}},React.createElement("p",{style:{color:"var(--text3)",marginBottom:12}},"Already have an account?"),React.createElement("button",{className:"btn btn-primary",onClick:()=>window.location.hash="login"},"Sign In")))}function L(){let{api:t}=x(),[a,s]=c(()=>localStorage.getItem("ccr_last_url")||""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),[i,n]=c(null),e=async()=>{if(a.trim()){l(!0),u(""),g(null),n(null);try{localStorage.setItem("ccr_last_url",a);let h=await t("/dashboard",{method:"POST",body:JSON.stringify({channel_url:a,topic:""})});if(!h)return;let v=await h.json();h.ok?(g(v),setTimeout(()=>y(v),100)):u(v.detail||"Failed")}catch{u("Network error")}finally{l(!1)}}},y=h=>{let v=F(),d=v?"#303030":"#e5e5e5",f=v?"#aaa":"#666";h.trends?.interest_over_time?.length&&U("trend-chart",{type:"line",data:{labels:h.trends.interest_over_time.map(E=>E.label),datasets:[{label:h.trends.topic||"Interest",data:h.trends.interest_over_time.map(E=>E.value),borderColor:"#ff4444",backgroundColor:"rgba(255,68,68,0.1)",fill:!0,tension:.3,pointRadius:3,borderWidth:2}]},options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{x:{grid:{color:d},ticks:{color:f,maxTicksLimit:8}},y:{grid:{color:d},ticks:{color:f}}}}})},p=r?.profile,R=r?.competitors;return React.createElement("div",null,React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:12}},React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700}},"Dashboard"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem"}},"Channel overview & performance")),React.createElement("div",{className:"topbar-search",style:{maxWidth:320,margin:0}},React.createElement("input",{type:"text",placeholder:"YouTube URL or @handle...",value:a,onChange:h=>s(h.target.value),onKeyDown:h=>h.key==="Enter"&&e()}),React.createElement("button",{className:"icon-btn",onClick:e},"\u25B6"))),React.createElement(_,{active:o}),React.createElement(z,{message:m}),!r&&!o?React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4C8}"),React.createElement("p",null,"Paste a YouTube channel URL above to see your dashboard"),React.createElement("button",{className:"btn btn-primary",style:{marginTop:12},onClick:()=>window.location.hash="pricing"},"View Plans")):null,r&&p?React.createElement("div",null,React.createElement("div",{className:"stats"},React.createElement(w,{label:"Subscribers",value:p.subscriber_count,change:p.channel_tier}),React.createElement(w,{label:"Total Views",value:p.view_count,change:p.niche}),React.createElement(w,{label:"Videos",value:p.video_count,change:p.upload_frequency}),React.createElement(w,{label:"Avg Views",value:Math.round(p.average_views_per_video),change:`${p.engagement_rate?.toFixed(1)||0}% eng.`}),React.createElement(w,{label:"Growth",value:p.growth_potential||"N/A",change:p.channel_tier}),React.createElement(w,{label:"Sources",value:r.total_sources_checked||0,change:"platforms"})),r.cross_platform_content?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(62,166,255,.15)",color:"var(--accent)"}},"\u{1F310}"),React.createElement("h2",null,`Cross-Platform Content (${r.cross_platform_content.length})`)),React.createElement("div",{className:"content-list"},r.cross_platform_content.slice(0,8).map((h,v)=>React.createElement(M,{key:v,item:h})))):null,R?.competitors?.length?React.createElement("div",{className:"card"},React.createElement("h3",{style:{fontSize:".9rem",color:"var(--text2)",marginBottom:10}},`Top Competitors in ${p.niche||"your niche"}`),React.createElement("div",{className:"competitor-grid"},R.competitors.slice(0,6).map((h,v)=>React.createElement("div",{key:v,className:"competitor-card"},React.createElement("div",{className:"name"},h.title),React.createElement("div",{className:"note"},h.relevance_note||""),React.createElement("div",{className:"subs"},`${T(h.subscriber_count)} subs`))))):null,p.content_recommendations?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(255,68,68,.15)",color:"var(--primary)"}},"\u{1F4A1}"),React.createElement("h2",null,"AI Content Recommendations")),React.createElement("ul",{className:"rec-list"},p.content_recommendations.map((h,v)=>React.createElement("li",{key:v},h)))):null):null)}function le(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),[i,n]=c(null),e=Q(null),y=async()=>{if(a.trim()){l(!0),u(""),g(null),n(null);try{let d=await t("/api/analyze/async",{method:"POST",body:JSON.stringify({channel_url:a,topic:""})});if(!d)return;let f=await d.json();d.ok?(g(f),p(f.job_id)):u(f.detail||"Analysis failed")}catch{u("Network error")}finally{l(!1)}}},p=d=>{e.current&&clearInterval(e.current),e.current=setInterval(async()=>{try{let f=await t(`/api/jobs/${d}`);if(!f){clearInterval(e.current);return}let E=await f.json();n(E),(E.status==="completed"||E.status==="failed")&&clearInterval(e.current)}catch{}},2e3)};S(()=>()=>{e.current&&clearInterval(e.current)},[]);let R=[{pct:5,label:"Queued..."},{pct:15,label:"Fetching channel data..."},{pct:30,label:"Analyzing channel..."},{pct:50,label:"Finding competitors..."},{pct:70,label:"Gathering cross-platform content..."},{pct:85,label:"Building dashboard..."},{pct:95,label:"Finalizing..."},{pct:100,label:"Complete!"}],h=i?R.findIndex(d=>d.pct>=i.progress_pct):-1,v=i?i.step||R[Math.max(0,h)]?.label||"Processing...":"";return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Channel Analysis"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Deep dive into your channel\u2019s performance"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,maxWidth:600}},React.createElement("input",{className:"input",placeholder:"YouTube URL, @handle, or channel ID...",value:a,onChange:d=>s(d.target.value),onKeyDown:d=>d.key==="Enter"&&y()}),React.createElement("button",{className:"btn btn-primary",onClick:y,disabled:o},o?"Analyzing...":"Analyze")),React.createElement(_,{active:o||i&&i.status==="running"}),React.createElement(z,{message:m}),i?React.createElement("div",{className:"card",style:{marginTop:12}},React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},React.createElement("span",{style:{fontWeight:600,fontSize:".85rem"}},"Analysis Progress"),React.createElement("span",{style:{color:"var(--text3)",fontSize:".8rem"}},`${i.progress_pct}%`)),React.createElement("div",{style:{width:"100%",height:8,background:"var(--bg3)",borderRadius:4,overflow:"hidden",marginBottom:8}},React.createElement("div",{style:{width:`${i.progress_pct}%`,height:"100%",background:"linear-gradient(90deg, var(--primary), var(--accent))",borderRadius:4,transition:"width .5s ease"}})),React.createElement("p",{style:{color:"var(--text2)",fontSize:".85rem"}},i.status==="completed"?"\u2705 Analysis complete!":i.status==="failed"?`\u274C Failed: ${i.error||"Unknown error"}`:`\u2699\uFE0F ${v}`),i.status==="completed"?React.createElement("button",{className:"btn btn-accent",style:{marginTop:8,fontSize:".8rem",padding:"6px 16px"},onClick:()=>window.location.hash="reports"},"View Reports"):null):null,r&&!i?React.createElement("div",{className:"insight"},React.createElement("h3",null,"\u2699\uFE0F Analysis Submitted"),React.createElement("p",null,`Job ID: ${r.job_id}`)):null,!r&&!o&&!i?React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F50D}"),React.createElement("p",null,"Enter a channel URL to begin analysis")):null))}function ce(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),i=async()=>{if(a.trim()){l(!0),u(""),g(null);try{let e=await t("/find-competitors",{method:"POST",body:JSON.stringify({channel_id:a})});if(!e)return;let y=await e.json();e.ok?g(y):u(y.detail||"Search failed")}catch{u("Network error")}finally{l(!1)}}},n=async e=>{await t("/api/watched-competitors",{method:"POST",body:JSON.stringify({channel_id:e.channel_id,channel_title:e.title,subscriber_count:e.subscriber_count})}),alert(`Watching ${e.title}`)};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Competitor Analysis"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Discover and analyze competing channels"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,maxWidth:500}},React.createElement("input",{className:"input",placeholder:"YouTube channel ID...",value:a,onChange:e=>s(e.target.value),onKeyDown:e=>e.key==="Enter"&&i()}),React.createElement("button",{className:"btn btn-accent",onClick:i,disabled:o},o?"Searching...":"Search")),React.createElement(_,{active:o}),React.createElement(z,{message:m})),r?.length?React.createElement("div",null,React.createElement("div",{className:"competitor-grid"},r.map((e,y)=>React.createElement("div",{key:y,className:"competitor-card"},React.createElement("div",{className:"name"},e.title),React.createElement("div",{className:"note"},e.relevance_note||""),React.createElement("div",{className:"subs"},`${T(e.subscriber_count)} subs \xB7 ${e.engagement_rate?.toFixed(1)||"?"}% eng`),React.createElement("button",{className:"btn btn-ghost",style:{marginTop:8,width:"100%",justifyContent:"center",padding:"4px 8px",fontSize:".78rem"},onClick:()=>n(e)},"\u{1F440} Watch"))))):null,!r&&!o?React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F465}"),React.createElement("p",null,"Enter a channel ID to discover competitors")):null)}function se(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(""),[o,l]=c(null),[m,u]=c(!1),[i,n]=c(""),[e,y]=c({trends:!0,twitter:!0,twitch:!0,hn:!0}),[p,R]=c("all"),h=async()=>{if(!a.trim()||!r.trim()){n("Enter both topic and channel ID");return}u(!0),n(""),l(null);try{let E=await t("/multi-source-search",{method:"POST",body:JSON.stringify({channel_id:r,topic:a,include_trends:e.trends,include_twitter:e.twitter,include_twitch:e.twitch,include_hn:e.hn,include_rss:!0,include_tiktok:!0,include_instagram:!0})});if(!E)return;let N=await E.json();E.ok?(l(N),R("all"),setTimeout(()=>v(N),100)):n(N.detail||"Search failed")}catch{n("Network error")}finally{u(!1)}},v=E=>{if(!E.trends?.interest_over_time?.length)return;let N=F();U("disc-trend-chart",{type:"line",data:{labels:E.trends.interest_over_time.map(k=>k.label),datasets:[{label:"Interest",data:E.trends.interest_over_time.map(k=>k.value),borderColor:"#3ea6ff",backgroundColor:"rgba(62,166,255,0.1)",fill:!0,tension:.3,borderWidth:2}]},options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{x:{grid:{color:N?"#303030":"#e5e5e5"},ticks:{color:N?"#aaa":"#666",maxTicksLimit:10}},y:{grid:{color:N?"#303030":"#e5e5e5"},ticks:{color:N?"#aaa":"#666"}}}}})},d=o?.cross_platform_content||[],f={};return d.forEach(E=>{f[E.platform]||(f[E.platform]=[]),f[E.platform].push(E)}),React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Content Discovery"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Cross-platform search across all sources"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},React.createElement("input",{className:"input",style:{flex:1,minWidth:200},placeholder:"Channel ID...",value:r,onChange:E=>g(E.target.value)}),React.createElement("input",{className:"input",style:{flex:2,minWidth:200},placeholder:"Search topic...",value:a,onChange:E=>s(E.target.value),onKeyDown:E=>E.key==="Enter"&&h()}),React.createElement("button",{className:"btn btn-accent",onClick:h,disabled:m},m?"Searching...":"Search All")),React.createElement("div",{style:{display:"flex",gap:16,marginTop:12,flexWrap:"wrap",fontSize:".85rem",color:"var(--text3)"}},Object.entries(e).map(([E,N])=>React.createElement("label",{key:E,style:{display:"flex",alignItems:"center",gap:4,cursor:"pointer"}},React.createElement("input",{type:"checkbox",checked:N,onChange:()=>y(k=>({...k,[E]:!k[E]}))}),` ${E.charAt(0).toUpperCase()+E.slice(1)}`))),React.createElement(_,{active:m}),React.createElement(z,{message:i})),o?React.createElement("div",null,React.createElement("div",{className:"stats"},...Object.entries(f).map(([E,N])=>React.createElement(w,{key:E,label:E,value:N.length,change:"items"})),React.createElement(w,{label:"total",value:d.length,change:"sources"})),o.trends?.interest_over_time?.length>1?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(62,166,255,.15)",color:"var(--accent)"}},"\u{1F4C8}"),React.createElement("h2",null,`Google Trends: "${a}"`)),React.createElement("div",{className:"chart-container"},React.createElement("canvas",{id:"disc-trend-chart"}))):null,d.length?React.createElement("div",null,React.createElement("div",{className:"tabs"},React.createElement("button",{className:`tab${p==="all"?" active":""}`,onClick:()=>R("all")},"All ",React.createElement("span",{className:"tab-count"},d.length)),Object.entries(f).map(([E,N])=>React.createElement("button",{key:E,className:`tab${p===E?" active":""}`,onClick:()=>R(E)},E," ",React.createElement("span",{className:"tab-count"},N.length)))),React.createElement("div",{className:"content-list"},(p==="all"?d:f[p]||[]).map((E,N)=>React.createElement(M,{key:N,item:E})))):React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F50D}"),React.createElement("p",null,`No results found for "${a}"`))):m?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F30D}"),React.createElement("p",null,"Search any topic to discover content across 7+ platforms")))}function oe(){let{api:t,user:a}=x(),[s,r]=c(null),[g,o]=c(!0),[l,m]=c(!1);S(()=>{(async()=>{let n=await t("/api/billing/usage");if(!n)return;let e=await n.json();n.ok&&r(e),o(!1)})()},[t]);let u=async()=>{m(!0);try{let n=await t("/api/billing/portal",{method:"POST"});if(!n)return;let e=await n.json();e.url&&(window.location.href=e.url)}catch{}finally{m(!1)}},i=async n=>{let e=await t("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:n})});if(!e)return;let y=await e.json();y.url&&(window.location.href=y.url)};return g?React.createElement(P,{count:2}):React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Billing & Usage"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Manage your subscription and view usage"),s?React.createElement("div",{className:"stats"},React.createElement(w,{label:"Plan",value:s.plan}),React.createElement(w,{label:"Analyses Used",value:s.analyses_this_month}),React.createElement(w,{label:"Monthly Limit",value:s.limit===-1?"\u221E":s.limit}),React.createElement(w,{label:"Remaining",value:s.remaining===-1?"\u221E":s.remaining})):null,React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Subscription Plans"),React.createElement("div",{className:"stats",style:{marginBottom:0}},React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},"Free"),React.createElement("div",{className:"value",style:{fontSize:"1rem"}},"3 analyses/mo"),s?.plan==="free"?React.createElement("div",{className:"change up"},"Current"):React.createElement("button",{className:"btn btn-ghost",style:{marginTop:8,width:"100%",justifyContent:"center",padding:"6px 12px",fontSize:".8rem"},disabled:!0},"Current")),React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},"Pro - $19/mo"),React.createElement("div",{className:"value",style:{fontSize:"1rem"}},"50 analyses/mo"),s?.plan==="pro"?React.createElement("div",{className:"change up"},"Current"):React.createElement("button",{className:"btn btn-primary",style:{marginTop:8,width:"100%",justifyContent:"center",padding:"6px 12px",fontSize:".8rem"},onClick:()=>i("pro")},"Upgrade")),React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},"Business - $49/mo"),React.createElement("div",{className:"value",style:{fontSize:"1rem"}},"Unlimited"),s?.plan==="business"?React.createElement("div",{className:"change up"},"Current"):React.createElement("button",{className:"btn btn-accent",style:{marginTop:8,width:"100%",justifyContent:"center",padding:"6px 12px",fontSize:".8rem"},onClick:()=>i("business")},"Upgrade"))),s?.plan!=="free"?React.createElement("button",{className:"btn btn-ghost",style:{marginTop:12},onClick:u,disabled:l},l?"Loading...":"Manage Subscription (Stripe Portal)"):null))}function ie(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),i=async()=>{if(a.trim()){l(!0),u(""),g(null);try{let e=await t("/api/ideas/generate",{method:"POST",body:JSON.stringify({topic:a})});if(!e)return;let y=await e.json();e.ok?g(y):u(y.detail||"Generation failed")}catch{u("Network error")}finally{l(!1)}}},n=async e=>{await t("/api/ideas/save",{method:"POST",body:JSON.stringify({topic:a,title:e.title,seo_keywords:JSON.stringify(e.seo_keywords||[]),thumbnail_ideas:JSON.stringify(e.thumbnail_ideas||[]),best_posting_time:e.best_time_to_post,predicted_performance:e.predicted_performance,platform_focus:JSON.stringify(e.platform_focus||[]),saved:!0})}),alert("Idea saved!")};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Content Idea Generator"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Get AI-powered video ideas with SEO keywords and thumbnail concepts"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,maxWidth:500}},React.createElement("input",{className:"input",placeholder:'e.g. "AI tools for content creators"',value:a,onChange:e=>s(e.target.value),onKeyDown:e=>e.key==="Enter"&&i()}),React.createElement("button",{className:"btn btn-accent",onClick:i,disabled:o},o?"Generating...":"Generate Ideas")),React.createElement(_,{active:o}),React.createElement(z,{message:m})),r?React.createElement("div",null,r.insight_summary?React.createElement("div",{className:"insight"},React.createElement("h3",null,"\u{1F916} AI Analysis"),React.createElement("p",null,r.insight_summary)):null,React.createElement("div",{className:"stats",style:{gridTemplateColumns:"repeat(auto-fill, minmax(300px, 1fr))"}},r.ideas.map((e,y)=>React.createElement("div",{key:y,className:"card",style:{padding:16}},React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}},React.createElement("h3",{style:{fontSize:"1rem",fontWeight:700,flex:1}},e.title),React.createElement("span",{className:"tag",style:{background:e.confidence_score>.8?"rgba(43,166,64,.15)":"var(--bg3)",color:e.confidence_score>.8?"var(--success)":"var(--text2)"}},`${Math.round(e.confidence_score*100)}%`)),React.createElement("p",{style:{color:"var(--text2)",fontSize:".85rem",marginBottom:12}},e.description),e.seo_keywords?.length?React.createElement("div",null,React.createElement("div",{style:{fontSize:".78rem",color:"var(--text3)",marginBottom:4,fontWeight:600}},"SEO Keywords"),React.createElement("div",null,e.seo_keywords.map((p,R)=>React.createElement("span",{key:R,className:"tag"},p)))):null,e.thumbnail_ideas?.length?React.createElement("div",{style:{marginTop:8}},React.createElement("div",{style:{fontSize:".78rem",color:"var(--text3)",marginBottom:4,fontWeight:600}},"\u{1F5BC} Thumbnail Ideas"),React.createElement("ul",{style:{fontSize:".82rem",color:"var(--text2)",paddingLeft:16}},e.thumbnail_ideas.map((p,R)=>React.createElement("li",{key:R},p)))):null,e.best_time_to_post?React.createElement("div",{style:{marginTop:8,fontSize:".82rem",color:"var(--accent)"}},"\u23F0 Best time: ",e.best_time_to_post," \xB7 Predicted: ",e.predicted_performance):null,e.viral_probability!==void 0?React.createElement("div",{style:{marginTop:8,display:"flex",gap:12,flexWrap:"wrap",fontSize:".82rem"}},React.createElement("span",{style:{color:e.viral_probability>70?"var(--success)":"var(--warning)"}},"\u{1F4A5} Viral: ",e.viral_probability,"%"),React.createElement("span",{style:{color:"var(--text2)"}},"\u{1F4C8} Views: ",(e.expected_view_min||0).toLocaleString(),"\u2013",(e.expected_view_max||0).toLocaleString())):null,e.publish_ready!==void 0?React.createElement("div",{style:{marginTop:8,padding:"8px 12px",borderRadius:"var(--radius)",fontSize:".82rem",background:e.publish_ready?"rgba(43,166,64,.1)":"rgba(255,78,69,.1)",border:`1px solid ${e.publish_ready?"var(--success)":"var(--error)"}`}},e.publish_ready?React.createElement("span",{style:{color:"var(--success)",fontWeight:600}},"\u2714\uFE0F Ready to Publish"):React.createElement("span",{style:{color:"var(--error)",fontWeight:600}},"\u26A0\uFE0F Improve Before Publishing"),e.publish_reasons?.length?React.createElement("div",{style:{marginTop:4,color:"var(--text2)"}},e.publish_reasons.map((p,R)=>React.createElement("div",{key:R},"\u2022 ",p))):null,e.improve_reasons?.length?React.createElement("div",{style:{marginTop:4,color:"var(--error)"}},e.improve_reasons.map((p,R)=>React.createElement("div",{key:R},"\u2022 ",p))):null):null,React.createElement("button",{className:"btn btn-ghost",style:{marginTop:12,width:"100%",justifyContent:"center",padding:"6px",fontSize:".8rem"},onClick:()=>n(e)},"\u{1F4BE} Save Idea"))))):o?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4A1}"),React.createElement("p",null,"Enter a topic to generate AI-powered content ideas")))}function me(){let{api:t,user:a,logout:s}=x(),[r,g]=c(null),[o,l]=c(null),[m,u]=c([]),[i,n]=c([]),[e,y]=c(null),[p,R]=c(""),[h,v]=c(""),[d,f]=c("profile"),[E,N]=c(!1);S(()=>{(async()=>{let[b,C,D,W,$]=await Promise.all([t("/api/billing/usage"),t("/api/notifications/prefs"),t("/api/api-keys"),t("/api/channels"),t("/api/digest-config")]);if(b?.ok){let B=await b.json();g(B)}if(C?.ok){let B=await C.json();l(B)}if(D?.ok){let B=await D.json();u(B)}if(W?.ok){let B=await W.json();n(B)}if($?.ok){let B=await $.json();y(B)}})()},[t]);let k=async()=>{await t("/api/notifications/prefs",{method:"PUT",body:JSON.stringify(o)}),alert("Preferences saved!")},Y=async()=>{let b=await t("/api/api-keys",{method:"POST",body:JSON.stringify({label:p||"default"})});if(!b)return;let C=await b.json();v(C.key),R("");let D=await t("/api/api-keys");D?.ok&&u(await D.json())},G=async b=>{await t(`/api/api-keys/${b}`,{method:"DELETE"});let C=await t("/api/api-keys");C?.ok&&u(await C.json())},V=async()=>{await t("/api/digest-config",{method:"PUT",body:JSON.stringify(e)}),alert("Digest settings saved!")},q=async()=>{E&&(await t("/api/account",{method:"DELETE"}),s())},H=["profile","notifications","api-keys","channels","digest"],X={profile:"Profile & Usage",notifications:"Notifications","api-keys":"API Keys",channels:"Channels",digest:"Email Digest"};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Settings"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Manage your account and preferences"),React.createElement("div",{className:"tabs"},H.map(b=>React.createElement("button",{key:b,className:`tab${d===b?" active":""}`,onClick:()=>f(b)},X[b]))),React.createElement("div",{className:"tab-panel",style:{display:d==="profile"?"block":"none"}},React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Account Information"),React.createElement("div",{style:{display:"grid",gap:8,gridTemplateColumns:"140px 1fr",fontSize:".9rem"}},React.createElement("span",{style:{color:"var(--text3)"}},"Email:"),React.createElement("span",null,a?.email),React.createElement("span",{style:{color:"var(--text3)"}},"Plan:"),React.createElement("span",{style:{color:"var(--primary)",fontWeight:600}},r?.plan||"free"),React.createElement("span",{style:{color:"var(--text3)"}},"Analyses Used:"),React.createElement("span",null,`${r?.analyses_this_month||0} / ${r?.limit===-1?"\u221E":r?.limit||3}`),React.createElement("span",{style:{color:"var(--text3)"}},"Member Since:"),React.createElement("span",null,a?.created_date?new Date(a.created_date).toLocaleDateString():"N/A")),r?.plan!=="free"?React.createElement("button",{className:"btn btn-ghost",style:{marginTop:16},onClick:async()=>{let b=await t("/api/billing/portal",{method:"POST"});if(b?.ok){let C=await b.json();C.url&&(window.location.href=C.url)}}},"Manage Subscription"):React.createElement("button",{className:"btn btn-primary",style:{marginTop:16},onClick:()=>window.location.hash="pricing"},"Upgrade Plan")),React.createElement("div",{className:"card",style:{borderColor:"rgba(255,68,68,.3)"}},React.createElement("h3",{style:{color:"var(--error)",marginBottom:8}},"Danger Zone"),React.createElement("p",{style:{fontSize:".85rem",color:"var(--text3)",marginBottom:12}},"Permanently delete your account and all data. This action cannot be undone."),E?React.createElement("div",{style:{display:"flex",gap:8}},React.createElement("button",{className:"btn",style:{background:"var(--error)",color:"#fff"},onClick:q},"Confirm Delete"),React.createElement("button",{className:"btn btn-ghost",onClick:()=>N(!1)},"Cancel")):React.createElement("button",{className:"btn btn-ghost",style:{borderColor:"var(--error)",color:"var(--error)"},onClick:()=>N(!0)},"Delete Account"))),React.createElement("div",{className:"tab-panel",style:{display:d==="notifications"?"block":"none"}},React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Notification Preferences"),o?Object.entries(o).filter(([b])=>b!=="id").map(([b,C])=>React.createElement("label",{key:b,style:{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".9rem",cursor:"pointer"}},React.createElement("input",{type:typeof C=="boolean"?"checkbox":"radio",checked:C===!0||C==="true"||C==="weekly",onChange:()=>{l(typeof C=="boolean"?D=>({...D,[b]:!D[b]}):D=>({...D,[b]:D.digest_frequency==="weekly"?"daily":"weekly"}))}}),b.replace(/_/g," ").replace(/\b\w/g,D=>D.toUpperCase()))):null,React.createElement("button",{className:"btn btn-accent",style:{marginTop:12},onClick:k},"Save Preferences"))),React.createElement("div",{className:"tab-panel",style:{display:d==="api-keys"?"block":"none"}},React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:4}},"API Keys"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem",marginBottom:12}},"API keys are only available on the Business plan."),a?.plan==="business"?React.createElement("div",null,React.createElement("div",{style:{display:"flex",gap:8,maxWidth:400,marginBottom:16}},React.createElement("input",{className:"input",placeholder:'Key label (e.g. "prod-server")',value:p,onChange:b=>R(b.target.value)}),React.createElement("button",{className:"btn btn-accent",onClick:Y},"Create Key")),h?React.createElement("div",{className:"insight"},React.createElement("h3",null,"\u26A0\uFE0F Copy this key now \u2014 it won\u2019t be shown again"),React.createElement("code",{style:{display:"block",padding:12,background:"var(--bg)",borderRadius:"var(--radius)",marginTop:8,fontSize:".85rem",wordBreak:"break-all"}},h)):null,m.length?React.createElement("div",null,React.createElement("div",{style:{fontSize:".85rem",color:"var(--text3)",marginBottom:8,fontWeight:600}},"Existing Keys"),m.map(b=>React.createElement("div",{key:b.id,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".85rem"}},React.createElement("div",null,React.createElement("div",{style:{fontWeight:600}},b.label),React.createElement("div",{style:{color:"var(--text3)"}},b.key," \xB7 ",new Date(b.created_date).toLocaleDateString())),React.createElement("button",{className:"btn btn-ghost",style:{padding:"4px 12px",fontSize:".78rem",borderColor:"var(--error)",color:"var(--error)"},onClick:()=>G(b.id)},"Revoke")))):React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem"}},"No API keys created yet.")):React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem",fontStyle:"italic"}},"Upgrade to Business to create API keys."))),React.createElement("div",{className:"tab-panel",style:{display:d==="channels"?"block":"none"}},React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Your Channels"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem",marginBottom:12}},"Manage multiple YouTube channels from one account."),i.length?i.map(b=>React.createElement("div",{key:b.id,style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--border)"}},React.createElement("div",null,React.createElement("div",{style:{fontWeight:600,fontSize:".9rem"}},b.channel_title||b.channel_id),React.createElement("div",{style:{color:"var(--text3)",fontSize:".8rem"}},b.is_primary?"Primary":"Secondary")),React.createElement("button",{className:"btn btn-ghost",style:{padding:"4px 12px",fontSize:".78rem"},onClick:async()=>{await t(`/api/channels/${b.channel_id}`,{method:"DELETE"});let C=await t("/api/channels");C?.ok&&n(await C.json())}},"Remove"))):React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem"}},"No channels added yet. Analyze a channel to add it."))),React.createElement("div",{className:"tab-panel",style:{display:d==="digest"?"block":"none"}},React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Email Digest Configuration"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem",marginBottom:12}},"Customize your weekly email report."),e?Object.entries(e).filter(([b])=>b!=="id"&&b!=="updated_at").map(([b,C])=>React.createElement("label",{key:b,style:{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".9rem",cursor:"pointer"}},React.createElement("input",{type:typeof C=="boolean"?"checkbox":"radio",checked:typeof C=="boolean"?C:C==="weekly",onChange:()=>{y(typeof C=="boolean"?D=>({...D,[b]:!D[b]}):D=>({...D,[b]:D.frequency==="weekly"?"daily":"weekly"}))}}),b.replace(/_/g," ").replace(/\b\w/g,D=>D.toUpperCase()))):null,React.createElement("button",{className:"btn btn-accent",style:{marginTop:12},onClick:V},"Save Digest Settings"))))}function de(){let{api:t}=x(),[a,s]=c([]),[r,g]=c(!0);return S(()=>{(async()=>{let o=await t("/api/ideas?saved_only=true");o?.ok&&s(await o.json()),g(!1)})()},[t]),r?React.createElement(P):React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Saved Ideas"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Your saved content ideas"),a.length?React.createElement("div",{className:"content-list"},a.map(o=>React.createElement("div",{key:o.id,className:"card"},React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},React.createElement("div",null,React.createElement("h3",{style:{fontSize:"1rem",fontWeight:600,marginBottom:4}},o.title),React.createElement("p",{style:{color:"var(--text3)",fontSize:".82rem"}},"Topic: ",o.topic)),React.createElement("button",{className:"btn btn-ghost",style:{padding:"4px 12px",fontSize:".78rem",borderColor:"var(--error)",color:"var(--error)"},onClick:async()=>{await t(`/api/ideas/${o.id}`,{method:"DELETE"}),s(a.filter(l=>l.id!==o.id))}},"Delete")),o.seo_keywords?.length?React.createElement("div",{style:{marginTop:8}},o.seo_keywords.map((l,m)=>React.createElement("span",{key:m,className:"tag"},l))):null))):React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4BE}"),React.createElement("p",null,"No saved ideas yet. Generate some from the Ideas page!")))}function ue(){let{api:t}=x(),[a,s]=c([]),[r,g]=c([]),[o,l]=c(!0),[m,u]=c("watched");S(()=>{(async()=>{let[n,e]=await Promise.all([t("/api/watched-competitors"),t("/api/alerts")]);n?.ok&&s(await n.json()),e?.ok&&g(await e.json()),l(!1)})()},[t]);let i=async()=>{await t("/api/alerts/read",{method:"POST"}),g(r.map(n=>({...n,read:!0})))};return o?React.createElement(P):React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Competitor Monitoring"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Watch competitors and get alerted to changes"),React.createElement("div",{className:"tabs"},React.createElement("button",{className:`tab${m==="watched"?" active":""}`,onClick:()=>u("watched")},"Watched Channels"),React.createElement("button",{className:`tab${m==="alerts"?" active":""}`,onClick:()=>u("alerts")},"Alerts",r.filter(n=>!n.read).length?React.createElement("span",{className:"tab-count",style:{background:"var(--primary)",color:"#fff"}},r.filter(n=>!n.read).length):null)),m==="watched"?React.createElement("div",null,a.length?React.createElement("div",{className:"competitor-grid"},a.map(n=>React.createElement("div",{key:n.id,className:"competitor-card"},React.createElement("div",{className:"name"},n.channel_title||n.channel_id),React.createElement("div",{className:"subs"},`${T(n.subscriber_count)} subs \xB7 Watching since ${new Date(n.added_at).toLocaleDateString()}`),React.createElement("button",{className:"btn btn-ghost",style:{marginTop:8,width:"100%",justifyContent:"center",padding:"4px 8px",fontSize:".78rem",borderColor:"var(--error)",color:"var(--error)"},onClick:async()=>{await t(`/api/watched-competitors/${n.channel_id}`,{method:"DELETE"}),s(a.filter(e=>e.id!==n.id))}},"Stop Watching")))):React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F440}"),React.createElement("p",null,'No competitors watched yet. Find competitors and click "Watch" to monitor them.'))):React.createElement("div",null,r.filter(n=>!n.read).length?React.createElement("button",{className:"btn btn-ghost",style:{marginBottom:12,fontSize:".85rem"},onClick:i},"Mark All Read"):null,r.length?React.createElement("div",{className:"content-list"},r.map(n=>React.createElement("div",{key:n.id,className:"card",style:{padding:12,opacity:n.read?.6:1}},React.createElement("div",{style:{display:"flex",alignItems:"flex-start",gap:8}},React.createElement("span",{style:{fontSize:"1.1rem"}},n.alert_type==="new_video"?"\u{1F3AC}":n.alert_type==="sub_spike"?"\u{1F4C8}":"\u{1F4A1}"),React.createElement("div",null,React.createElement("p",{style:{fontSize:".85rem",fontWeight:600}},n.message),React.createElement("p",{style:{fontSize:".78rem",color:"var(--text3)"}},new Date(n.created_at).toLocaleString())))))):React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F514}"),React.createElement("p",null,"No alerts yet. Alerts will appear when your watched competitors have notable changes."))))}function pe(){let{api:t}=x(),a=new Date,[s,r]=c(`${a.getFullYear()}-${String(a.getMonth()+1).padStart(2,"0")}`),[g,o]=c([]),[l,m]=c(!0),[u,i]=c(!1),[n,e]=c({title:"",description:"",event_date:"",event_time:"",event_type:"idea",related_channel_id:""});S(()=>{(async()=>{let d=await t(`/api/calendar?month=${s}`);d?.ok&&o(await d.json()),m(!1)})()},[t,s]);let y=async()=>{(await t("/api/calendar",{method:"POST",body:JSON.stringify(n)}))?.ok&&(i(!1),e({title:"",description:"",event_date:"",event_time:"",event_type:"idea",related_channel_id:""}));let f=await t(`/api/calendar?month=${s}`);f?.ok&&o(await f.json())},p=async d=>{await t(`/api/calendar/${d}`,{method:"DELETE"}),o(g.filter(f=>f.id!==d))},R=new Date(parseInt(s),parseInt(s.split("-")[1]),0).getDate(),h=new Date(parseInt(s),parseInt(s.split("-")[1])-1,1).getDay(),v=Array.from({length:R},(d,f)=>f+1);return l?React.createElement(P):React.createElement("div",null,React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}},React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Content Calendar"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem"}},"Plan and schedule your content")),React.createElement("button",{className:"btn btn-primary",onClick:()=>i(!u)},u?"Cancel":"+ Add Event")),u?React.createElement("div",{className:"card",style:{marginBottom:16}},React.createElement("div",{style:{display:"grid",gap:8,gridTemplateColumns:"1fr 1fr"}},React.createElement("input",{className:"input",placeholder:"Event title",value:n.title,onChange:d=>e(f=>({...f,title:d.target.value}))}),React.createElement("input",{className:"input",type:"date",value:n.event_date,onChange:d=>e(f=>({...f,event_date:d.target.value}))}),React.createElement("input",{className:"input",type:"time",value:n.event_time,onChange:d=>e(f=>({...f,event_time:d.target.value}))}),React.createElement("select",{className:"input",value:n.event_type,onChange:d=>e(f=>({...f,event_type:d.target.value}))},React.createElement("option",{value:"idea"},"Content Idea"),React.createElement("option",{value:"upload"},"Upload"),React.createElement("option",{value:"meeting"},"Meeting"),React.createElement("option",{value:"deadline"},"Deadline"))),React.createElement("textarea",{className:"input",style:{marginTop:8,minHeight:60},placeholder:"Description",value:n.description,onChange:d=>e(f=>({...f,description:d.target.value}))}),React.createElement("button",{className:"btn btn-accent",style:{marginTop:8},onClick:y,disabled:!n.title||!n.event_date},"Save Event")):null,React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",marginBottom:16}},React.createElement("button",{className:"btn btn-ghost",style:{padding:"6px 12px"},onClick:()=>{let[d,f]=s.split("-").map(Number),E=new Date(d,f-2,1);r(`${E.getFullYear()}-${String(E.getMonth()+1).padStart(2,"0")}`)}},"\u2190"),React.createElement("h2",{style:{fontSize:"1.1rem",fontWeight:600,minWidth:160,textAlign:"center"}},new Date(parseInt(s),parseInt(s.split("-")[1])-1).toLocaleString("default",{month:"long",year:"numeric"})),React.createElement("button",{className:"btn btn-ghost",style:{padding:"6px 12px"},onClick:()=>{let[d,f]=s.split("-").map(Number),E=new Date(d,f,1);r(`${E.getFullYear()}-${String(E.getMonth()+1).padStart(2,"0")}`)}},"\u2192"),React.createElement("button",{className:"btn btn-ghost",style:{padding:"6px 12px",fontSize:".8rem"},onClick:()=>{let d=new Date;r(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`)}},"Today")),React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:"var(--radius)",overflow:"hidden"}},React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(7, 1fr)",background:"var(--bg3)",borderBottom:"1px solid var(--border)"}},["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>React.createElement("div",{key:d,style:{padding:"8px",textAlign:"center",fontSize:".78rem",color:"var(--text3)",fontWeight:600}},d))),React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(7, 1fr)"}},Array.from({length:h},(d,f)=>React.createElement("div",{key:`empty-${f}`,style:{padding:"8px",minHeight:80,background:"var(--bg2)"}})),v.map(d=>{let f=`${s}-${String(d).padStart(2,"0")}`,E=g.filter(N=>N.event_date===f);return React.createElement("div",{key:d,style:{padding:"4px",minHeight:80,borderRight:"1px solid var(--border)",borderBottom:"1px solid var(--border)",cursor:"pointer"},onClick:()=>e(N=>({...N,event_date:f}))},React.createElement("div",{style:{fontSize:".8rem",fontWeight:600,color:"var(--text2)",marginBottom:2}},d),E.slice(0,3).map(N=>{let k=N.event_type==="upload"?"rgba(255,68,68,.15)":"rgba(62,166,255,.15)";return React.createElement("div",{key:N.id,style:{fontSize:".7rem",padding:"2px 4px",marginBottom:2,background:k,borderRadius:4,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},N.title)}),E.length>3?React.createElement("div",{style:{fontSize:".65rem",color:"var(--text3)"}},`+${E.length-3} more`):null)}))),React.createElement("div",{style:{marginTop:16,fontSize:".85rem",color:"var(--text3)"}},React.createElement("span",null,g.length," events this month"),g.filter(d=>d.event_type==="upload").length?React.createElement("span",{style:{marginLeft:12}},"\xB7 ",g.filter(d=>d.event_type==="upload").length," uploads"):null))}function ge(){let{api:t}=x(),[a,s]=c([]),[r,g]=c(!0),[o,l]=c(null),[m,u]=c("");S(()=>{(async()=>{let e=await t("/api/reports");e?.ok&&s(await e.json()),g(!1)})()},[t]);let i=async e=>{let y=await t(`/api/reports/${e}`);y?.ok&&l(await y.json())},n=async e=>{if(o?.data?.profile?.channel_id){u(e);try{let y=await t(`/api/analyze/${o.data.profile.channel_id}/export?format=${e}`);if(!y)return;let p=await y.blob(),R=URL.createObjectURL(p),h=document.createElement("a");h.href=R,h.download=`analysis_${o.data.profile.channel_id}.${e}`,h.click(),URL.revokeObjectURL(R)}catch{}finally{u("")}}};return r?React.createElement(P):React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Reports & Exports"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"View saved analyses and export reports"),React.createElement("div",{style:{display:"grid",gridTemplateColumns:o?"1fr 1fr":"1fr",gap:16}},React.createElement("div",null,React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:12}},"Saved Reports"),a.length?a.map(e=>React.createElement("div",{key:e.report_id,className:"content-item",style:{marginBottom:4},onClick:()=>i(e.report_id)},React.createElement("div",null,React.createElement("div",{style:{fontWeight:600,fontSize:".9rem"}},e.channel_title||e.channel_url),React.createElement("div",{style:{color:"var(--text3)",fontSize:".8rem"}},e.topic||"Channel analysis"," \xB7 ",new Date(e.created_at).toLocaleDateString())))):React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem"}},"No reports yet. Analyze a channel to see reports here."))),o?React.createElement("div",null,React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:8}},o.channel_title||"Report"),React.createElement("div",{style:{fontSize:".85rem",color:"var(--text3)",marginBottom:12}},o.topic," \xB7 ",new Date(o.created_at).toLocaleString()),React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},React.createElement("button",{className:"btn btn-accent",style:{fontSize:".82rem",padding:"8px 16px"},onClick:()=>n("csv"),disabled:m==="csv"},m==="csv"?"Exporting...":"\u{1F4C4} Export CSV"),React.createElement("button",{className:"btn btn-primary",style:{fontSize:".82rem",padding:"8px 16px"},onClick:()=>n("pdf"),disabled:m==="pdf"},m==="pdf"?"Exporting...":"\u{1F4C4} Export PDF"),React.createElement("button",{className:"btn btn-ghost",style:{fontSize:".82rem",padding:"8px 16px"},onClick:()=>l(null)},"Close")))):null))}function ye(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(""),[o,l]=c({tiktok:!0,instagram:!0}),[m,u]=c(null),[i,n]=c([]),[e,y]=c(!1),[p,R]=c("");S(()=>{(async()=>{let v=await t("/api/repurpose");v?.ok&&n(await v.json())})()},[t]);let h=async()=>{if(a.trim()){y(!0),R(""),u(null);try{let v=Object.entries(o).filter(([,E])=>E).map(([E])=>E);if(!v.length){R("Select at least one platform"),y(!1);return}let d=await t("/api/repurpose",{method:"POST",body:JSON.stringify({url:a,title:r,target_platforms:v})});if(!d)return;let f=await d.json();d.ok?u(f):R(f.detail||"Failed")}catch{R("Network error")}finally{y(!1)}}};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Cross-Platform Repurposing"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Turn YouTube videos into short-form content for other platforms"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},React.createElement("input",{className:"input",style:{flex:2,minWidth:250},placeholder:"YouTube video URL...",value:a,onChange:v=>s(v.target.value)}),React.createElement("input",{className:"input",style:{flex:1,minWidth:150},placeholder:"Video title (optional)",value:r,onChange:v=>g(v.target.value)}),React.createElement("button",{className:"btn btn-accent",onClick:h,disabled:e},e?"Generating...":"Repurpose")),React.createElement("div",{style:{display:"flex",gap:16,marginTop:12,fontSize:".85rem",color:"var(--text3)"}},Object.entries(o).map(([v,d])=>React.createElement("label",{key:v,style:{display:"flex",alignItems:"center",gap:4,cursor:"pointer"}},React.createElement("input",{type:"checkbox",checked:d,onChange:()=>l(f=>({...f,[v]:!f[v]}))}),A(v).icon," ",v.charAt(0).toUpperCase()+v.slice(1)))),React.createElement(_,{active:e}),React.createElement(z,{message:p})),m?React.createElement("div",null,React.createElement("h3",{style:{marginBottom:12}},"Generated Scripts"),React.createElement("div",{className:"stats",style:{gridTemplateColumns:"repeat(auto-fill, minmax(320px, 1fr))"}},m.scripts.map((v,d)=>React.createElement("div",{key:d,className:"card"},React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:8}},React.createElement("span",{className:"platform-badge",style:{background:A(v.platform).bg,color:A(v.platform).color,width:28,height:28,fontSize:".75rem"}},A(v.platform).icon),React.createElement("h3",{style:{fontSize:"1rem"}},v.platform," Script (",v.duration_seconds,"s)")),React.createElement("pre",{style:{whiteSpace:"pre-wrap",fontSize:".82rem",color:"var(--text2)",background:"var(--bg)",padding:12,borderRadius:"var(--radius)",marginBottom:8,lineHeight:1.5}},v.script),v.tips?.length?React.createElement("div",null,v.tips.map((f,E)=>React.createElement("div",{key:E,style:{fontSize:".78rem",color:"var(--text3)",padding:"2px 0"}},"\u{1F4A1} ",f))):null)))):null,i.length?React.createElement("div",{className:"card",style:{marginTop:16}},React.createElement("h3",{style:{marginBottom:8}},"History"),i.slice(0,5).map(v=>React.createElement("div",{key:v.id,style:{padding:"8px 0",borderBottom:"1px solid var(--border)",fontSize:".85rem"}},React.createElement("div",{style:{fontWeight:600}},v.source_title||v.source_url),React.createElement("div",{style:{color:"var(--text3)",fontSize:".8rem"}},v.target_platforms?.join(", ")," \xB7 ",new Date(v.created_at).toLocaleDateString())))):null,!m&&!e?React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F504}"),React.createElement("p",null,"Paste a YouTube video URL to generate platform-specific scripts")):null)}function Ee(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),i=async()=>{if(a.trim()){l(!0),u(""),g(null);try{let e=await t("/api/seo-scorecard",{method:"POST",body:JSON.stringify({channel_id:a})});if(!e)return;let y=await e.json();e.ok?g(y):u(y.detail||"Failed")}catch{u("Network error")}finally{l(!1)}}},n=e=>e>=80?"var(--success)":e>=50?"var(--warning)":"var(--error)";return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"SEO Scorecard"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Analyze how well your channel is optimized for search"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,maxWidth:500}},React.createElement("input",{className:"input",placeholder:"Channel ID...",value:a,onChange:e=>s(e.target.value),onKeyDown:e=>e.key==="Enter"&&i()}),React.createElement("button",{className:"btn btn-accent",onClick:i,disabled:o},o?"Scoring...":"Score")),React.createElement(_,{active:o}),React.createElement(z,{message:m})),r?React.createElement("div",null,React.createElement("div",{className:"stats",style:{gridTemplateColumns:"1fr 1fr 1fr 1fr"}},React.createElement("div",{className:"stat",style:{textAlign:"center"}},React.createElement("div",{style:{fontSize:"2.5rem",fontWeight:800,color:n(r.overall_score)}},r.overall_score),React.createElement("div",{className:"label"},"Overall SEO Score")),["title_score","description_score","tags_score"].map(e=>{let y=e.replace("_score","").replace("_"," ");return React.createElement("div",{key:e,className:"stat",style:{textAlign:"center"}},React.createElement("div",{style:{fontSize:"2rem",fontWeight:700,color:n(r[e])}},r[e]),React.createElement("div",{className:"label"},y))})),r.recommendations?.length?React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:8}},"\u{1F4A1} Recommendations"),React.createElement("ul",{className:"rec-list"},r.recommendations.map((e,y)=>React.createElement("li",{key:y},e)))):null):o?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F50D}"),React.createElement("p",null,"Enter a channel ID to generate an SEO scorecard")))}function Re(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(""),[o,l]=c(""),[m,u]=c(null),[i,n]=c(!1),[e,y]=c(""),p=async()=>{if(!a.trim()||!r.trim()){y("Both thumbnail URLs are required");return}n(!0),y(""),u(null);try{let R=await t("/api/thumbnail-test",{method:"POST",body:JSON.stringify({thumbnail_a_url:a,thumbnail_b_url:r,title:o})});if(!R)return;let h=await R.json();R.ok?u(h):y(h.detail||"Test failed")}catch{y("Network error")}finally{n(!1)}};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"A/B Thumbnail Tester"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"AI predicts which thumbnail will perform better"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"grid",gap:8,gridTemplateColumns:"1fr 1fr",maxWidth:600}},React.createElement("input",{className:"input",placeholder:"Thumbnail A URL...",value:a,onChange:R=>s(R.target.value)}),React.createElement("input",{className:"input",placeholder:"Thumbnail B URL...",value:r,onChange:R=>g(R.target.value)}),React.createElement("input",{className:"input",placeholder:"Video title (optional)",value:o,onChange:R=>l(R.target.value),style:{gridColumn:"1 / -1"}})),React.createElement("button",{className:"btn btn-accent",style:{marginTop:8},onClick:p,disabled:i},i?"Testing...":"Compare Thumbnails"),React.createElement(_,{active:i}),React.createElement(z,{message:e})),m?React.createElement("div",null,React.createElement("div",{className:"stats",style:{gridTemplateColumns:"1fr 1fr"}},["a","b"].map(R=>{let h=m[`thumbnail_${R}`];return React.createElement("div",{key:R,className:"card",style:{border:m.winner===R.toUpperCase()?"2px solid var(--success)":"1px solid var(--border)",textAlign:"center"}},React.createElement("div",{style:{fontSize:"3rem",fontWeight:800,color:ve(h.score*10)}},h.score),React.createElement("div",{className:"label",style:{fontSize:"1rem",marginBottom:8}},`Thumbnail ${R.toUpperCase()}${m.winner===R.toUpperCase()?" \u{1F3C6}":""}`),h.factors.map((v,d)=>React.createElement("div",{key:d,style:{fontSize:".82rem",color:"var(--text2)",padding:"4px 0",borderBottom:"1px solid var(--border)"}},v)))})),m.tips?.length?React.createElement("div",{className:"card"},React.createElement("h3",{style:{marginBottom:8}},"\u{1F4A1} General Tips"),m.tips.map((R,h)=>React.createElement("div",{key:h,style:{padding:"4px 0",fontSize:".85rem",color:"var(--text2)"}},R))):null):i?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F5BC}"),React.createElement("p",null,"Enter two thumbnail URLs to see which one performs better")))}function ve(t){return t=Number(t),t>=80?"var(--success)":t>=50?"var(--warning)":"var(--error)"}function fe(){let{api:t}=x(),[a,s]=c([]),[r,g]=c(!1),o=async()=>{g(!0);try{let l=await t("/api/trend-alerts/check",{method:"POST"});if(!l)return;let m=await l.json();l.ok&&s(m.alerts||[])}catch{}finally{g(!1)}};return React.createElement("div",null,React.createElement("h1",{style:{fontSize:"1.5rem",fontWeight:700,marginBottom:4}},"Trend Alerts"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:20}},"Discover trending topics in your niche"),React.createElement("button",{className:"btn btn-accent",onClick:o,disabled:r,style:{marginBottom:16}},r?"Checking...":"\u{1F514} Check for Trends"),a.length?React.createElement("div",{className:"content-list"},a.map((l,m)=>React.createElement("div",{key:m,className:"card",style:{padding:12,borderLeft:`4px solid ${l.strength==="high"?"var(--primary)":"var(--warning)"}`}},React.createElement("div",{style:{display:"flex",alignItems:"flex-start",gap:8}},React.createElement("span",{style:{fontSize:"1.2rem"}},"\u{1F525}"),React.createElement("div",null,React.createElement("p",{style:{fontSize:".9rem",fontWeight:600}},l.topic),React.createElement("p",{style:{fontSize:".82rem",color:"var(--text2)"}},l.message),React.createElement("p",{style:{fontSize:".75rem",color:"var(--text3)",marginTop:4}},"Platform: ",l.platform," \xB7 Strength: ",l.strength)))))):r?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4A1}"),React.createElement("p",null,'Click "Check for Trends" to discover trending topics in your niche')))}function he(){let{api:t}=x(),[a,s]=c(""),[r,g]=c(null),[o,l]=c(!1),[m,u]=c(""),i=async()=>{if(a.trim()){l(!0),u(""),g(null);try{let p=await t("/api/comments/analyze",{method:"POST",body:JSON.stringify({video_url:a})});if(!p)return;let R=await p.json();p.ok?g(R):u(R.detail||"Analysis failed")}catch{u("Network error")}finally{l(!1)}}},n=r?.sentiment_breakdown||{},e=n.positive+n.neutral+n.negative||1,y=p=>Math.round(p/e*100);return React.createElement("div",null,React.createElement("h1",null,"\u{1F4AC} Comment Analyzer"),React.createElement("p",{style:{color:"var(--text3)",marginBottom:16}},"Paste a YouTube video URL to analyze audience comments with AI sentiment and topic extraction"),React.createElement("div",{className:"card"},React.createElement("div",{style:{display:"flex",gap:8,maxWidth:500}},React.createElement("input",{className:"input",placeholder:"https://youtube.com/watch?v=...",value:a,onChange:p=>s(p.target.value),onKeyDown:p=>p.key==="Enter"&&i()}),React.createElement("button",{className:"btn btn-accent",onClick:i,disabled:o},o?"Analyzing...":"Analyze")),React.createElement(_,{active:o}),React.createElement(z,{message:m})),r?React.createElement("div",null,React.createElement("div",{className:"card"},React.createElement("h3",null,r.video_title||"Untitled Video"),React.createElement("p",{style:{color:"var(--text3)",fontSize:".85rem"}},`${r.total_comments} comments analyzed`)),React.createElement("div",{className:"stats",style:{gridTemplateColumns:"repeat(3, 1fr)"}},React.createElement("div",{className:"stat",style:{borderLeft:"4px solid #2ba640"}},React.createElement("div",{className:"label"},"Positive"),React.createElement("div",{className:"value"},`${y(n.positive)}%`),React.createElement("div",{className:"change",style:{color:"var(--success)"}},`${n.positive} comments`)),React.createElement("div",{className:"stat",style:{borderLeft:"4px solid #ffa73c"}},React.createElement("div",{className:"label"},"Neutral"),React.createElement("div",{className:"value"},`${y(n.neutral)}%`),React.createElement("div",{className:"change",style:{color:"var(--warning)"}},`${n.neutral} comments`)),React.createElement("div",{className:"stat",style:{borderLeft:"4px solid #ff4e45"}},React.createElement("div",{className:"label"},"Negative"),React.createElement("div",{className:"value"},`${y(n.negative)}%`),React.createElement("div",{className:"change",style:{color:"var(--error)"}},`${n.negative} comments`))),r.topics?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(62,166,255,.15)"}},"\u{1F4DD}"),React.createElement("h3",null,"Topics Mentioned")),React.createElement("div",null,r.topics.map((p,R)=>React.createElement("span",{key:R,className:"tag"},p)))):null,r.content_ideas?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(43,166,64,.15)"}},"\u{1F4A1}"),React.createElement("h3",null,"Content Ideas from Comments")),React.createElement("ul",{className:"rec-list"},r.content_ideas.map((p,R)=>React.createElement("li",{key:R},p)))):null,r.common_requests?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(255,167,60,.15)"}},"\u{1F4E3}"),React.createElement("h3",null,"Common Requests")),React.createElement("ul",{className:"rec-list"},r.common_requests.map((p,R)=>React.createElement("li",{key:R},p)))):null,r.negative_feedback?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(255,78,69,.15)"}},"\u26A0\uFE0F"),React.createElement("h3",null,"Negative Feedback")),React.createElement("ul",{className:"rec-list"},r.negative_feedback.map((p,R)=>React.createElement("li",{key:R,style:{color:"var(--error)"}},p)))):null,r.summary?React.createElement("div",{className:"insight"},React.createElement("h3",null,"\u{1F916} AI Summary"),React.createElement("p",null,r.summary)):null):o?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4AC}"),React.createElement("p",null,"Enter a YouTube video URL to analyze audience comments")))}function be(){let{api:t}=x(),[a,s]=c(null),[r,g]=c(!1),[o,l]=c(""),m=async()=>{g(!0),l(""),s(null);try{let i=await t("/api/publishing/insights",{method:"POST",body:JSON.stringify({topic:""})});if(!i)return;let n=await i.json();i.ok?s(n):l(n.detail||"Failed")}catch{l("Network error")}finally{g(!1)}};React.useEffect(()=>{m()},[]);let u=i=>i>=80?"var(--success)":i>=60?"var(--warning)":"var(--error)";return React.createElement("div",null,React.createElement("h1",null,"\u{1F4E4} Publishing Assistant"),React.createElement("p",{style:{color:"var(--text3)",marginBottom:16}},"Optimal posting times, CTR predictions, and A/B slot analysis for your channel"),React.createElement(_,{active:r}),React.createElement(z,{message:o}),a?React.createElement("div",null,React.createElement("div",{className:"stats"},React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},"Predicted CTR"),React.createElement("div",{className:"value"},`${a.predicted_ctr}%`),React.createElement("div",{className:"change",style:{color:"var(--accent)"}},"Estimated click-through rate")),React.createElement("div",{className:"stat"},React.createElement("div",{className:"label"},"Niche"),React.createElement("div",{className:"value",style:{fontSize:"1.1rem"}},a.niche),React.createElement("div",{className:"change",style:{color:"var(--text3)"}},`${a.subscriber_count?.toLocaleString()||0} subscribers`))),a.best_time_slots?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(62,166,255,.15)"}},"\u23F0"),React.createElement("h3",null,"Best Posting Times")),React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(180px, 1fr))",gap:8}},a.best_time_slots.map((i,n)=>React.createElement("div",{key:n,className:"stat",style:{borderLeft:`4px solid ${u(i.score)}`,padding:12}},React.createElement("div",{className:"label"},`${i.day} ${i.time}`),React.createElement("div",{className:"value",style:{fontSize:"1.2rem"}},`${i.score}/100`))))):null,a.ab_comparison?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(255,167,60,.15)"}},"\u2696\uFE0F"),React.createElement("h3",null,"A/B Time Slot Comparison")),a.ab_comparison.map((i,n)=>React.createElement("div",{key:n,style:{padding:"12px 0",borderBottom:n<a.ab_comparison.length-1?"1px solid var(--border)":"none"}},React.createElement("div",{style:{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap"}},React.createElement("span",{style:{background:"var(--bg3)",padding:"6px 14px",borderRadius:"var(--radius)",fontSize:".85rem"}},i.slot_a),React.createElement("span",{style:{color:"var(--text3)"}},"vs"),React.createElement("span",{style:{background:"var(--bg3)",padding:"6px 14px",borderRadius:"var(--radius)",fontSize:".85rem"}},i.slot_b)),React.createElement("div",{style:{marginTop:8,fontSize:".88rem",color:"var(--success)"}},`Winner: ${i.winner} \u2014 ${i.reason}`)))):null,a.heatmap?.length?React.createElement("div",{className:"card"},React.createElement("div",{className:"card-header"},React.createElement("div",{className:"card-icon",style:{background:"rgba(43,166,64,.15)"}},"\u{1F4CA}"),React.createElement("h3",null,"Optimal Schedule Heatmap")),React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:".78rem"}},React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",{style:{padding:"6px 8px",textAlign:"left",borderBottom:"1px solid var(--border)"}},"Day"),["8am","10am","12pm","2pm","4pm","6pm","8pm"].map(i=>React.createElement("th",{key:i,style:{padding:"6px 8px",textAlign:"center",borderBottom:"1px solid var(--border)"}},i)))),React.createElement("tbody",null,["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(i=>React.createElement("tr",{key:i},React.createElement("td",{style:{padding:"6px 8px",fontWeight:600,borderBottom:"1px solid var(--border)"}},i.slice(0,3)),a.heatmap.filter(n=>n.day===i).map((n,e)=>{let y=n.score>=80?"rgba(43,166,64,.25)":n.score>=60?"rgba(255,167,60,.2)":"rgba(255,78,69,.15)",p=n.score>=80?"var(--success)":n.score>=60?"var(--warning)":"var(--error)";return React.createElement("td",{key:e,style:{padding:"6px 8px",textAlign:"center",background:y,color:p,borderRadius:4,borderBottom:"1px solid var(--border)"}},`${n.score}`)}))))))):null,a.recommendation?React.createElement("div",{className:"insight"},React.createElement("h3",null,"\u{1F4CC} Recommendation"),React.createElement("p",null,a.recommendation)):null):r?null:React.createElement("div",{className:"empty-state"},React.createElement("div",{className:"emoji"},"\u{1F4E4}"),React.createElement("p",null,"Loading publishing insights...")))}function Ne(){let{api:t}=x(),[a,s]=c(0),[r,g]=c(""),o=[{title:"Welcome!",icon:"\u{1F44B}",desc:"Creator Content Radar helps you analyze YouTube channels, discover competitors, and find content ideas across 7+ platforms."},{title:"Analyze Your Channel",icon:"\u{1F4FA}",desc:"Paste your YouTube channel URL or @handle to get started. We\u2019ll analyze your channel and find actionable insights."},{title:"Discover & Grow",icon:"\u{1F4C8}",desc:"You\u2019ll get competitor analysis, cross-platform content ideas, SEO recommendations, and more. Ready to go?"}],l=async()=>{if(!r.trim()){s(2);return}try{(await t("/api/analyze/async",{method:"POST",body:JSON.stringify({channel_url:r,topic:""})}))?.ok&&s(2)}catch{s(2)}};return React.createElement("div",{className:"auth-page"},React.createElement("div",{className:"auth-card",style:{maxWidth:500,textAlign:"center"}},React.createElement("div",{style:{fontSize:"3rem",marginBottom:12}},o[a].icon),React.createElement("h1",{style:{fontSize:"1.5rem",marginBottom:8}},o[a].title),React.createElement("p",{style:{color:"var(--text3)",fontSize:".9rem",marginBottom:24,lineHeight:1.6}},o[a].desc),a===0?React.createElement("button",{className:"btn btn-primary",style:{padding:"12px 32px",fontSize:"1rem"},onClick:()=>s(1)},"Get Started"):null,a===1?React.createElement("div",null,React.createElement("input",{className:"input",style:{marginBottom:12},placeholder:"YouTube URL or @handle...",value:r,onChange:m=>g(m.target.value),onKeyDown:m=>m.key==="Enter"&&l(),autoFocus:!0}),React.createElement("div",{style:{display:"flex",gap:8,justifyContent:"center"}},React.createElement("button",{className:"btn btn-primary",onClick:l},"Analyze Channel"),React.createElement("button",{className:"btn btn-ghost",onClick:()=>s(2)},"Skip"))):null,a===2?React.createElement("div",null,React.createElement("button",{className:"btn btn-primary",style:{padding:"12px 32px",fontSize:"1rem",marginBottom:8},onClick:()=>window.location.hash="dashboard"},"Go to Dashboard"),React.createElement("div",{style:{fontSize:".85rem",color:"var(--text3)"}},React.createElement("a",{href:"#ideas",style:{color:"var(--accent)",textDecoration:"none"}},"Generate content ideas")," \xB7 ",React.createElement("a",{href:"#pricing",style:{color:"var(--primary)",textDecoration:"none"}},"View pricing"))):null,React.createElement("div",{style:{marginTop:24,display:"flex",gap:8,justifyContent:"center"}},o.map((m,u)=>React.createElement("div",{key:u,style:{width:10,height:10,borderRadius:"50%",background:u===a?"var(--primary)":"var(--bg4)",transition:"all .2s"}})))))}function Ce({page:t,setPage:a}){let{user:s,logout:r}=x(),[g,o]=c(!1),[l,m]=c(0);S(()=>{(async()=>{try{let n=await fetch("/api/alerts?unread_only=true",{headers:{Authorization:`Bearer ${localStorage.getItem("ccr_token")}`}});if(n.ok){let e=await n.json();m(e.length)}}catch{}})()},[t]);let u=[{id:"dashboard",label:"Dashboard",icon:"\u{1F4CA}",section:"Main"},{id:"analyze",label:"Channel Analysis",icon:"\u{1F4FA}",section:"Main"},{id:"competitors",label:"Competitors",icon:"\u{1F465}",section:"Main"},{id:"discover",label:"Content Discovery",icon:"\u{1F50D}",section:"Main"},{id:"ideas",label:"Idea Generator",icon:"\u{1F4A1}",section:"Content"},{id:"watch",label:"Monitored",icon:"\u{1F440}",section:"Content",badge:l||null},{id:"calendar",label:"Calendar",icon:"\u{1F4C5}",section:"Content"},{id:"repurpose",label:"Repurpose",icon:"\u{1F504}",section:"Content"},{id:"seo",label:"SEO Score",icon:"\u{1F50D}",section:"Content"},{id:"thumbnail-test",label:"A/B Thumbnails",icon:"\u{1F5BC}",section:"Content"},{id:"trends",label:"Trend Alerts",icon:"\u{1F525}",section:"Content"},{id:"comments",label:"Comments",icon:"\u{1F4AC}",section:"Content"},{id:"publishing",label:"Publishing",icon:"\u{1F4E4}",section:"Content"},{id:"reports",label:"Reports & Export",icon:"\u{1F4C4}",section:"Content"},{id:"saved-ideas",label:"Saved Ideas",icon:"\u{1F4BE}",section:"Content"},{id:"pricing",label:"Pricing",icon:"\u{1F4B0}",section:"Settings"},{id:"billing",label:"Billing & Usage",icon:"\u{1F4B0}",section:"Settings"},{id:"settings",label:"Settings",icon:"\u2699\uFE0F",section:"Settings"}],i=()=>{switch(t){case"dashboard":return React.createElement(L);case"analyze":return React.createElement(le);case"competitors":return React.createElement(ce);case"discover":return React.createElement(se);case"ideas":return React.createElement(ie);case"watch":return React.createElement(ue);case"calendar":return React.createElement(pe);case"reports":return React.createElement(ge);case"saved-ideas":return React.createElement(de);case"repurpose":return React.createElement(ye);case"seo":return React.createElement(Ee);case"thumbnail-test":return React.createElement(Re);case"trends":return React.createElement(fe);case"comments":return React.createElement(he);case"publishing":return React.createElement(be);case"pricing":return React.createElement(J);case"billing":return React.createElement(oe);case"settings":return React.createElement(me);case"onboarding":return React.createElement(Ne);default:return React.createElement(L)}};return React.createElement("div",{className:"app-layout"},React.createElement("aside",{className:`sidebar${g?" open":""}`},React.createElement("div",{className:"sidebar-logo"},React.createElement("svg",{viewBox:"0 0 24 24",fill:"currentColor"},React.createElement("path",{d:"M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"})),React.createElement("span",null,"Creator Radar")),React.createElement("nav",{className:"sidebar-nav"},...["Main","Content","Settings"].map(n=>React.createElement(React.Fragment,{key:n},React.createElement("div",{className:"nav-section"},n),...u.filter(e=>e.section===n).map(e=>React.createElement("button",{key:e.id,className:`nav-item${t===e.id?" active":""}`,onClick:()=>{a(e.id),o(!1)}},e.icon," ",e.label,e.badge?React.createElement("span",{className:"badge"},e.badge):null)))))),React.createElement("div",{className:"main-area"},React.createElement("header",{className:"topbar"},React.createElement("button",{className:"icon-btn menu-toggle",onClick:()=>o(!g),style:{display:"none"}},React.createElement("svg",{viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,width:22,height:22},React.createElement("line",{x1:3,y1:6,x2:21,y2:6}),React.createElement("line",{x1:3,y1:12,x2:21,y2:12}),React.createElement("line",{x1:3,y1:18,x2:21,y2:18}))),React.createElement("div",{style:{flex:1,display:"flex",alignItems:"center",gap:8}},React.createElement("span",{style:{fontSize:".85rem",color:"var(--text2)",fontWeight:600}},s?.email||""),React.createElement("span",{className:"tag",style:{fontSize:".7rem",padding:"2px 8px"}},s?.plan||"free")),React.createElement("div",{className:"topbar-actions"},React.createElement("button",{className:"icon-btn",onClick:()=>window.location.hash="settings",title:"Settings"},"\u2699\uFE0F"),React.createElement("button",{className:"icon-btn",onClick:r,title:"Sign out"},"\u{1F6AA}"))),React.createElement("main",{className:"page-content"},i())))}function xe(){let{user:t}=x(),[a,s]=c("dashboard"),[r,g]=c(!1);return S(()=>{let o=()=>{let l=window.location.hash.replace("#","")||"dashboard";["dashboard","analyze","competitors","discover","ideas","watch","calendar","reports","saved-ideas","repurpose","seo","thumbnail-test","trends","comments","publishing","pricing","billing","settings","onboarding","login","register"].includes(l)&&s(l)};return window.addEventListener("hashchange",o),o(),()=>window.removeEventListener("hashchange",o)},[]),S(()=>{window.location.hash=a},[a]),S(()=>{t&&!localStorage.getItem("ccr_onboarding_done")&&(localStorage.setItem("ccr_onboarding_done","1"),s("onboarding"))},[t]),t?React.createElement(Ce,{page:a,setPage:s}):a==="register"?React.createElement(re):a==="pricing"?React.createElement(J):React.createElement(ne)}var De=ReactDOM.createRoot(document.getElementById("root"));De.render(React.createElement(te,null,React.createElement(xe)));var K=document.createElement("style");K.textContent="@media(max-width:768px){.menu-toggle{display:flex!important}}";document.head.appendChild(K);})();
+// static/app.jsx
+var { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
+var AuthContext = createContext(null);
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("ccr_user") || "null"));
+  const [token, setToken] = useState(() => localStorage.getItem("ccr_token") || "");
+  const login = useCallback((t, u) => {
+    setToken(t);
+    setUser(u);
+    localStorage.setItem("ccr_token", t);
+    localStorage.setItem("ccr_user", JSON.stringify(u));
+  }, []);
+  const logout = useCallback(() => {
+    setToken("");
+    setUser(null);
+    localStorage.removeItem("ccr_token");
+    localStorage.removeItem("ccr_user");
+  }, []);
+  const api = useCallback(async (path, opts = {}) => {
+    const headers = { "Content-Type": "application/json", ...opts.headers };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(path, { ...opts, headers });
+    if (res.status === 401) {
+      logout();
+      return null;
+    }
+    return res;
+  }, [token, logout]);
+  return React.createElement(AuthContext.Provider, { value: { user, token, login, logout, api } }, children);
+}
+function useAuth() {
+  return useContext(AuthContext);
+}
+function fmtNum(n) {
+  if (n == null) return "\u2014";
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
+  return n.toLocaleString();
+}
+var PLATFORM_CONFIG = {
+  youtube: { icon: "\u25B6", color: "#ff0000", bg: "rgba(255,0,0,.15)" },
+  reddit: { icon: "R", color: "#ff4500", bg: "rgba(255,69,0,.15)" },
+  twitter: { icon: "X", color: "#1da1f2", bg: "rgba(29,161,242,.15)" },
+  twitch: { icon: "\u{1F3AE}", color: "#a970ff", bg: "rgba(169,112,255,.15)" },
+  hn: { icon: "Y", color: "#f60", bg: "rgba(255,102,0,.15)" },
+  trends: { icon: "\u{1F4C8}", color: "#4285f4", bg: "rgba(66,133,244,.15)" },
+  rss: { icon: "\u{1F4E1}", color: "#ffa500", bg: "rgba(255,165,0,.15)" },
+  instagram: { icon: "\u{1F4F7}", color: "#e1306c", bg: "rgba(225,48,108,.15)" },
+  tiktok: { icon: "\u{1F3A7}", color: "#00f2ea", bg: "rgba(0,242,234,.15)" }
+};
+function getPlatformConfig(p) {
+  return PLATFORM_CONFIG[p] || { icon: "?", color: "#888", bg: "rgba(128,128,128,.15)" };
+}
+function isDark() {
+  return (document.documentElement.getAttribute("data-theme") || "dark") === "dark";
+}
+var chartInstances = {};
+function safeChart(id, config) {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  chartInstances[id] = new Chart(canvas, config);
+}
+function Skeleton({ count = 3 }) {
+  return React.createElement(
+    "div",
+    null,
+    Array.from(
+      { length: count },
+      (_, i) => React.createElement(
+        "div",
+        { key: i, className: "card" },
+        React.createElement("div", { className: "skeleton", style: { height: 24, width: "60%", marginBottom: 8 } }),
+        React.createElement("div", { className: "skeleton", style: { height: 24, width: "80%", marginBottom: 8 } }),
+        React.createElement("div", { className: "skeleton", style: { height: 100, width: "100%" } })
+      )
+    )
+  );
+}
+function LoadingBar({ active }) {
+  return React.createElement("div", { className: `loading-bar${active ? " active" : ""}` });
+}
+function ErrorBox({ message }) {
+  if (!message) return null;
+  return React.createElement("div", { className: "error-box", style: { display: "block" } }, message);
+}
+function StatCard({ label, value, change, changeDir = "up" }) {
+  return React.createElement(
+    "div",
+    { className: "stat" },
+    React.createElement("div", { className: "label" }, label),
+    React.createElement("div", { className: "value" }, fmtNum(value)),
+    change ? React.createElement("div", { className: `change ${changeDir}`, style: { fontSize: ".78rem", fontWeight: 600, marginTop: 4 } }, change) : null
+  );
+}
+function ContentItem({ item }) {
+  const cfg = getPlatformConfig(item.platform);
+  const m = item.raw_metrics || {};
+  return React.createElement(
+    "a",
+    { href: item.url, target: "_blank", className: "content-item" },
+    React.createElement("div", { className: "platform-badge", style: { background: cfg.bg, color: cfg.color } }, cfg.icon),
+    React.createElement(
+      "div",
+      { style: { flex: 1, minWidth: 0 } },
+      React.createElement("div", { style: { fontWeight: 600, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: ".9rem" } }, item.title),
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 12, fontSize: ".8rem", color: "var(--text3)", flexWrap: "wrap" } },
+        React.createElement("span", null, `\u{1F4CD} ${item.source || item.platform}`),
+        React.createElement("span", null, `\u{1F4CA} ${fmtNum(item.engagement_score)}`),
+        m.views ? React.createElement("span", null, `\u{1F441} ${fmtNum(m.views)}`) : null,
+        m.likes ? React.createElement("span", null, `\u{1F44D} ${fmtNum(m.likes)}`) : null,
+        React.createElement("span", { className: `tag` }, item.classification || "new")
+      )
+    )
+  );
+}
+function LoginPage() {
+  const { login, api } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErr("");
+    setLoading(true);
+    try {
+      const res = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        login(d.access_token, d.user);
+      } else {
+        setErr(d.detail || "Login failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return React.createElement(
+    "div",
+    { className: "auth-page" },
+    React.createElement(
+      "form",
+      { onSubmit: handleSubmit, className: "auth-card" },
+      React.createElement("h1", null, "Creator Content Radar"),
+      React.createElement("p", { className: "subtitle" }, "Sign in to your account"),
+      err ? React.createElement("div", { className: "error", style: { display: "block" } }, err) : null,
+      React.createElement(
+        "div",
+        { className: "form-group" },
+        React.createElement("label", null, "Email"),
+        React.createElement("input", { className: "input", type: "email", value: email, onChange: (e) => setEmail(e.target.value), placeholder: "you@example.com", required: true })
+      ),
+      React.createElement(
+        "div",
+        { className: "form-group" },
+        React.createElement("label", null, "Password"),
+        React.createElement("input", { className: "input", type: "password", value: password, onChange: (e) => setPassword(e.target.value), placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", required: true })
+      ),
+      React.createElement(
+        "button",
+        { type: "submit", className: "btn btn-primary", style: { width: "100%", justifyContent: "center" }, disabled: loading },
+        loading ? "Signing in..." : "Sign In"
+      ),
+      React.createElement(
+        "p",
+        { style: { textAlign: "center", marginTop: 16, fontSize: ".85rem", color: "var(--text3)" } },
+        "Don't have an account? ",
+        React.createElement("a", { href: "#register", style: { color: "var(--accent)", textDecoration: "none" } }, "Register")
+      ),
+      React.createElement(
+        "p",
+        { style: { textAlign: "center", marginTop: 12, fontSize: ".85rem", color: "var(--text3)" } },
+        React.createElement("a", { href: "#pricing", style: { color: "var(--primary)", textDecoration: "none", fontWeight: 600 } }, "View Pricing & Plans")
+      )
+    )
+  );
+}
+function RegisterPage() {
+  const { login, api } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErr("");
+    setLoading(true);
+    try {
+      const res = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        login(d.access_token, d.user);
+      } else {
+        setErr(d.detail || "Registration failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return React.createElement(
+    "div",
+    { className: "auth-page" },
+    React.createElement(
+      "form",
+      { onSubmit: handleSubmit, className: "auth-card" },
+      React.createElement("h1", null, "Create Account"),
+      React.createElement("p", { className: "subtitle" }, "Join Creator Content Radar"),
+      err ? React.createElement("div", { className: "error", style: { display: "block" } }, err) : null,
+      React.createElement(
+        "div",
+        { className: "form-group" },
+        React.createElement("label", null, "Email"),
+        React.createElement("input", { className: "input", type: "email", value: email, onChange: (e) => setEmail(e.target.value), placeholder: "you@example.com", required: true })
+      ),
+      React.createElement(
+        "div",
+        { className: "form-group" },
+        React.createElement("label", null, "Password"),
+        React.createElement("input", { className: "input", type: "password", value: password, onChange: (e) => setPassword(e.target.value), placeholder: "Minimum 8 characters", required: true, minLength: 8 })
+      ),
+      React.createElement(
+        "button",
+        { type: "submit", className: "btn btn-primary", style: { width: "100%", justifyContent: "center" }, disabled: loading },
+        loading ? "Creating account..." : "Create Account"
+      ),
+      React.createElement(
+        "p",
+        { style: { textAlign: "center", marginTop: 16, fontSize: ".85rem", color: "var(--text3)" } },
+        "Already have an account? ",
+        React.createElement("a", { href: "#login", style: { color: "var(--accent)", textDecoration: "none" } }, "Sign In")
+      )
+    )
+  );
+}
+function PricingPage() {
+  const { api, user } = useAuth();
+  const [usage, setUsage] = useState(null);
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const res = await api("/api/billing/usage");
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setUsage(d);
+    })();
+  }, [api, user]);
+  const openCheckout = async (plan) => {
+    const res = await api("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan }) });
+    if (!res) return;
+    const d = await res.json();
+    if (d.url) window.location.href = d.url;
+  };
+  const plans = [
+    { id: "free", name: "Free", price: "$0", desc: "Perfect for getting started", analyses: "3 analyses/mo", exports: "No", api: "No", support: "Community", features: ["Basic channel analysis", "Competitor discovery", "Cross-platform content search", "Email support"] },
+    { id: "pro", name: "Pro", price: "$19", desc: "For serious creators", analyses: "50 analyses/mo", exports: "CSV + PDF", api: "No", support: "Priority email", features: ["Everything in Free", "Export reports (CSV/PDF)", "Content idea generator", "Competitor monitoring alerts", "Email digests", "Content calendar"] },
+    { id: "business", name: "Business", price: "$49", desc: "For teams & agencies", analyses: "Unlimited", exports: "CSV + PDF + Shareable links", api: "Full API access", support: "Dedicated support", features: ["Everything in Pro", "Unlimited analyses", "API keys for integrations", "Multi-channel management", "SEO scorecards", "A/B thumbnail testing", "Trend alerts", "White-label reports"] }
+  ];
+  return React.createElement(
+    "div",
+    null,
+    React.createElement(
+      "div",
+      { style: { textAlign: "center", marginBottom: 32 } },
+      React.createElement("h1", { style: { fontSize: "2rem", fontWeight: 800, marginBottom: 8 } }, "Choose Your Plan"),
+      React.createElement("p", { style: { color: "var(--text3)", fontSize: "1rem", maxWidth: 500, margin: "0 auto" } }, "Unlock the full power of Creator Content Radar. Scale your content strategy with AI-powered insights.")
+    ),
+    React.createElement(
+      "div",
+      { className: "stats", style: { gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 } },
+      plans.map((plan) => {
+        const isCurrent = usage?.plan === plan.id;
+        return React.createElement(
+          "div",
+          {
+            key: plan.id,
+            className: "card",
+            style: { display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", border: isCurrent ? "2px solid var(--primary)" : "1px solid var(--border)" }
+          },
+          plan.id === "pro" ? React.createElement("div", { style: { position: "absolute", top: 12, right: 12, background: "var(--primary)", color: "#fff", padding: "4px 12px", borderRadius: 999, fontSize: ".7rem", fontWeight: 700, textTransform: "uppercase" } }, "Popular") : null,
+          React.createElement("h2", { style: { fontSize: "1.2rem", fontWeight: 700, marginBottom: 4 } }, plan.name),
+          React.createElement("div", { style: { fontSize: "2.5rem", fontWeight: 800, marginBottom: 4 } }, plan.price, React.createElement("span", { style: { fontSize: "1rem", fontWeight: 400, color: "var(--text3)" } }, "/mo")),
+          React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem", marginBottom: 16 } }, plan.desc),
+          React.createElement("div", { style: { fontSize: ".9rem", color: "var(--text2)", marginBottom: 16, padding: "8px 12px", background: "var(--bg3)", borderRadius: "var(--radius)", textAlign: "center", fontWeight: 600 } }, plan.analyses),
+          React.createElement(
+            "div",
+            { style: { flex: 1 } },
+            plan.features.map(
+              (f, i) => React.createElement(
+                "div",
+                { key: i, style: { padding: "6px 0", fontSize: ".85rem", color: "var(--text2)", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 8 } },
+                React.createElement("span", { style: { color: "var(--success)" } }, "\u2713"),
+                f
+              )
+            )
+          ),
+          React.createElement(
+            "div",
+            { style: { marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" } },
+            isCurrent ? React.createElement("button", { className: "btn btn-ghost", style: { flex: 1, justifyContent: "center" }, disabled: true }, "Current Plan") : plan.id === "free" ? React.createElement("button", { className: "btn btn-ghost", style: { flex: 1, justifyContent: "center" }, onClick: () => window.location.hash = "login" }, "Get Started") : React.createElement("button", { className: plan.id === "pro" ? "btn btn-primary" : "btn btn-accent", style: { flex: 1, justifyContent: "center" }, onClick: () => openCheckout(plan.id) }, "Subscribe")
+          ),
+          React.createElement(
+            "div",
+            { style: { marginTop: 8, fontSize: ".75rem", color: "var(--text3)", textAlign: "center" } },
+            plan.exports !== "No" ? `\u2713 ${plan.exports}` : null,
+            plan.api !== "No" ? ` \xB7 ${plan.api}` : null,
+            ` \xB7 ${plan.support}`
+          )
+        );
+      })
+    ),
+    !user ? React.createElement(
+      "div",
+      { className: "card", style: { textAlign: "center", padding: 24 } },
+      React.createElement("p", { style: { color: "var(--text3)", marginBottom: 12 } }, "Already have an account?"),
+      React.createElement("button", { className: "btn btn-primary", onClick: () => window.location.hash = "login" }, "Sign In")
+    ) : null
+  );
+}
+function DashboardPage() {
+  const { api } = useAuth();
+  const [url, setUrl] = useState(() => localStorage.getItem("ccr_last_url") || "");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [jobId, setJobId] = useState(null);
+  const load = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setErr("");
+    setData(null);
+    setJobId(null);
+    try {
+      localStorage.setItem("ccr_last_url", url);
+      const res = await api("/dashboard", { method: "POST", body: JSON.stringify({ channel_url: url, topic: "" }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setData(d);
+        setTimeout(() => renderCharts(d), 100);
+      } else {
+        setErr(d.detail || "Failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderCharts = (d) => {
+    const tDark = isDark();
+    const gridColor = tDark ? "#303030" : "#e5e5e5";
+    const tickColor = tDark ? "#aaa" : "#666";
+    if (d.trends?.interest_over_time?.length) {
+      safeChart("trend-chart", {
+        type: "line",
+        data: {
+          labels: d.trends.interest_over_time.map((x) => x.label),
+          datasets: [{ label: d.trends.topic || "Interest", data: d.trends.interest_over_time.map((x) => x.value), borderColor: "#ff4444", backgroundColor: "rgba(255,68,68,0.1)", fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: gridColor }, ticks: { color: tickColor, maxTicksLimit: 8 } }, y: { grid: { color: gridColor }, ticks: { color: tickColor } } } }
+      });
+    }
+  };
+  const p = data?.profile;
+  const c = data?.competitors;
+  return React.createElement(
+    "div",
+    null,
+    React.createElement(
+      "div",
+      { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 } },
+      React.createElement(
+        "div",
+        null,
+        React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700 } }, "Dashboard"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem" } }, "Channel overview & performance")
+      ),
+      React.createElement(
+        "div",
+        { className: "topbar-search", style: { maxWidth: 320, margin: 0 } },
+        React.createElement("input", { type: "text", placeholder: "YouTube URL or @handle...", value: url, onChange: (e) => setUrl(e.target.value), onKeyDown: (e) => e.key === "Enter" && load() }),
+        React.createElement("button", { className: "icon-btn", onClick: load }, "\u25B6")
+      )
+    ),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    !data && !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4C8}"),
+      React.createElement("p", null, "Paste a YouTube channel URL above to see your dashboard"),
+      React.createElement("button", { className: "btn btn-primary", style: { marginTop: 12 }, onClick: () => window.location.hash = "pricing" }, "View Plans")
+    ) : null,
+    data && p ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats" },
+        React.createElement(StatCard, { label: "Subscribers", value: p.subscriber_count, change: p.channel_tier }),
+        React.createElement(StatCard, { label: "Total Views", value: p.view_count, change: p.niche }),
+        React.createElement(StatCard, { label: "Videos", value: p.video_count, change: p.upload_frequency }),
+        React.createElement(StatCard, { label: "Avg Views", value: Math.round(p.average_views_per_video), change: `${p.engagement_rate?.toFixed(1) || 0}% eng.` }),
+        React.createElement(StatCard, { label: "Growth", value: p.growth_potential || "N/A", change: p.channel_tier }),
+        React.createElement(StatCard, { label: "Sources", value: data.total_sources_checked || 0, change: "platforms" })
+      ),
+      data.cross_platform_content?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)", color: "var(--accent)" } }, "\u{1F310}"),
+          React.createElement("h2", null, `Cross-Platform Content (${data.cross_platform_content.length})`)
+        ),
+        React.createElement(
+          "div",
+          { className: "content-list" },
+          data.cross_platform_content.slice(0, 8).map((item, i) => React.createElement(ContentItem, { key: i, item }))
+        )
+      ) : null,
+      c?.competitors?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { fontSize: ".9rem", color: "var(--text2)", marginBottom: 10 } }, `Top Competitors in ${p.niche || "your niche"}`),
+        React.createElement(
+          "div",
+          { className: "competitor-grid" },
+          c.competitors.slice(0, 6).map(
+            (co, i) => React.createElement(
+              "div",
+              { key: i, className: "competitor-card" },
+              React.createElement("div", { className: "name" }, co.title),
+              React.createElement("div", { className: "note" }, co.relevance_note || ""),
+              React.createElement("div", { className: "subs" }, `${fmtNum(co.subscriber_count)} subs`)
+            )
+          )
+        )
+      ) : null,
+      p.content_recommendations?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(255,68,68,.15)", color: "var(--primary)" } }, "\u{1F4A1}"),
+          React.createElement("h2", null, "AI Content Recommendations")
+        ),
+        React.createElement(
+          "ul",
+          { className: "rec-list" },
+          p.content_recommendations.map((r, i) => React.createElement("li", { key: i }, r))
+        )
+      ) : null
+    ) : null
+  );
+}
+function AnalyzePage() {
+  const { api } = useAuth();
+  const [url, setUrl] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [job, setJob] = useState(null);
+  const intervalRef = useRef(null);
+  const analyze = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setErr("");
+    setResult(null);
+    setJob(null);
+    try {
+      const res = await api("/api/analyze/async", { method: "POST", body: JSON.stringify({ channel_url: url, topic: "" }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setResult(d);
+        pollJob(d.job_id);
+      } else {
+        setErr(d.detail || "Analysis failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const pollJob = (jobId) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(async () => {
+      try {
+        const res = await api(`/api/jobs/${jobId}`);
+        if (!res) {
+          clearInterval(intervalRef.current);
+          return;
+        }
+        const j = await res.json();
+        setJob(j);
+        if (j.status === "completed" || j.status === "failed") {
+          clearInterval(intervalRef.current);
+        }
+      } catch {
+      }
+    }, 2e3);
+  };
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+  const steps = [
+    { pct: 5, label: "Queued..." },
+    { pct: 15, label: "Fetching channel data..." },
+    { pct: 30, label: "Analyzing channel..." },
+    { pct: 50, label: "Finding competitors..." },
+    { pct: 70, label: "Gathering cross-platform content..." },
+    { pct: 85, label: "Building dashboard..." },
+    { pct: 95, label: "Finalizing..." },
+    { pct: 100, label: "Complete!" }
+  ];
+  const currentStep = job ? steps.findIndex((s) => s.pct >= job.progress_pct) : -1;
+  const currentLabel = job ? job.step || steps[Math.max(0, currentStep)]?.label || "Processing..." : "";
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Channel Analysis"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Deep dive into your channel\u2019s performance"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, maxWidth: 600 } },
+        React.createElement("input", { className: "input", placeholder: "YouTube URL, @handle, or channel ID...", value: url, onChange: (e) => setUrl(e.target.value), onKeyDown: (e) => e.key === "Enter" && analyze() }),
+        React.createElement("button", { className: "btn btn-primary", onClick: analyze, disabled: loading }, loading ? "Analyzing..." : "Analyze")
+      ),
+      React.createElement(LoadingBar, { active: loading || job && job.status === "running" }),
+      React.createElement(ErrorBox, { message: err }),
+      job ? React.createElement(
+        "div",
+        { className: "card", style: { marginTop: 12 } },
+        React.createElement(
+          "div",
+          { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } },
+          React.createElement("span", { style: { fontWeight: 600, fontSize: ".85rem" } }, "Analysis Progress"),
+          React.createElement("span", { style: { color: "var(--text3)", fontSize: ".8rem" } }, `${job.progress_pct}%`)
+        ),
+        React.createElement(
+          "div",
+          { style: { width: "100%", height: 8, background: "var(--bg3)", borderRadius: 4, overflow: "hidden", marginBottom: 8 } },
+          React.createElement("div", { style: { width: `${job.progress_pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary), var(--accent))", borderRadius: 4, transition: "width .5s ease" } })
+        ),
+        React.createElement(
+          "p",
+          { style: { color: "var(--text2)", fontSize: ".85rem" } },
+          job.status === "completed" ? "\u2705 Analysis complete!" : job.status === "failed" ? `\u274C Failed: ${job.error || "Unknown error"}` : `\u2699\uFE0F ${currentLabel}`
+        ),
+        job.status === "completed" ? React.createElement("button", { className: "btn btn-accent", style: { marginTop: 8, fontSize: ".8rem", padding: "6px 16px" }, onClick: () => window.location.hash = "reports" }, "View Reports") : null
+      ) : null,
+      result && !job ? React.createElement(
+        "div",
+        { className: "insight" },
+        React.createElement("h3", null, "\u2699\uFE0F Analysis Submitted"),
+        React.createElement("p", null, `Job ID: ${result.job_id}`)
+      ) : null,
+      !result && !loading && !job ? React.createElement(
+        "div",
+        { className: "empty-state" },
+        React.createElement("div", { className: "emoji" }, "\u{1F50D}"),
+        React.createElement("p", null, "Enter a channel URL to begin analysis")
+      ) : null
+    )
+  );
+}
+function CompetitorsPage() {
+  const { api } = useAuth();
+  const [channelId, setChannelId] = useState("");
+  const [competitors, setCompetitors] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const find = async () => {
+    if (!channelId.trim()) return;
+    setLoading(true);
+    setErr("");
+    setCompetitors(null);
+    try {
+      const res = await api("/find-competitors", { method: "POST", body: JSON.stringify({ channel_id: channelId }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setCompetitors(d);
+      } else {
+        setErr(d.detail || "Search failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const watchCompetitor = async (ch) => {
+    await api("/api/watched-competitors", { method: "POST", body: JSON.stringify({ channel_id: ch.channel_id, channel_title: ch.title, subscriber_count: ch.subscriber_count }) });
+    alert(`Watching ${ch.title}`);
+  };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Competitor Analysis"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Discover and analyze competing channels"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, maxWidth: 500 } },
+        React.createElement("input", { className: "input", placeholder: "YouTube channel ID...", value: channelId, onChange: (e) => setChannelId(e.target.value), onKeyDown: (e) => e.key === "Enter" && find() }),
+        React.createElement("button", { className: "btn btn-accent", onClick: find, disabled: loading }, loading ? "Searching..." : "Search")
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    competitors?.length ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "competitor-grid" },
+        competitors.map(
+          (co, i) => React.createElement(
+            "div",
+            { key: i, className: "competitor-card" },
+            React.createElement("div", { className: "name" }, co.title),
+            React.createElement("div", { className: "note" }, co.relevance_note || ""),
+            React.createElement("div", { className: "subs" }, `${fmtNum(co.subscriber_count)} subs \xB7 ${co.engagement_rate?.toFixed(1) || "?"}% eng`),
+            React.createElement("button", { className: "btn btn-ghost", style: { marginTop: 8, width: "100%", justifyContent: "center", padding: "4px 8px", fontSize: ".78rem" }, onClick: () => watchCompetitor(co) }, "\u{1F440} Watch")
+          )
+        )
+      )
+    ) : null,
+    !competitors && !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F465}"),
+      React.createElement("p", null, "Enter a channel ID to discover competitors")
+    ) : null
+  );
+}
+function DiscoverPage() {
+  const { api } = useAuth();
+  const [topic, setTopic] = useState("");
+  const [channelId, setChannelId] = useState("");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [sources, setSources] = useState({ trends: true, twitter: true, twitch: true, hn: true });
+  const [activeTab, setActiveTab] = useState("all");
+  const search = async () => {
+    if (!topic.trim() || !channelId.trim()) {
+      setErr("Enter both topic and channel ID");
+      return;
+    }
+    setLoading(true);
+    setErr("");
+    setData(null);
+    try {
+      const res = await api("/multi-source-search", {
+        method: "POST",
+        body: JSON.stringify({ channel_id: channelId, topic, include_trends: sources.trends, include_twitter: sources.twitter, include_twitch: sources.twitch, include_hn: sources.hn, include_rss: true, include_tiktok: true, include_instagram: true })
+      });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setData(d);
+        setActiveTab("all");
+        setTimeout(() => renderCharts(d), 100);
+      } else {
+        setErr(d.detail || "Search failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderCharts = (d) => {
+    if (!d.trends?.interest_over_time?.length) return;
+    const tDark = isDark();
+    safeChart("disc-trend-chart", {
+      type: "line",
+      data: {
+        labels: d.trends.interest_over_time.map((x) => x.label),
+        datasets: [{ label: "Interest", data: d.trends.interest_over_time.map((x) => x.value), borderColor: "#3ea6ff", backgroundColor: "rgba(62,166,255,0.1)", fill: true, tension: 0.3, borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: tDark ? "#303030" : "#e5e5e5" }, ticks: { color: tDark ? "#aaa" : "#666", maxTicksLimit: 10 } }, y: { grid: { color: tDark ? "#303030" : "#e5e5e5" }, ticks: { color: tDark ? "#aaa" : "#666" } } } }
+    });
+  };
+  const results = data?.cross_platform_content || [];
+  const groups = {};
+  results.forEach((r) => {
+    if (!groups[r.platform]) groups[r.platform] = [];
+    groups[r.platform].push(r);
+  });
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Content Discovery"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Cross-platform search across all sources"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+        React.createElement("input", { className: "input", style: { flex: 1, minWidth: 200 }, placeholder: "Channel ID...", value: channelId, onChange: (e) => setChannelId(e.target.value) }),
+        React.createElement("input", { className: "input", style: { flex: 2, minWidth: 200 }, placeholder: "Search topic...", value: topic, onChange: (e) => setTopic(e.target.value), onKeyDown: (e) => e.key === "Enter" && search() }),
+        React.createElement("button", { className: "btn btn-accent", onClick: search, disabled: loading }, loading ? "Searching..." : "Search All")
+      ),
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 16, marginTop: 12, flexWrap: "wrap", fontSize: ".85rem", color: "var(--text3)" } },
+        Object.entries(sources).map(
+          ([k, v]) => React.createElement(
+            "label",
+            { key: k, style: { display: "flex", alignItems: "center", gap: 4, cursor: "pointer" } },
+            React.createElement("input", { type: "checkbox", checked: v, onChange: () => setSources((s) => ({ ...s, [k]: !s[k] })) }),
+            ` ${k.charAt(0).toUpperCase() + k.slice(1)}`
+          )
+        )
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    data ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats" },
+        ...Object.entries(groups).map(([k, v]) => React.createElement(StatCard, { key: k, label: k, value: v.length, change: "items" })),
+        React.createElement(StatCard, { label: "total", value: results.length, change: "sources" })
+      ),
+      data.trends?.interest_over_time?.length > 1 ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)", color: "var(--accent)" } }, "\u{1F4C8}"),
+          React.createElement("h2", null, `Google Trends: "${topic}"`)
+        ),
+        React.createElement("div", { className: "chart-container" }, React.createElement("canvas", { id: "disc-trend-chart" }))
+      ) : null,
+      results.length ? React.createElement(
+        "div",
+        null,
+        React.createElement(
+          "div",
+          { className: "tabs" },
+          React.createElement("button", { className: `tab${activeTab === "all" ? " active" : ""}`, onClick: () => setActiveTab("all") }, "All ", React.createElement("span", { className: "tab-count" }, results.length)),
+          Object.entries(groups).map(
+            ([k, v]) => React.createElement("button", { key: k, className: `tab${activeTab === k ? " active" : ""}`, onClick: () => setActiveTab(k) }, k, " ", React.createElement("span", { className: "tab-count" }, v.length))
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "content-list" },
+          (activeTab === "all" ? results : groups[activeTab] || []).map((item, i) => React.createElement(ContentItem, { key: i, item }))
+        )
+      ) : React.createElement(
+        "div",
+        { className: "empty-state" },
+        React.createElement("div", { className: "emoji" }, "\u{1F50D}"),
+        React.createElement("p", null, `No results found for "${topic}"`)
+      )
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F30D}"),
+      React.createElement("p", null, "Search any topic to discover content across 7+ platforms")
+    ) : null
+  );
+}
+function BillingPage() {
+  const { api, user } = useAuth();
+  const [usage, setUsage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const res = await api("/api/billing/usage");
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setUsage(d);
+      setLoading(false);
+    })();
+  }, [api]);
+  const openPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await api("/api/billing/portal", { method: "POST" });
+      if (!res) return;
+      const d = await res.json();
+      if (d.url) window.location.href = d.url;
+    } catch {
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+  const openCheckout = async (plan) => {
+    const res = await api("/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan }) });
+    if (!res) return;
+    const d = await res.json();
+    if (d.url) window.location.href = d.url;
+  };
+  if (loading) return React.createElement(Skeleton, { count: 2 });
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Billing & Usage"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Manage your subscription and view usage"),
+    usage ? React.createElement(
+      "div",
+      { className: "stats" },
+      React.createElement(StatCard, { label: "Plan", value: usage.plan }),
+      React.createElement(StatCard, { label: "Analyses Used", value: usage.analyses_this_month }),
+      React.createElement(StatCard, { label: "Monthly Limit", value: usage.limit === -1 ? "\u221E" : usage.limit }),
+      React.createElement(StatCard, { label: "Remaining", value: usage.remaining === -1 ? "\u221E" : usage.remaining })
+    ) : null,
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement("h3", { style: { marginBottom: 12 } }, "Subscription Plans"),
+      React.createElement(
+        "div",
+        { className: "stats", style: { marginBottom: 0 } },
+        React.createElement(
+          "div",
+          { className: "stat" },
+          React.createElement("div", { className: "label" }, "Free"),
+          React.createElement("div", { className: "value", style: { fontSize: "1rem" } }, "3 analyses/mo"),
+          usage?.plan === "free" ? React.createElement("div", { className: "change up" }, "Current") : React.createElement("button", { className: "btn btn-ghost", style: { marginTop: 8, width: "100%", justifyContent: "center", padding: "6px 12px", fontSize: ".8rem" }, disabled: true }, "Current")
+        ),
+        React.createElement(
+          "div",
+          { className: "stat" },
+          React.createElement("div", { className: "label" }, "Pro - $19/mo"),
+          React.createElement("div", { className: "value", style: { fontSize: "1rem" } }, "50 analyses/mo"),
+          usage?.plan === "pro" ? React.createElement("div", { className: "change up" }, "Current") : React.createElement("button", { className: "btn btn-primary", style: { marginTop: 8, width: "100%", justifyContent: "center", padding: "6px 12px", fontSize: ".8rem" }, onClick: () => openCheckout("pro") }, "Upgrade")
+        ),
+        React.createElement(
+          "div",
+          { className: "stat" },
+          React.createElement("div", { className: "label" }, "Business - $49/mo"),
+          React.createElement("div", { className: "value", style: { fontSize: "1rem" } }, "Unlimited"),
+          usage?.plan === "business" ? React.createElement("div", { className: "change up" }, "Current") : React.createElement("button", { className: "btn btn-accent", style: { marginTop: 8, width: "100%", justifyContent: "center", padding: "6px 12px", fontSize: ".8rem" }, onClick: () => openCheckout("business") }, "Upgrade")
+        )
+      ),
+      usage?.plan !== "free" ? React.createElement(
+        "button",
+        { className: "btn btn-ghost", style: { marginTop: 12 }, onClick: openPortal, disabled: portalLoading },
+        portalLoading ? "Loading..." : "Manage Subscription (Stripe Portal)"
+      ) : null
+    )
+  );
+}
+function IdeasPage() {
+  const { api } = useAuth();
+  const [topic, setTopic] = useState("");
+  const [ideas, setIdeas] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const generate = async () => {
+    if (!topic.trim()) return;
+    setLoading(true);
+    setErr("");
+    setIdeas(null);
+    try {
+      const res = await api("/api/ideas/generate", { method: "POST", body: JSON.stringify({ topic }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setIdeas(d);
+      } else {
+        setErr(d.detail || "Generation failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const saveIdea = async (idea) => {
+    await api("/api/ideas/save", { method: "POST", body: JSON.stringify({
+      topic,
+      title: idea.title,
+      seo_keywords: JSON.stringify(idea.seo_keywords || []),
+      thumbnail_ideas: JSON.stringify(idea.thumbnail_ideas || []),
+      best_posting_time: idea.best_time_to_post,
+      predicted_performance: idea.predicted_performance,
+      platform_focus: JSON.stringify(idea.platform_focus || []),
+      saved: true
+    }) });
+    alert("Idea saved!");
+  };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Content Idea Generator"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Get AI-powered video ideas with SEO keywords and thumbnail concepts"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, maxWidth: 500 } },
+        React.createElement("input", { className: "input", placeholder: 'e.g. "AI tools for content creators"', value: topic, onChange: (e) => setTopic(e.target.value), onKeyDown: (e) => e.key === "Enter" && generate() }),
+        React.createElement("button", { className: "btn btn-accent", onClick: generate, disabled: loading }, loading ? "Generating..." : "Generate Ideas")
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    ideas ? React.createElement(
+      "div",
+      null,
+      ideas.insight_summary ? React.createElement(
+        "div",
+        { className: "insight" },
+        React.createElement("h3", null, "\u{1F916} AI Analysis"),
+        React.createElement("p", null, ideas.insight_summary)
+      ) : null,
+      React.createElement(
+        "div",
+        { className: "stats", style: { gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" } },
+        ideas.ideas.map(
+          (idea, i) => React.createElement(
+            "div",
+            { key: i, className: "card", style: { padding: 16 } },
+            React.createElement(
+              "div",
+              { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } },
+              React.createElement("h3", { style: { fontSize: "1rem", fontWeight: 700, flex: 1 } }, idea.title),
+              React.createElement("span", { className: "tag", style: { background: idea.confidence_score > 0.8 ? "rgba(43,166,64,.15)" : "var(--bg3)", color: idea.confidence_score > 0.8 ? "var(--success)" : "var(--text2)" } }, `${Math.round(idea.confidence_score * 100)}%`)
+            ),
+            React.createElement("p", { style: { color: "var(--text2)", fontSize: ".85rem", marginBottom: 12 } }, idea.description),
+            idea.seo_keywords?.length ? React.createElement(
+              "div",
+              null,
+              React.createElement("div", { style: { fontSize: ".78rem", color: "var(--text3)", marginBottom: 4, fontWeight: 600 } }, "SEO Keywords"),
+              React.createElement("div", null, idea.seo_keywords.map((kw, j) => React.createElement("span", { key: j, className: "tag" }, kw)))
+            ) : null,
+            idea.thumbnail_ideas?.length ? React.createElement(
+              "div",
+              { style: { marginTop: 8 } },
+              React.createElement("div", { style: { fontSize: ".78rem", color: "var(--text3)", marginBottom: 4, fontWeight: 600 } }, "\u{1F5BC} Thumbnail Ideas"),
+              React.createElement(
+                "ul",
+                { style: { fontSize: ".82rem", color: "var(--text2)", paddingLeft: 16 } },
+                idea.thumbnail_ideas.map((t, j) => React.createElement("li", { key: j }, t))
+              )
+            ) : null,
+            idea.best_time_to_post ? React.createElement(
+              "div",
+              { style: { marginTop: 8, fontSize: ".82rem", color: "var(--accent)" } },
+              "\u23F0 Best time: ",
+              idea.best_time_to_post,
+              " \xB7 Predicted: ",
+              idea.predicted_performance
+            ) : null,
+            idea.viral_probability !== void 0 ? React.createElement(
+              "div",
+              { style: { marginTop: 8, display: "flex", gap: 12, flexWrap: "wrap", fontSize: ".82rem" } },
+              React.createElement(
+                "span",
+                { style: { color: idea.viral_probability > 70 ? "var(--success)" : "var(--warning)" } },
+                "\u{1F4A5} Viral: ",
+                idea.viral_probability,
+                "%"
+              ),
+              React.createElement(
+                "span",
+                { style: { color: "var(--text2)" } },
+                "\u{1F4C8} Views: ",
+                (idea.expected_view_min || 0).toLocaleString(),
+                "\u2013",
+                (idea.expected_view_max || 0).toLocaleString()
+              )
+            ) : null,
+            idea.publish_ready !== void 0 ? React.createElement(
+              "div",
+              { style: { marginTop: 8, padding: "8px 12px", borderRadius: "var(--radius)", fontSize: ".82rem", background: idea.publish_ready ? "rgba(43,166,64,.1)" : "rgba(255,78,69,.1)", border: `1px solid ${idea.publish_ready ? "var(--success)" : "var(--error)"}` } },
+              idea.publish_ready ? React.createElement("span", { style: { color: "var(--success)", fontWeight: 600 } }, "\u2714\uFE0F Ready to Publish") : React.createElement("span", { style: { color: "var(--error)", fontWeight: 600 } }, "\u26A0\uFE0F Improve Before Publishing"),
+              idea.publish_reasons?.length ? React.createElement("div", { style: { marginTop: 4, color: "var(--text2)" } }, idea.publish_reasons.map((r, j) => React.createElement("div", { key: j }, "\u2022 ", r))) : null,
+              idea.improve_reasons?.length ? React.createElement("div", { style: { marginTop: 4, color: "var(--error)" } }, idea.improve_reasons.map((r, j) => React.createElement("div", { key: j }, "\u2022 ", r))) : null
+            ) : null,
+            React.createElement("button", { className: "btn btn-ghost", style: { marginTop: 12, width: "100%", justifyContent: "center", padding: "6px", fontSize: ".8rem" }, onClick: () => saveIdea(idea) }, "\u{1F4BE} Save Idea")
+          )
+        )
+      )
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4A1}"),
+      React.createElement("p", null, "Enter a topic to generate AI-powered content ideas")
+    ) : null
+  );
+}
+function SettingsPage() {
+  const { api, user, logout } = useAuth();
+  const [usage, setUsage] = useState(null);
+  const [prefs, setPrefs] = useState(null);
+  const [apiKeys, setApiKeys] = useState([]);
+  const [channels, setChannels] = useState([]);
+  const [digestCfg, setDigestCfg] = useState(null);
+  const [newKeyLabel, setNewKeyLabel] = useState("");
+  const [newKey, setNewKey] = useState("");
+  const [activeTab, setActiveTab] = useState("profile");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const [uRes, pRes, kRes, cRes, dRes] = await Promise.all([
+        api("/api/billing/usage"),
+        api("/api/notifications/prefs"),
+        api("/api/api-keys"),
+        api("/api/channels"),
+        api("/api/digest-config")
+      ]);
+      if (uRes?.ok) {
+        const d = await uRes.json();
+        setUsage(d);
+      }
+      if (pRes?.ok) {
+        const d = await pRes.json();
+        setPrefs(d);
+      }
+      if (kRes?.ok) {
+        const d = await kRes.json();
+        setApiKeys(d);
+      }
+      if (cRes?.ok) {
+        const d = await cRes.json();
+        setChannels(d);
+      }
+      if (dRes?.ok) {
+        const d = await dRes.json();
+        setDigestCfg(d);
+      }
+    })();
+  }, [api]);
+  const savePrefs = async () => {
+    await api("/api/notifications/prefs", { method: "PUT", body: JSON.stringify(prefs) });
+    alert("Preferences saved!");
+  };
+  const createKey = async () => {
+    const res = await api("/api/api-keys", { method: "POST", body: JSON.stringify({ label: newKeyLabel || "default" }) });
+    if (!res) return;
+    const d = await res.json();
+    setNewKey(d.key);
+    setNewKeyLabel("");
+    const kRes = await api("/api/api-keys");
+    if (kRes?.ok) setApiKeys(await kRes.json());
+  };
+  const deleteKey = async (id) => {
+    await api(`/api/api-keys/${id}`, { method: "DELETE" });
+    const kRes = await api("/api/api-keys");
+    if (kRes?.ok) setApiKeys(await kRes.json());
+  };
+  const saveDigest = async () => {
+    await api("/api/digest-config", { method: "PUT", body: JSON.stringify(digestCfg) });
+    alert("Digest settings saved!");
+  };
+  const deleteAccount = async () => {
+    if (!confirmDelete) return;
+    await api("/api/account", { method: "DELETE" });
+    logout();
+  };
+  const tabs = ["profile", "notifications", "api-keys", "channels", "digest"];
+  const tabLabels = { profile: "Profile & Usage", notifications: "Notifications", "api-keys": "API Keys", channels: "Channels", digest: "Email Digest" };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Settings"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Manage your account and preferences"),
+    React.createElement(
+      "div",
+      { className: "tabs" },
+      tabs.map((t) => React.createElement("button", { key: t, className: `tab${activeTab === t ? " active" : ""}`, onClick: () => setActiveTab(t) }, tabLabels[t]))
+    ),
+    React.createElement(
+      "div",
+      { className: "tab-panel", style: { display: activeTab === "profile" ? "block" : "none" } },
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 12 } }, "Account Information"),
+        React.createElement(
+          "div",
+          { style: { display: "grid", gap: 8, gridTemplateColumns: "140px 1fr", fontSize: ".9rem" } },
+          React.createElement("span", { style: { color: "var(--text3)" } }, "Email:"),
+          React.createElement("span", null, user?.email),
+          React.createElement("span", { style: { color: "var(--text3)" } }, "Plan:"),
+          React.createElement("span", { style: { color: "var(--primary)", fontWeight: 600 } }, usage?.plan || "free"),
+          React.createElement("span", { style: { color: "var(--text3)" } }, "Analyses Used:"),
+          React.createElement("span", null, `${usage?.analyses_this_month || 0} / ${usage?.limit === -1 ? "\u221E" : usage?.limit || 3}`),
+          React.createElement("span", { style: { color: "var(--text3)" } }, "Member Since:"),
+          React.createElement("span", null, user?.created_date ? new Date(user.created_date).toLocaleDateString() : "N/A")
+        ),
+        usage?.plan !== "free" ? React.createElement("button", { className: "btn btn-ghost", style: { marginTop: 16 }, onClick: async () => {
+          const res = await api("/api/billing/portal", { method: "POST" });
+          if (res?.ok) {
+            const d = await res.json();
+            if (d.url) window.location.href = d.url;
+          }
+        } }, "Manage Subscription") : React.createElement("button", { className: "btn btn-primary", style: { marginTop: 16 }, onClick: () => window.location.hash = "pricing" }, "Upgrade Plan")
+      ),
+      React.createElement(
+        "div",
+        { className: "card", style: { borderColor: "rgba(255,68,68,.3)" } },
+        React.createElement("h3", { style: { color: "var(--error)", marginBottom: 8 } }, "Danger Zone"),
+        React.createElement("p", { style: { fontSize: ".85rem", color: "var(--text3)", marginBottom: 12 } }, "Permanently delete your account and all data. This action cannot be undone."),
+        confirmDelete ? React.createElement(
+          "div",
+          { style: { display: "flex", gap: 8 } },
+          React.createElement("button", { className: "btn", style: { background: "var(--error)", color: "#fff" }, onClick: deleteAccount }, "Confirm Delete"),
+          React.createElement("button", { className: "btn btn-ghost", onClick: () => setConfirmDelete(false) }, "Cancel")
+        ) : React.createElement("button", { className: "btn btn-ghost", style: { borderColor: "var(--error)", color: "var(--error)" }, onClick: () => setConfirmDelete(true) }, "Delete Account")
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "tab-panel", style: { display: activeTab === "notifications" ? "block" : "none" } },
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 12 } }, "Notification Preferences"),
+        prefs ? Object.entries(prefs).filter(([k]) => k !== "id").map(
+          ([k, v]) => React.createElement(
+            "label",
+            { key: k, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--border)", fontSize: ".9rem", cursor: "pointer" } },
+            React.createElement("input", { type: typeof v === "boolean" ? "checkbox" : "radio", checked: v === true || v === "true" || v === "weekly", onChange: () => {
+              if (typeof v === "boolean") setPrefs((p) => ({ ...p, [k]: !p[k] }));
+              else setPrefs((p) => ({ ...p, [k]: p.digest_frequency === "weekly" ? "daily" : "weekly" }));
+            } }),
+            k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+          )
+        ) : null,
+        React.createElement("button", { className: "btn btn-accent", style: { marginTop: 12 }, onClick: savePrefs }, "Save Preferences")
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "tab-panel", style: { display: activeTab === "api-keys" ? "block" : "none" } },
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 4 } }, "API Keys"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem", marginBottom: 12 } }, "API keys are only available on the Business plan."),
+        user?.plan === "business" ? React.createElement(
+          "div",
+          null,
+          React.createElement(
+            "div",
+            { style: { display: "flex", gap: 8, maxWidth: 400, marginBottom: 16 } },
+            React.createElement("input", { className: "input", placeholder: 'Key label (e.g. "prod-server")', value: newKeyLabel, onChange: (e) => setNewKeyLabel(e.target.value) }),
+            React.createElement("button", { className: "btn btn-accent", onClick: createKey }, "Create Key")
+          ),
+          newKey ? React.createElement(
+            "div",
+            { className: "insight" },
+            React.createElement("h3", null, "\u26A0\uFE0F Copy this key now \u2014 it won\u2019t be shown again"),
+            React.createElement("code", { style: { display: "block", padding: 12, background: "var(--bg)", borderRadius: "var(--radius)", marginTop: 8, fontSize: ".85rem", wordBreak: "break-all" } }, newKey)
+          ) : null,
+          apiKeys.length ? React.createElement(
+            "div",
+            null,
+            React.createElement("div", { style: { fontSize: ".85rem", color: "var(--text3)", marginBottom: 8, fontWeight: 600 } }, "Existing Keys"),
+            apiKeys.map((k) => React.createElement(
+              "div",
+              { key: k.id, style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)", fontSize: ".85rem" } },
+              React.createElement(
+                "div",
+                null,
+                React.createElement("div", { style: { fontWeight: 600 } }, k.label),
+                React.createElement("div", { style: { color: "var(--text3)" } }, k.key, " \xB7 ", new Date(k.created_date).toLocaleDateString())
+              ),
+              React.createElement("button", { className: "btn btn-ghost", style: { padding: "4px 12px", fontSize: ".78rem", borderColor: "var(--error)", color: "var(--error)" }, onClick: () => deleteKey(k.id) }, "Revoke")
+            ))
+          ) : React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem" } }, "No API keys created yet.")
+        ) : React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem", fontStyle: "italic" } }, "Upgrade to Business to create API keys.")
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "tab-panel", style: { display: activeTab === "channels" ? "block" : "none" } },
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 12 } }, "Your Channels"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem", marginBottom: 12 } }, "Manage multiple YouTube channels from one account."),
+        channels.length ? channels.map(
+          (c) => React.createElement(
+            "div",
+            { key: c.id, style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" } },
+            React.createElement(
+              "div",
+              null,
+              React.createElement("div", { style: { fontWeight: 600, fontSize: ".9rem" } }, c.channel_title || c.channel_id),
+              React.createElement("div", { style: { color: "var(--text3)", fontSize: ".8rem" } }, c.is_primary ? "Primary" : "Secondary")
+            ),
+            React.createElement("button", { className: "btn btn-ghost", style: { padding: "4px 12px", fontSize: ".78rem" }, onClick: async () => {
+              await api(`/api/channels/${c.channel_id}`, { method: "DELETE" });
+              const cRes = await api("/api/channels");
+              if (cRes?.ok) setChannels(await cRes.json());
+            } }, "Remove")
+          )
+        ) : React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem" } }, "No channels added yet. Analyze a channel to add it.")
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "tab-panel", style: { display: activeTab === "digest" ? "block" : "none" } },
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 12 } }, "Email Digest Configuration"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem", marginBottom: 12 } }, "Customize your weekly email report."),
+        digestCfg ? Object.entries(digestCfg).filter(([k]) => k !== "id" && k !== "updated_at").map(
+          ([k, v]) => React.createElement(
+            "label",
+            { key: k, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--border)", fontSize: ".9rem", cursor: "pointer" } },
+            React.createElement("input", { type: typeof v === "boolean" ? "checkbox" : "radio", checked: typeof v === "boolean" ? v : v === "weekly", onChange: () => {
+              if (typeof v === "boolean") setDigestCfg((d) => ({ ...d, [k]: !d[k] }));
+              else setDigestCfg((d) => ({ ...d, [k]: d.frequency === "weekly" ? "daily" : "weekly" }));
+            } }),
+            k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+          )
+        ) : null,
+        React.createElement("button", { className: "btn btn-accent", style: { marginTop: 12 }, onClick: saveDigest }, "Save Digest Settings")
+      )
+    )
+  );
+}
+function SavedIdeasPage() {
+  const { api } = useAuth();
+  const [ideas, setIdeas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    (async () => {
+      const res = await api("/api/ideas?saved_only=true");
+      if (res?.ok) setIdeas(await res.json());
+      setLoading(false);
+    })();
+  }, [api]);
+  if (loading) return React.createElement(Skeleton);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Saved Ideas"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Your saved content ideas"),
+    ideas.length ? React.createElement(
+      "div",
+      { className: "content-list" },
+      ideas.map((idea) => React.createElement(
+        "div",
+        { key: idea.id, className: "card" },
+        React.createElement(
+          "div",
+          { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" } },
+          React.createElement(
+            "div",
+            null,
+            React.createElement("h3", { style: { fontSize: "1rem", fontWeight: 600, marginBottom: 4 } }, idea.title),
+            React.createElement("p", { style: { color: "var(--text3)", fontSize: ".82rem" } }, "Topic: ", idea.topic)
+          ),
+          React.createElement("button", { className: "btn btn-ghost", style: { padding: "4px 12px", fontSize: ".78rem", borderColor: "var(--error)", color: "var(--error)" }, onClick: async () => {
+            await api(`/api/ideas/${idea.id}`, { method: "DELETE" });
+            setIdeas(ideas.filter((i) => i.id !== idea.id));
+          } }, "Delete")
+        ),
+        idea.seo_keywords?.length ? React.createElement(
+          "div",
+          { style: { marginTop: 8 } },
+          idea.seo_keywords.map((kw, i) => React.createElement("span", { key: i, className: "tag" }, kw))
+        ) : null
+      ))
+    ) : React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4BE}"),
+      React.createElement("p", null, "No saved ideas yet. Generate some from the Ideas page!")
+    )
+  );
+}
+function WatchPage() {
+  const { api } = useAuth();
+  const [watched, setWatched] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("watched");
+  useEffect(() => {
+    (async () => {
+      const [wRes, aRes] = await Promise.all([api("/api/watched-competitors"), api("/api/alerts")]);
+      if (wRes?.ok) setWatched(await wRes.json());
+      if (aRes?.ok) setAlerts(await aRes.json());
+      setLoading(false);
+    })();
+  }, [api]);
+  const markRead = async () => {
+    await api("/api/alerts/read", { method: "POST" });
+    setAlerts(alerts.map((a) => ({ ...a, read: true })));
+  };
+  if (loading) return React.createElement(Skeleton);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Competitor Monitoring"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Watch competitors and get alerted to changes"),
+    React.createElement(
+      "div",
+      { className: "tabs" },
+      React.createElement("button", { className: `tab${tab === "watched" ? " active" : ""}`, onClick: () => setTab("watched") }, "Watched Channels"),
+      React.createElement("button", { className: `tab${tab === "alerts" ? " active" : ""}`, onClick: () => setTab("alerts") }, "Alerts", alerts.filter((a) => !a.read).length ? React.createElement("span", { className: "tab-count", style: { background: "var(--primary)", color: "#fff" } }, alerts.filter((a) => !a.read).length) : null)
+    ),
+    tab === "watched" ? React.createElement(
+      "div",
+      null,
+      watched.length ? React.createElement(
+        "div",
+        { className: "competitor-grid" },
+        watched.map((w) => React.createElement(
+          "div",
+          { key: w.id, className: "competitor-card" },
+          React.createElement("div", { className: "name" }, w.channel_title || w.channel_id),
+          React.createElement("div", { className: "subs" }, `${fmtNum(w.subscriber_count)} subs \xB7 Watching since ${new Date(w.added_at).toLocaleDateString()}`),
+          React.createElement("button", { className: "btn btn-ghost", style: { marginTop: 8, width: "100%", justifyContent: "center", padding: "4px 8px", fontSize: ".78rem", borderColor: "var(--error)", color: "var(--error)" }, onClick: async () => {
+            await api(`/api/watched-competitors/${w.channel_id}`, { method: "DELETE" });
+            setWatched(watched.filter((x) => x.id !== w.id));
+          } }, "Stop Watching")
+        ))
+      ) : React.createElement(
+        "div",
+        { className: "empty-state" },
+        React.createElement("div", { className: "emoji" }, "\u{1F440}"),
+        React.createElement("p", null, 'No competitors watched yet. Find competitors and click "Watch" to monitor them.')
+      )
+    ) : React.createElement(
+      "div",
+      null,
+      alerts.filter((a) => !a.read).length ? React.createElement("button", { className: "btn btn-ghost", style: { marginBottom: 12, fontSize: ".85rem" }, onClick: markRead }, "Mark All Read") : null,
+      alerts.length ? React.createElement(
+        "div",
+        { className: "content-list" },
+        alerts.map((a) => React.createElement(
+          "div",
+          { key: a.id, className: "card", style: { padding: 12, opacity: a.read ? 0.6 : 1 } },
+          React.createElement(
+            "div",
+            { style: { display: "flex", alignItems: "flex-start", gap: 8 } },
+            React.createElement("span", { style: { fontSize: "1.1rem" } }, a.alert_type === "new_video" ? "\u{1F3AC}" : a.alert_type === "sub_spike" ? "\u{1F4C8}" : "\u{1F4A1}"),
+            React.createElement(
+              "div",
+              null,
+              React.createElement("p", { style: { fontSize: ".85rem", fontWeight: 600 } }, a.message),
+              React.createElement("p", { style: { fontSize: ".78rem", color: "var(--text3)" } }, new Date(a.created_at).toLocaleString())
+            )
+          )
+        ))
+      ) : React.createElement(
+        "div",
+        { className: "empty-state" },
+        React.createElement("div", { className: "emoji" }, "\u{1F514}"),
+        React.createElement("p", null, "No alerts yet. Alerts will appear when your watched competitors have notable changes.")
+      )
+    )
+  );
+}
+function CalendarPage() {
+  const { api } = useAuth();
+  const now = /* @__PURE__ */ new Date();
+  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", event_date: "", event_time: "", event_type: "idea", related_channel_id: "" });
+  useEffect(() => {
+    (async () => {
+      const res = await api(`/api/calendar?month=${month}`);
+      if (res?.ok) setEvents(await res.json());
+      setLoading(false);
+    })();
+  }, [api, month]);
+  const createEvent = async () => {
+    const res = await api("/api/calendar", { method: "POST", body: JSON.stringify(form) });
+    if (res?.ok) {
+      setShowForm(false);
+      setForm({ title: "", description: "", event_date: "", event_time: "", event_type: "idea", related_channel_id: "" });
+    }
+    const fres = await api(`/api/calendar?month=${month}`);
+    if (fres?.ok) setEvents(await fres.json());
+  };
+  const deleteEvent = async (id) => {
+    await api(`/api/calendar/${id}`, { method: "DELETE" });
+    setEvents(events.filter((e) => e.id !== id));
+  };
+  const daysInMonth = new Date(parseInt(month), parseInt(month.split("-")[1]), 0).getDate();
+  const firstDay = new Date(parseInt(month), parseInt(month.split("-")[1]) - 1, 1).getDay();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  if (loading) return React.createElement(Skeleton);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement(
+      "div",
+      { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 } },
+      React.createElement(
+        "div",
+        null,
+        React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Content Calendar"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem" } }, "Plan and schedule your content")
+      ),
+      React.createElement("button", { className: "btn btn-primary", onClick: () => setShowForm(!showForm) }, showForm ? "Cancel" : "+ Add Event")
+    ),
+    showForm ? React.createElement(
+      "div",
+      { className: "card", style: { marginBottom: 16 } },
+      React.createElement(
+        "div",
+        { style: { display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr" } },
+        React.createElement("input", { className: "input", placeholder: "Event title", value: form.title, onChange: (e) => setForm((f) => ({ ...f, title: e.target.value })) }),
+        React.createElement("input", { className: "input", type: "date", value: form.event_date, onChange: (e) => setForm((f) => ({ ...f, event_date: e.target.value })) }),
+        React.createElement("input", { className: "input", type: "time", value: form.event_time, onChange: (e) => setForm((f) => ({ ...f, event_time: e.target.value })) }),
+        React.createElement(
+          "select",
+          { className: "input", value: form.event_type, onChange: (e) => setForm((f) => ({ ...f, event_type: e.target.value })) },
+          React.createElement("option", { value: "idea" }, "Content Idea"),
+          React.createElement("option", { value: "upload" }, "Upload"),
+          React.createElement("option", { value: "meeting" }, "Meeting"),
+          React.createElement("option", { value: "deadline" }, "Deadline")
+        )
+      ),
+      React.createElement("textarea", { className: "input", style: { marginTop: 8, minHeight: 60 }, placeholder: "Description", value: form.description, onChange: (e) => setForm((f) => ({ ...f, description: e.target.value })) }),
+      React.createElement("button", { className: "btn btn-accent", style: { marginTop: 8 }, onClick: createEvent, disabled: !form.title || !form.event_date }, "Save Event")
+    ) : null,
+    React.createElement(
+      "div",
+      { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 16 } },
+      React.createElement("button", { className: "btn btn-ghost", style: { padding: "6px 12px" }, onClick: () => {
+        const [y, m] = month.split("-").map(Number);
+        const d = new Date(y, m - 2, 1);
+        setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      } }, "\u2190"),
+      React.createElement("h2", { style: { fontSize: "1.1rem", fontWeight: 600, minWidth: 160, textAlign: "center" } }, new Date(parseInt(month), parseInt(month.split("-")[1]) - 1).toLocaleString("default", { month: "long", year: "numeric" })),
+      React.createElement("button", { className: "btn btn-ghost", style: { padding: "6px 12px" }, onClick: () => {
+        const [y, m] = month.split("-").map(Number);
+        const d = new Date(y, m, 1);
+        setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      } }, "\u2192"),
+      React.createElement("button", { className: "btn btn-ghost", style: { padding: "6px 12px", fontSize: ".8rem" }, onClick: () => {
+        const n = /* @__PURE__ */ new Date();
+        setMonth(`${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`);
+      } }, "Today")
+    ),
+    React.createElement(
+      "div",
+      { style: { background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", overflow: "hidden" } },
+      React.createElement(
+        "div",
+        { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", background: "var(--bg3)", borderBottom: "1px solid var(--border)" } },
+        ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => React.createElement("div", { key: d, style: { padding: "8px", textAlign: "center", fontSize: ".78rem", color: "var(--text3)", fontWeight: 600 } }, d))
+      ),
+      React.createElement(
+        "div",
+        { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)" } },
+        Array.from({ length: firstDay }, (_, i) => React.createElement("div", { key: `empty-${i}`, style: { padding: "8px", minHeight: 80, background: "var(--bg2)" } })),
+        days.map((d) => {
+          const dateStr = `${month}-${String(d).padStart(2, "0")}`;
+          const dayEvents = events.filter((e) => e.event_date === dateStr);
+          return React.createElement(
+            "div",
+            { key: d, style: { padding: "4px", minHeight: 80, borderRight: "1px solid var(--border)", borderBottom: "1px solid var(--border)", cursor: "pointer" }, onClick: () => setForm((f) => ({ ...f, event_date: dateStr })) },
+            React.createElement("div", { style: { fontSize: ".8rem", fontWeight: 600, color: "var(--text2)", marginBottom: 2 } }, d),
+            dayEvents.slice(0, 3).map((ev) => {
+              const bg = ev.event_type === "upload" ? "rgba(255,68,68,.15)" : "rgba(62,166,255,.15)";
+              return React.createElement("div", { key: ev.id, style: { fontSize: ".7rem", padding: "2px 4px", marginBottom: 2, background: bg, borderRadius: 4, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, ev.title);
+            }),
+            dayEvents.length > 3 ? React.createElement("div", { style: { fontSize: ".65rem", color: "var(--text3)" } }, `+${dayEvents.length - 3} more`) : null
+          );
+        })
+      )
+    ),
+    React.createElement(
+      "div",
+      { style: { marginTop: 16, fontSize: ".85rem", color: "var(--text3)" } },
+      React.createElement("span", null, events.length, " events this month"),
+      events.filter((e) => e.event_type === "upload").length ? React.createElement("span", { style: { marginLeft: 12 } }, "\xB7 ", events.filter((e) => e.event_type === "upload").length, " uploads") : null
+    )
+  );
+}
+function ReportsPage() {
+  const { api } = useAuth();
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [exporting, setExporting] = useState("");
+  useEffect(() => {
+    (async () => {
+      const res = await api("/api/reports");
+      if (res?.ok) setReports(await res.json());
+      setLoading(false);
+    })();
+  }, [api]);
+  const loadReport = async (reportId) => {
+    const res = await api(`/api/reports/${reportId}`);
+    if (res?.ok) setSelectedReport(await res.json());
+  };
+  const doExport = async (format) => {
+    if (!selectedReport?.data?.profile?.channel_id) return;
+    setExporting(format);
+    try {
+      const res = await api(`/api/analyze/${selectedReport.data.profile.channel_id}/export?format=${format}`);
+      if (!res) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `analysis_${selectedReport.data.profile.channel_id}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+    } finally {
+      setExporting("");
+    }
+  };
+  if (loading) return React.createElement(Skeleton);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Reports & Exports"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "View saved analyses and export reports"),
+    React.createElement(
+      "div",
+      { style: { display: "grid", gridTemplateColumns: selectedReport ? "1fr 1fr" : "1fr", gap: 16 } },
+      React.createElement(
+        "div",
+        null,
+        React.createElement(
+          "div",
+          { className: "card" },
+          React.createElement("h3", { style: { marginBottom: 12 } }, "Saved Reports"),
+          reports.length ? reports.map((r) => React.createElement(
+            "div",
+            { key: r.report_id, className: "content-item", style: { marginBottom: 4 }, onClick: () => loadReport(r.report_id) },
+            React.createElement(
+              "div",
+              null,
+              React.createElement("div", { style: { fontWeight: 600, fontSize: ".9rem" } }, r.channel_title || r.channel_url),
+              React.createElement("div", { style: { color: "var(--text3)", fontSize: ".8rem" } }, r.topic || "Channel analysis", " \xB7 ", new Date(r.created_at).toLocaleDateString())
+            )
+          )) : React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem" } }, "No reports yet. Analyze a channel to see reports here.")
+        )
+      ),
+      selectedReport ? React.createElement(
+        "div",
+        null,
+        React.createElement(
+          "div",
+          { className: "card" },
+          React.createElement("h3", { style: { marginBottom: 8 } }, selectedReport.channel_title || "Report"),
+          React.createElement("div", { style: { fontSize: ".85rem", color: "var(--text3)", marginBottom: 12 } }, selectedReport.topic, " \xB7 ", new Date(selectedReport.created_at).toLocaleString()),
+          React.createElement(
+            "div",
+            { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+            React.createElement("button", { className: "btn btn-accent", style: { fontSize: ".82rem", padding: "8px 16px" }, onClick: () => doExport("csv"), disabled: exporting === "csv" }, exporting === "csv" ? "Exporting..." : "\u{1F4C4} Export CSV"),
+            React.createElement("button", { className: "btn btn-primary", style: { fontSize: ".82rem", padding: "8px 16px" }, onClick: () => doExport("pdf"), disabled: exporting === "pdf" }, exporting === "pdf" ? "Exporting..." : "\u{1F4C4} Export PDF"),
+            React.createElement("button", { className: "btn btn-ghost", style: { fontSize: ".82rem", padding: "8px 16px" }, onClick: () => setSelectedReport(null) }, "Close")
+          )
+        )
+      ) : null
+    )
+  );
+}
+function RepurposePage() {
+  const { api } = useAuth();
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [platforms, setPlatforms] = useState({ tiktok: true, instagram: true });
+  const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    (async () => {
+      const res = await api("/api/repurpose");
+      if (res?.ok) setHistory(await res.json());
+    })();
+  }, [api]);
+  const repurpose = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setErr("");
+    setResult(null);
+    try {
+      const targetPlatforms = Object.entries(platforms).filter(([, v]) => v).map(([k]) => k);
+      if (!targetPlatforms.length) {
+        setErr("Select at least one platform");
+        setLoading(false);
+        return;
+      }
+      const res = await api("/api/repurpose", { method: "POST", body: JSON.stringify({ url, title, target_platforms: targetPlatforms }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setResult(d);
+      } else {
+        setErr(d.detail || "Failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Cross-Platform Repurposing"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Turn YouTube videos into short-form content for other platforms"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+        React.createElement("input", { className: "input", style: { flex: 2, minWidth: 250 }, placeholder: "YouTube video URL...", value: url, onChange: (e) => setUrl(e.target.value) }),
+        React.createElement("input", { className: "input", style: { flex: 1, minWidth: 150 }, placeholder: "Video title (optional)", value: title, onChange: (e) => setTitle(e.target.value) }),
+        React.createElement("button", { className: "btn btn-accent", onClick: repurpose, disabled: loading }, loading ? "Generating..." : "Repurpose")
+      ),
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 16, marginTop: 12, fontSize: ".85rem", color: "var(--text3)" } },
+        Object.entries(platforms).map(
+          ([k, v]) => React.createElement(
+            "label",
+            { key: k, style: { display: "flex", alignItems: "center", gap: 4, cursor: "pointer" } },
+            React.createElement("input", { type: "checkbox", checked: v, onChange: () => setPlatforms((p) => ({ ...p, [k]: !p[k] })) }),
+            getPlatformConfig(k).icon,
+            " ",
+            k.charAt(0).toUpperCase() + k.slice(1)
+          )
+        )
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    result ? React.createElement(
+      "div",
+      null,
+      React.createElement("h3", { style: { marginBottom: 12 } }, "Generated Scripts"),
+      React.createElement(
+        "div",
+        { className: "stats", style: { gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))" } },
+        result.scripts.map((s, i) => React.createElement(
+          "div",
+          { key: i, className: "card" },
+          React.createElement(
+            "div",
+            { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+            React.createElement("span", { className: "platform-badge", style: { background: getPlatformConfig(s.platform).bg, color: getPlatformConfig(s.platform).color, width: 28, height: 28, fontSize: ".75rem" } }, getPlatformConfig(s.platform).icon),
+            React.createElement("h3", { style: { fontSize: "1rem" } }, s.platform, " Script (", s.duration_seconds, "s)")
+          ),
+          React.createElement("pre", { style: { whiteSpace: "pre-wrap", fontSize: ".82rem", color: "var(--text2)", background: "var(--bg)", padding: 12, borderRadius: "var(--radius)", marginBottom: 8, lineHeight: 1.5 } }, s.script),
+          s.tips?.length ? React.createElement("div", null, s.tips.map((t, j) => React.createElement("div", { key: j, style: { fontSize: ".78rem", color: "var(--text3)", padding: "2px 0" } }, "\u{1F4A1} ", t))) : null
+        ))
+      )
+    ) : null,
+    history.length ? React.createElement(
+      "div",
+      { className: "card", style: { marginTop: 16 } },
+      React.createElement("h3", { style: { marginBottom: 8 } }, "History"),
+      history.slice(0, 5).map((h) => React.createElement(
+        "div",
+        { key: h.id, style: { padding: "8px 0", borderBottom: "1px solid var(--border)", fontSize: ".85rem" } },
+        React.createElement("div", { style: { fontWeight: 600 } }, h.source_title || h.source_url),
+        React.createElement("div", { style: { color: "var(--text3)", fontSize: ".8rem" } }, h.target_platforms?.join(", "), " \xB7 ", new Date(h.created_at).toLocaleDateString())
+      ))
+    ) : null,
+    !result && !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F504}"),
+      React.createElement("p", null, "Paste a YouTube video URL to generate platform-specific scripts")
+    ) : null
+  );
+}
+function SeoPage() {
+  const { api } = useAuth();
+  const [channelId, setChannelId] = useState("");
+  const [scorecard, setScorecard] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const analyze = async () => {
+    if (!channelId.trim()) return;
+    setLoading(true);
+    setErr("");
+    setScorecard(null);
+    try {
+      const res = await api("/api/seo-scorecard", { method: "POST", body: JSON.stringify({ channel_id: channelId }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setScorecard(d);
+      } else {
+        setErr(d.detail || "Failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const scoreColor2 = (s) => s >= 80 ? "var(--success)" : s >= 50 ? "var(--warning)" : "var(--error)";
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "SEO Scorecard"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Analyze how well your channel is optimized for search"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, maxWidth: 500 } },
+        React.createElement("input", { className: "input", placeholder: "Channel ID...", value: channelId, onChange: (e) => setChannelId(e.target.value), onKeyDown: (e) => e.key === "Enter" && analyze() }),
+        React.createElement("button", { className: "btn btn-accent", onClick: analyze, disabled: loading }, loading ? "Scoring..." : "Score")
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    scorecard ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats", style: { gridTemplateColumns: "1fr 1fr 1fr 1fr" } },
+        React.createElement(
+          "div",
+          { className: "stat", style: { textAlign: "center" } },
+          React.createElement("div", { style: { fontSize: "2.5rem", fontWeight: 800, color: scoreColor2(scorecard.overall_score) } }, scorecard.overall_score),
+          React.createElement("div", { className: "label" }, "Overall SEO Score")
+        ),
+        ["title_score", "description_score", "tags_score"].map((f) => {
+          const label = f.replace("_score", "").replace("_", " ");
+          return React.createElement(
+            "div",
+            { key: f, className: "stat", style: { textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: "2rem", fontWeight: 700, color: scoreColor2(scorecard[f]) } }, scorecard[f]),
+            React.createElement("div", { className: "label" }, label)
+          );
+        })
+      ),
+      scorecard.recommendations?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 8 } }, "\u{1F4A1} Recommendations"),
+        React.createElement(
+          "ul",
+          { className: "rec-list" },
+          scorecard.recommendations.map((r, i) => React.createElement("li", { key: i }, r))
+        )
+      ) : null
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F50D}"),
+      React.createElement("p", null, "Enter a channel ID to generate an SEO scorecard")
+    ) : null
+  );
+}
+function ThumbnailTestPage() {
+  const { api } = useAuth();
+  const [urlA, setUrlA] = useState("");
+  const [urlB, setUrlB] = useState("");
+  const [title, setTitle] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const test = async () => {
+    if (!urlA.trim() || !urlB.trim()) {
+      setErr("Both thumbnail URLs are required");
+      return;
+    }
+    setLoading(true);
+    setErr("");
+    setResult(null);
+    try {
+      const res = await api("/api/thumbnail-test", { method: "POST", body: JSON.stringify({ thumbnail_a_url: urlA, thumbnail_b_url: urlB, title }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        setResult(d);
+      } else {
+        setErr(d.detail || "Test failed");
+      }
+    } catch (ex) {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "A/B Thumbnail Tester"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "AI predicts which thumbnail will perform better"),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr", maxWidth: 600 } },
+        React.createElement("input", { className: "input", placeholder: "Thumbnail A URL...", value: urlA, onChange: (e) => setUrlA(e.target.value) }),
+        React.createElement("input", { className: "input", placeholder: "Thumbnail B URL...", value: urlB, onChange: (e) => setUrlB(e.target.value) }),
+        React.createElement("input", { className: "input", placeholder: "Video title (optional)", value: title, onChange: (e) => setTitle(e.target.value), style: { gridColumn: "1 / -1" } })
+      ),
+      React.createElement("button", { className: "btn btn-accent", style: { marginTop: 8 }, onClick: test, disabled: loading }, loading ? "Testing..." : "Compare Thumbnails"),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    result ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats", style: { gridTemplateColumns: "1fr 1fr" } },
+        ["a", "b"].map((side) => {
+          const data = result[`thumbnail_${side}`];
+          return React.createElement(
+            "div",
+            { key: side, className: "card", style: { border: result.winner === side.toUpperCase() ? "2px solid var(--success)" : "1px solid var(--border)", textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: "3rem", fontWeight: 800, color: scoreColor(data.score * 10) } }, data.score),
+            React.createElement("div", { className: "label", style: { fontSize: "1rem", marginBottom: 8 } }, `Thumbnail ${side.toUpperCase()}${result.winner === side.toUpperCase() ? " \u{1F3C6}" : ""}`),
+            data.factors.map((f, i) => React.createElement("div", { key: i, style: { fontSize: ".82rem", color: "var(--text2)", padding: "4px 0", borderBottom: "1px solid var(--border)" } }, f))
+          );
+        })
+      ),
+      result.tips?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", { style: { marginBottom: 8 } }, "\u{1F4A1} General Tips"),
+        result.tips.map((t, i) => React.createElement("div", { key: i, style: { padding: "4px 0", fontSize: ".85rem", color: "var(--text2)" } }, t))
+      ) : null
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F5BC}"),
+      React.createElement("p", null, "Enter two thumbnail URLs to see which one performs better")
+    ) : null
+  );
+}
+function scoreColor(s) {
+  s = Number(s);
+  return s >= 80 ? "var(--success)" : s >= 50 ? "var(--warning)" : "var(--error)";
+}
+function TrendAlertsPage() {
+  const { api } = useAuth();
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const check = async () => {
+    setLoading(true);
+    try {
+      const res = await api("/api/trend-alerts/check", { method: "POST" });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setAlerts(d.alerts || []);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  };
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", { style: { fontSize: "1.5rem", fontWeight: 700, marginBottom: 4 } }, "Trend Alerts"),
+    React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 20 } }, "Discover trending topics in your niche"),
+    React.createElement("button", { className: "btn btn-accent", onClick: check, disabled: loading, style: { marginBottom: 16 } }, loading ? "Checking..." : "\u{1F514} Check for Trends"),
+    alerts.length ? React.createElement(
+      "div",
+      { className: "content-list" },
+      alerts.map((a, i) => React.createElement(
+        "div",
+        { key: i, className: "card", style: { padding: 12, borderLeft: `4px solid ${a.strength === "high" ? "var(--primary)" : "var(--warning)"}` } },
+        React.createElement(
+          "div",
+          { style: { display: "flex", alignItems: "flex-start", gap: 8 } },
+          React.createElement("span", { style: { fontSize: "1.2rem" } }, "\u{1F525}"),
+          React.createElement(
+            "div",
+            null,
+            React.createElement("p", { style: { fontSize: ".9rem", fontWeight: 600 } }, a.topic),
+            React.createElement("p", { style: { fontSize: ".82rem", color: "var(--text2)" } }, a.message),
+            React.createElement("p", { style: { fontSize: ".75rem", color: "var(--text3)", marginTop: 4 } }, "Platform: ", a.platform, " \xB7 Strength: ", a.strength)
+          )
+        )
+      ))
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4A1}"),
+      React.createElement("p", null, 'Click "Check for Trends" to discover trending topics in your niche')
+    ) : null
+  );
+}
+function CommentsPage() {
+  const { api } = useAuth();
+  const [url, setUrl] = useState("");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const analyze = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setErr("");
+    setData(null);
+    try {
+      const res = await api("/api/comments/analyze", { method: "POST", body: JSON.stringify({ video_url: url }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || "Analysis failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const sen = data?.sentiment_breakdown || {};
+  const total = sen.positive + sen.neutral + sen.negative || 1;
+  const pct = (v) => Math.round(v / total * 100);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", null, "\u{1F4AC} Comment Analyzer"),
+    React.createElement(
+      "p",
+      { style: { color: "var(--text3)", marginBottom: 16 } },
+      "Paste a YouTube video URL to analyze audience comments with AI sentiment and topic extraction"
+    ),
+    React.createElement(
+      "div",
+      { className: "card" },
+      React.createElement(
+        "div",
+        { style: { display: "flex", gap: 8, maxWidth: 500 } },
+        React.createElement("input", { className: "input", placeholder: "https://youtube.com/watch?v=...", value: url, onChange: (e) => setUrl(e.target.value), onKeyDown: (e) => e.key === "Enter" && analyze() }),
+        React.createElement("button", { className: "btn btn-accent", onClick: analyze, disabled: loading }, loading ? "Analyzing..." : "Analyze")
+      ),
+      React.createElement(LoadingBar, { active: loading }),
+      React.createElement(ErrorBox, { message: err })
+    ),
+    data ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement("h3", null, data.video_title || "Untitled Video"),
+        React.createElement("p", { style: { color: "var(--text3)", fontSize: ".85rem" } }, `${data.total_comments} comments analyzed`)
+      ),
+      React.createElement(
+        "div",
+        { className: "stats", style: { gridTemplateColumns: "repeat(3, 1fr)" } },
+        React.createElement(
+          "div",
+          { className: "stat", style: { borderLeft: "4px solid #2ba640" } },
+          React.createElement("div", { className: "label" }, "Positive"),
+          React.createElement("div", { className: "value" }, `${pct(sen.positive)}%`),
+          React.createElement("div", { className: "change", style: { color: "var(--success)" } }, `${sen.positive} comments`)
+        ),
+        React.createElement(
+          "div",
+          { className: "stat", style: { borderLeft: "4px solid #ffa73c" } },
+          React.createElement("div", { className: "label" }, "Neutral"),
+          React.createElement("div", { className: "value" }, `${pct(sen.neutral)}%`),
+          React.createElement("div", { className: "change", style: { color: "var(--warning)" } }, `${sen.neutral} comments`)
+        ),
+        React.createElement(
+          "div",
+          { className: "stat", style: { borderLeft: "4px solid #ff4e45" } },
+          React.createElement("div", { className: "label" }, "Negative"),
+          React.createElement("div", { className: "value" }, `${pct(sen.negative)}%`),
+          React.createElement("div", { className: "change", style: { color: "var(--error)" } }, `${sen.negative} comments`)
+        )
+      ),
+      data.topics?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)" } }, "\u{1F4DD}"),
+          React.createElement("h3", null, "Topics Mentioned")
+        ),
+        React.createElement("div", null, data.topics.map((t, i) => React.createElement("span", { key: i, className: "tag" }, t)))
+      ) : null,
+      data.content_ideas?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(43,166,64,.15)" } }, "\u{1F4A1}"),
+          React.createElement("h3", null, "Content Ideas from Comments")
+        ),
+        React.createElement("ul", { className: "rec-list" }, data.content_ideas.map((idea, i) => React.createElement("li", { key: i }, idea)))
+      ) : null,
+      data.common_requests?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(255,167,60,.15)" } }, "\u{1F4E3}"),
+          React.createElement("h3", null, "Common Requests")
+        ),
+        React.createElement("ul", { className: "rec-list" }, data.common_requests.map((r, i) => React.createElement("li", { key: i }, r)))
+      ) : null,
+      data.negative_feedback?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(255,78,69,.15)" } }, "\u26A0\uFE0F"),
+          React.createElement("h3", null, "Negative Feedback")
+        ),
+        React.createElement("ul", { className: "rec-list" }, data.negative_feedback.map((f, i) => React.createElement("li", { key: i, style: { color: "var(--error)" } }, f)))
+      ) : null,
+      data.summary ? React.createElement(
+        "div",
+        { className: "insight" },
+        React.createElement("h3", null, "\u{1F916} AI Summary"),
+        React.createElement("p", null, data.summary)
+      ) : null
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4AC}"),
+      React.createElement("p", null, "Enter a YouTube video URL to analyze audience comments")
+    ) : null
+  );
+}
+function PublishingPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const load = async () => {
+    setLoading(true);
+    setErr("");
+    setData(null);
+    try {
+      const res = await api("/api/publishing/insights", { method: "POST", body: JSON.stringify({ topic: "" }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || "Failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  React.useEffect(() => {
+    load();
+  }, []);
+  const slotColor = (s) => s >= 80 ? "var(--success)" : s >= 60 ? "var(--warning)" : "var(--error)";
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", null, "\u{1F4E4} Publishing Assistant"),
+    React.createElement(
+      "p",
+      { style: { color: "var(--text3)", marginBottom: 16 } },
+      "Optimal posting times, CTR predictions, and A/B slot analysis for your channel"
+    ),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    data ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats" },
+        React.createElement(
+          "div",
+          { className: "stat" },
+          React.createElement("div", { className: "label" }, "Predicted CTR"),
+          React.createElement("div", { className: "value" }, `${data.predicted_ctr}%`),
+          React.createElement("div", { className: "change", style: { color: "var(--accent)" } }, "Estimated click-through rate")
+        ),
+        React.createElement(
+          "div",
+          { className: "stat" },
+          React.createElement("div", { className: "label" }, "Niche"),
+          React.createElement("div", { className: "value", style: { fontSize: "1.1rem" } }, data.niche),
+          React.createElement("div", { className: "change", style: { color: "var(--text3)" } }, `${data.subscriber_count?.toLocaleString() || 0} subscribers`)
+        )
+      ),
+      data.best_time_slots?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)" } }, "\u23F0"),
+          React.createElement("h3", null, "Best Posting Times")
+        ),
+        React.createElement(
+          "div",
+          { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 8 } },
+          data.best_time_slots.map(
+            (slot, i) => React.createElement(
+              "div",
+              { key: i, className: "stat", style: { borderLeft: `4px solid ${slotColor(slot.score)}`, padding: 12 } },
+              React.createElement("div", { className: "label" }, `${slot.day} ${slot.time}`),
+              React.createElement("div", { className: "value", style: { fontSize: "1.2rem" } }, `${slot.score}/100`)
+            )
+          )
+        )
+      ) : null,
+      data.ab_comparison?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(255,167,60,.15)" } }, "\u2696\uFE0F"),
+          React.createElement("h3", null, "A/B Time Slot Comparison")
+        ),
+        data.ab_comparison.map(
+          (ab, i) => React.createElement(
+            "div",
+            { key: i, style: { padding: "12px 0", borderBottom: i < data.ab_comparison.length - 1 ? "1px solid var(--border)" : "none" } },
+            React.createElement(
+              "div",
+              { style: { display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" } },
+              React.createElement("span", { style: { background: "var(--bg3)", padding: "6px 14px", borderRadius: "var(--radius)", fontSize: ".85rem" } }, ab.slot_a),
+              React.createElement("span", { style: { color: "var(--text3)" } }, "vs"),
+              React.createElement("span", { style: { background: "var(--bg3)", padding: "6px 14px", borderRadius: "var(--radius)", fontSize: ".85rem" } }, ab.slot_b)
+            ),
+            React.createElement(
+              "div",
+              { style: { marginTop: 8, fontSize: ".88rem", color: "var(--success)" } },
+              `Winner: ${ab.winner} \u2014 ${ab.reason}`
+            )
+          )
+        )
+      ) : null,
+      data.heatmap?.length ? React.createElement(
+        "div",
+        { className: "card" },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(43,166,64,.15)" } }, "\u{1F4CA}"),
+          React.createElement("h3", null, "Optimal Schedule Heatmap")
+        ),
+        React.createElement(
+          "div",
+          { style: { overflowX: "auto" } },
+          React.createElement(
+            "table",
+            { style: { width: "100%", borderCollapse: "collapse", fontSize: ".78rem" } },
+            React.createElement(
+              "thead",
+              null,
+              React.createElement(
+                "tr",
+                null,
+                React.createElement("th", { style: { padding: "6px 8px", textAlign: "left", borderBottom: "1px solid var(--border)" } }, "Day"),
+                ["8am", "10am", "12pm", "2pm", "4pm", "6pm", "8pm"].map(
+                  (h) => React.createElement("th", { key: h, style: { padding: "6px 8px", textAlign: "center", borderBottom: "1px solid var(--border)" } }, h)
+                )
+              )
+            ),
+            React.createElement(
+              "tbody",
+              null,
+              ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+                (day) => React.createElement(
+                  "tr",
+                  { key: day },
+                  React.createElement("td", { style: { padding: "6px 8px", fontWeight: 600, borderBottom: "1px solid var(--border)" } }, day.slice(0, 3)),
+                  data.heatmap.filter((h) => h.day === day).map((h, i) => {
+                    const bg = h.score >= 80 ? "rgba(43,166,64,.25)" : h.score >= 60 ? "rgba(255,167,60,.2)" : "rgba(255,78,69,.15)";
+                    const fg = h.score >= 80 ? "var(--success)" : h.score >= 60 ? "var(--warning)" : "var(--error)";
+                    return React.createElement("td", { key: i, style: { padding: "6px 8px", textAlign: "center", background: bg, color: fg, borderRadius: 4, borderBottom: "1px solid var(--border)" } }, `${h.score}`);
+                  })
+                )
+              )
+            )
+          )
+        )
+      ) : null,
+      data.recommendation ? React.createElement(
+        "div",
+        { className: "insight" },
+        React.createElement("h3", null, "\u{1F4CC} Recommendation"),
+        React.createElement("p", null, data.recommendation)
+      ) : null
+    ) : !loading ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4E4}"),
+      React.createElement("p", null, "Loading publishing insights...")
+    ) : null
+  );
+}
+function AlgoShiftPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const load = async () => {
+    setLoading(true);
+    setErr("");
+    setData(null);
+    try {
+      const res = await api("/api/algorithm/shifts", { method: "POST" });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setData(d);
+      else setErr(d.detail || "Failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  React.useEffect(() => {
+    load();
+  }, []);
+  const changeColor = (pct) => pct > 0 ? "var(--success)" : pct < 0 ? "var(--error)" : "var(--text2)";
+  const shiftIcon = (t) => t === "decline" ? "\u2B07" : t === "surge" ? "\u2B06" : "\u27A1";
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", null, "\u{1F4C8} Algorithm Shift Tracker"),
+    React.createElement(
+      "p",
+      { style: { color: "var(--text3)", marginBottom: 16 } },
+      "Detect algorithm shifts, view velocity changes, and get adaptation recommendations"
+    ),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    data?.shifts?.length ? data.shifts.map(
+      (ch, i) => React.createElement(
+        "div",
+        { key: i, className: "card", style: { marginBottom: 16 } },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)" } }, shiftIcon(ch.shift_type)),
+          React.createElement("h3", null, ch.channel_title),
+          React.createElement("span", { className: "tag", style: {
+            background: ch.shift_type === "decline" ? "rgba(255,78,69,.15)" : ch.shift_type === "surge" ? "rgba(43,166,64,.15)" : "rgba(128,128,128,.15)",
+            color: ch.shift_type === "decline" ? "var(--error)" : ch.shift_type === "surge" ? "var(--success)" : "var(--text2)"
+          } }, ch.shift_type.toUpperCase())
+        ),
+        React.createElement(
+          "div",
+          { className: "stats", style: { marginBottom: 12 } },
+          React.createElement(StatCard, { label: "Subscribers", value: ch.current_subscribers, change: `${ch.subscriber_change_pct > 0 ? "+" : ""}${ch.subscriber_change_pct}%`, changeDir: ch.subscriber_change_pct >= 0 ? "up" : "down" }),
+          React.createElement(StatCard, { label: "Views", value: "-", change: `${ch.view_change_pct > 0 ? "+" : ""}${ch.view_change_pct}%`, changeDir: ch.view_change_pct >= 0 ? "up" : "down" }),
+          React.createElement(StatCard, { label: "Engagement", value: ch.engagement_change.toFixed(2), change: `${ch.engagement_change > 0 ? "+" : ""}${ch.engagement_change.toFixed(2)}%`, changeDir: ch.engagement_change >= 0 ? "up" : "down" })
+        ),
+        ch.anomalies?.length ? React.createElement(
+          "div",
+          { style: { marginBottom: 12 } },
+          React.createElement("h4", { style: { fontSize: ".85rem", marginBottom: 8, color: "var(--error)" } }, "\u26A0\uFE0F Anomalies Detected"),
+          ch.anomalies.map(
+            (a, j) => React.createElement("div", { key: j, style: { padding: "6px 10px", background: "rgba(255,78,69,.08)", borderRadius: "var(--radius)", marginBottom: 4, fontSize: ".85rem", color: "var(--error)" } }, a)
+          )
+        ) : null,
+        React.createElement(
+          "div",
+          null,
+          React.createElement("h4", { style: { fontSize: ".85rem", marginBottom: 8, color: "var(--accent)" } }, "\u{1F4CC} Recommendations"),
+          ch.recommendations.map(
+            (r, j) => React.createElement("div", { key: j, style: { padding: "6px 10px", background: "rgba(62,166,255,.08)", borderRadius: "var(--radius)", marginBottom: 4, fontSize: ".85rem" } }, r)
+          )
+        )
+      )
+    ) : !loading && data ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F4C8}"),
+      React.createElement("p", null, data.message || "Analyze more channels to detect algorithm shifts.")
+    ) : null
+  );
+}
+function AgentPage() {
+  const { api } = useAuth();
+  const [tab, setTab] = useState("plan");
+  const [plan, setPlan] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const loadPlan = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await api("/api/agent/weekly-plan", { method: "POST" });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setPlan(d);
+      else setErr(d.detail || "Failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const loadStatus = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await api("/api/agent/status");
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setStatus(d);
+      else setErr(d.detail || "Failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const studyCompetitors = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const res = await api("/api/agent/study-competitors", { method: "POST" });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        alert("Competitor study complete! Check the plan tab for insights.");
+        loadPlan();
+      } else setErr(d.detail || "Failed");
+    } catch {
+      setErr("Network error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  React.useEffect(() => {
+    if (tab === "plan") loadPlan();
+    else loadStatus();
+  }, [tab]);
+  const dayColor = (day) => ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].indexOf(day);
+  return React.createElement(
+    "div",
+    null,
+    React.createElement("h1", null, "\u{1F916} Growth Agent"),
+    React.createElement(
+      "div",
+      { style: { display: "flex", gap: 8, marginBottom: 16 } },
+      React.createElement("button", { className: `btn ${tab === "plan" ? "btn-primary" : "btn-ghost"}`, onClick: () => setTab("plan") }, "Weekly Plan"),
+      React.createElement("button", { className: `btn ${tab === "status" ? "btn-primary" : "btn-ghost"}`, onClick: () => setTab("status") }, "Status & Insights"),
+      React.createElement("button", { className: "btn btn-secondary", onClick: studyCompetitors, disabled: loading }, "\u{1F50D} Study Competitors")
+    ),
+    React.createElement(LoadingBar, { active: loading }),
+    React.createElement(ErrorBox, { message: err }),
+    tab === "plan" && plan ? React.createElement(
+      "div",
+      null,
+      plan.weekly_focus ? React.createElement(
+        "div",
+        { className: "insight", style: { marginBottom: 16 } },
+        React.createElement("h3", null, "\u{1F31F} Weekly Focus"),
+        React.createElement("p", null, plan.weekly_focus)
+      ) : null,
+      plan.competitor_insights?.length ? React.createElement(
+        "div",
+        { className: "card", style: { marginBottom: 16 } },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(255,167,60,.15)" } }, "\u{1F465}"),
+          React.createElement("h3", null, "Competitor Insights")
+        ),
+        plan.competitor_insights.map(
+          (ci, i) => React.createElement("div", { key: i, style: { padding: "6px 0", fontSize: ".88rem", borderBottom: i < plan.competitor_insights.length - 1 ? "1px solid var(--border)" : "none" } }, ci)
+        )
+      ) : null,
+      plan.days?.length ? React.createElement(
+        "div",
+        null,
+        React.createElement("h3", { style: { marginBottom: 12 } }, "\u{1F4C5} 7-Day Content Plan"),
+        plan.days.map(
+          (d, i) => React.createElement(
+            "div",
+            { key: i, className: "card", style: { marginBottom: 8, borderLeft: `4px solid ${d.publish_ready ? "var(--success)" : "var(--warning)"}` } },
+            React.createElement(
+              "div",
+              { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } },
+              React.createElement("h4", { style: { margin: 0, fontSize: ".95rem" } }, d.day),
+              React.createElement("span", { className: "tag", style: {
+                background: d.publish_ready ? "rgba(43,166,64,.15)" : "rgba(255,167,60,.15)",
+                color: d.publish_ready ? "var(--success)" : "var(--warning)",
+                fontSize: ".7rem"
+              } }, d.publish_ready ? "PUBLISH" : "IMPROVE")
+            ),
+            React.createElement(
+              "div",
+              { style: { color: "var(--text2)", fontSize: ".85rem", marginBottom: 4 } },
+              React.createElement("span", { className: "tag", style: { marginRight: 6 } }, d.content_type),
+              d.task
+            ),
+            d.suggested_title ? React.createElement("div", { style: { fontWeight: 600, fontSize: ".88rem", marginBottom: 4 } }, d.suggested_title) : null,
+            d.thumbnail_idea ? React.createElement("div", { style: { color: "var(--text3)", fontSize: ".82rem" } }, "\u{1F5BC} " + d.thumbnail_idea) : null
+          )
+        )
+      ) : null,
+      plan.recommendation ? React.createElement(
+        "div",
+        { className: "insight", style: { marginTop: 12 } },
+        React.createElement("h3", null, "\u{1F4CC} Recommendation"),
+        React.createElement("p", null, plan.recommendation)
+      ) : null
+    ) : null,
+    tab === "status" && status ? React.createElement(
+      "div",
+      null,
+      React.createElement(
+        "div",
+        { className: "stats" },
+        React.createElement(StatCard, { label: "Channels", value: status.channel_count }),
+        React.createElement(StatCard, { label: "Ideas Saved", value: status.saved_ideas }),
+        React.createElement(StatCard, { label: "Events", value: status.calendar_events }),
+        React.createElement(StatCard, { label: "Competitors", value: status.watched_competitors })
+      ),
+      status.agent_summary ? React.createElement(
+        "div",
+        { className: "card", style: { marginTop: 16 } },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(62,166,255,.15)" } }, "\u{1F916}"),
+          React.createElement("h3", null, "Agent Summary")
+        ),
+        React.createElement("p", { style: { fontSize: ".9rem" } }, status.agent_summary)
+      ) : null,
+      status.next_steps?.length ? React.createElement(
+        "div",
+        { className: "card", style: { marginTop: 16 } },
+        React.createElement(
+          "div",
+          { className: "card-header" },
+          React.createElement("div", { className: "card-icon", style: { background: "rgba(43,166,64,.15)" } }, "\u{1F4E5}"),
+          React.createElement("h3", null, "Next Steps")
+        ),
+        status.next_steps.filter(Boolean).map(
+          (ns, i) => React.createElement(
+            "div",
+            { key: i, style: { padding: "8px 0", fontSize: ".88rem", borderBottom: i < status.next_steps.filter(Boolean).length - 1 ? "1px solid var(--border)" : "none" } },
+            "\u27A1 ",
+            ns
+          )
+        )
+      ) : null,
+      status.niche ? React.createElement(
+        "div",
+        { className: "tag", style: { marginTop: 12, fontSize: ".85rem", padding: "8px 16px" } },
+        "\u{1F31F} Niche: ",
+        status.niche
+      ) : null
+    ) : null,
+    !loading && !plan && !status ? React.createElement(
+      "div",
+      { className: "empty-state" },
+      React.createElement("div", { className: "emoji" }, "\u{1F916}"),
+      React.createElement("p", null, "Let the Growth Agent analyze your channel to generate a personalized plan.")
+    ) : null
+  );
+}
+function OnboardingPage() {
+  const { api } = useAuth();
+  const [step, setStep] = useState(0);
+  const [url, setUrl] = useState("");
+  const steps = [
+    { title: "Welcome!", icon: "\u{1F44B}", desc: "Creator Content Radar helps you analyze YouTube channels, discover competitors, and find content ideas across 7+ platforms." },
+    { title: "Analyze Your Channel", icon: "\u{1F4FA}", desc: "Paste your YouTube channel URL or @handle to get started. We\u2019ll analyze your channel and find actionable insights." },
+    { title: "Discover & Grow", icon: "\u{1F4C8}", desc: "You\u2019ll get competitor analysis, cross-platform content ideas, SEO recommendations, and more. Ready to go?" }
+  ];
+  const submitUrl = async () => {
+    if (!url.trim()) {
+      setStep(2);
+      return;
+    }
+    try {
+      const res = await api("/api/analyze/async", { method: "POST", body: JSON.stringify({ channel_url: url, topic: "" }) });
+      if (res?.ok) {
+        setStep(2);
+      }
+    } catch {
+      setStep(2);
+    }
+  };
+  return React.createElement(
+    "div",
+    { className: "auth-page" },
+    React.createElement(
+      "div",
+      { className: "auth-card", style: { maxWidth: 500, textAlign: "center" } },
+      React.createElement("div", { style: { fontSize: "3rem", marginBottom: 12 } }, steps[step].icon),
+      React.createElement("h1", { style: { fontSize: "1.5rem", marginBottom: 8 } }, steps[step].title),
+      React.createElement("p", { style: { color: "var(--text3)", fontSize: ".9rem", marginBottom: 24, lineHeight: 1.6 } }, steps[step].desc),
+      step === 0 ? React.createElement("button", { className: "btn btn-primary", style: { padding: "12px 32px", fontSize: "1rem" }, onClick: () => setStep(1) }, "Get Started") : null,
+      step === 1 ? React.createElement(
+        "div",
+        null,
+        React.createElement("input", { className: "input", style: { marginBottom: 12 }, placeholder: "YouTube URL or @handle...", value: url, onChange: (e) => setUrl(e.target.value), onKeyDown: (e) => e.key === "Enter" && submitUrl(), autoFocus: true }),
+        React.createElement(
+          "div",
+          { style: { display: "flex", gap: 8, justifyContent: "center" } },
+          React.createElement("button", { className: "btn btn-primary", onClick: submitUrl }, "Analyze Channel"),
+          React.createElement("button", { className: "btn btn-ghost", onClick: () => setStep(2) }, "Skip")
+        )
+      ) : null,
+      step === 2 ? React.createElement(
+        "div",
+        null,
+        React.createElement("button", { className: "btn btn-primary", style: { padding: "12px 32px", fontSize: "1rem", marginBottom: 8 }, onClick: () => window.location.hash = "dashboard" }, "Go to Dashboard"),
+        React.createElement(
+          "div",
+          { style: { fontSize: ".85rem", color: "var(--text3)" } },
+          React.createElement("a", { href: "#ideas", style: { color: "var(--accent)", textDecoration: "none" } }, "Generate content ideas"),
+          " \xB7 ",
+          React.createElement("a", { href: "#pricing", style: { color: "var(--primary)", textDecoration: "none" } }, "View pricing")
+        )
+      ) : null,
+      React.createElement(
+        "div",
+        { style: { marginTop: 24, display: "flex", gap: 8, justifyContent: "center" } },
+        steps.map((_, i) => React.createElement("div", { key: i, style: { width: 10, height: 10, borderRadius: "50%", background: i === step ? "var(--primary)" : "var(--bg4)", transition: "all .2s" } }))
+      )
+    )
+  );
+}
+function AppShell({ page, setPage }) {
+  const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [alertsCount, setAlertsCount] = useState(0);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/alerts?unread_only=true", { headers: { Authorization: `Bearer ${localStorage.getItem("ccr_token")}` } });
+        if (res.ok) {
+          const d = await res.json();
+          setAlertsCount(d.length);
+        }
+      } catch {
+      }
+    })();
+  }, [page]);
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: "\u{1F4CA}", section: "Main" },
+    { id: "analyze", label: "Channel Analysis", icon: "\u{1F4FA}", section: "Main" },
+    { id: "competitors", label: "Competitors", icon: "\u{1F465}", section: "Main" },
+    { id: "discover", label: "Content Discovery", icon: "\u{1F50D}", section: "Main" },
+    { id: "ideas", label: "Idea Generator", icon: "\u{1F4A1}", section: "Content" },
+    { id: "watch", label: "Monitored", icon: "\u{1F440}", section: "Content", badge: alertsCount || null },
+    { id: "calendar", label: "Calendar", icon: "\u{1F4C5}", section: "Content" },
+    { id: "repurpose", label: "Repurpose", icon: "\u{1F504}", section: "Content" },
+    { id: "seo", label: "SEO Score", icon: "\u{1F50D}", section: "Content" },
+    { id: "thumbnail-test", label: "A/B Thumbnails", icon: "\u{1F5BC}", section: "Content" },
+    { id: "trends", label: "Trend Alerts", icon: "\u{1F525}", section: "Content" },
+    { id: "comments", label: "Comments", icon: "\u{1F4AC}", section: "Content" },
+    { id: "publishing", label: "Publishing", icon: "\u{1F4E4}", section: "Content" },
+    { id: "algo-shift", label: "Algo Shifts", icon: "\u{1F4C8}", section: "Content" },
+    { id: "agent", label: "Growth Agent", icon: "\u{1F916}", section: "Content" },
+    { id: "reports", label: "Reports & Export", icon: "\u{1F4C4}", section: "Content" },
+    { id: "saved-ideas", label: "Saved Ideas", icon: "\u{1F4BE}", section: "Content" },
+    { id: "pricing", label: "Pricing", icon: "\u{1F4B0}", section: "Settings" },
+    { id: "billing", label: "Billing & Usage", icon: "\u{1F4B0}", section: "Settings" },
+    { id: "settings", label: "Settings", icon: "\u2699\uFE0F", section: "Settings" }
+  ];
+  const renderPage = () => {
+    switch (page) {
+      case "dashboard":
+        return React.createElement(DashboardPage);
+      case "analyze":
+        return React.createElement(AnalyzePage);
+      case "competitors":
+        return React.createElement(CompetitorsPage);
+      case "discover":
+        return React.createElement(DiscoverPage);
+      case "ideas":
+        return React.createElement(IdeasPage);
+      case "watch":
+        return React.createElement(WatchPage);
+      case "calendar":
+        return React.createElement(CalendarPage);
+      case "reports":
+        return React.createElement(ReportsPage);
+      case "saved-ideas":
+        return React.createElement(SavedIdeasPage);
+      case "repurpose":
+        return React.createElement(RepurposePage);
+      case "seo":
+        return React.createElement(SeoPage);
+      case "thumbnail-test":
+        return React.createElement(ThumbnailTestPage);
+      case "trends":
+        return React.createElement(TrendAlertsPage);
+      case "comments":
+        return React.createElement(CommentsPage);
+      case "publishing":
+        return React.createElement(PublishingPage);
+      case "algo-shift":
+        return React.createElement(AlgoShiftPage);
+      case "agent":
+        return React.createElement(AgentPage);
+      case "pricing":
+        return React.createElement(PricingPage);
+      case "billing":
+        return React.createElement(BillingPage);
+      case "settings":
+        return React.createElement(SettingsPage);
+      case "onboarding":
+        return React.createElement(OnboardingPage);
+      default:
+        return React.createElement(DashboardPage);
+    }
+  };
+  return React.createElement(
+    "div",
+    { className: "app-layout" },
+    React.createElement(
+      "aside",
+      { className: `sidebar${sidebarOpen ? " open" : ""}` },
+      React.createElement(
+        "div",
+        { className: "sidebar-logo" },
+        React.createElement(
+          "svg",
+          { viewBox: "0 0 24 24", fill: "currentColor" },
+          React.createElement("path", { d: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" })
+        ),
+        React.createElement("span", null, "Creator Radar")
+      ),
+      React.createElement(
+        "nav",
+        { className: "sidebar-nav" },
+        ...["Main", "Content", "Settings"].map(
+          (section) => React.createElement(
+            React.Fragment,
+            { key: section },
+            React.createElement("div", { className: "nav-section" }, section),
+            ...navItems.filter((n) => n.section === section).map(
+              (item) => React.createElement(
+                "button",
+                {
+                  key: item.id,
+                  className: `nav-item${page === item.id ? " active" : ""}`,
+                  onClick: () => {
+                    setPage(item.id);
+                    setSidebarOpen(false);
+                  }
+                },
+                item.icon,
+                " ",
+                item.label,
+                item.badge ? React.createElement("span", { className: "badge" }, item.badge) : null
+              )
+            )
+          )
+        )
+      )
+    ),
+    React.createElement(
+      "div",
+      { className: "main-area" },
+      React.createElement(
+        "header",
+        { className: "topbar" },
+        React.createElement(
+          "button",
+          { className: "icon-btn menu-toggle", onClick: () => setSidebarOpen(!sidebarOpen), style: { display: "none" } },
+          React.createElement(
+            "svg",
+            { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, width: 22, height: 22 },
+            React.createElement("line", { x1: 3, y1: 6, x2: 21, y2: 6 }),
+            React.createElement("line", { x1: 3, y1: 12, x2: 21, y2: 12 }),
+            React.createElement("line", { x1: 3, y1: 18, x2: 21, y2: 18 })
+          )
+        ),
+        React.createElement(
+          "div",
+          { style: { flex: 1, display: "flex", alignItems: "center", gap: 8 } },
+          React.createElement("span", { style: { fontSize: ".85rem", color: "var(--text2)", fontWeight: 600 } }, user?.email || ""),
+          React.createElement("span", { className: "tag", style: { fontSize: ".7rem", padding: "2px 8px" } }, user?.plan || "free")
+        ),
+        React.createElement(
+          "div",
+          { className: "topbar-actions" },
+          React.createElement("button", { className: "icon-btn", onClick: () => window.location.hash = "settings", title: "Settings" }, "\u2699\uFE0F"),
+          React.createElement("button", { className: "icon-btn", onClick: logout, title: "Sign out" }, "\u{1F6AA}")
+        )
+      ),
+      React.createElement("main", { className: "page-content" }, renderPage())
+    )
+  );
+}
+function App() {
+  const { user } = useAuth();
+  const [page, setPage] = useState("dashboard");
+  const [onboarding, setOnboarding] = useState(false);
+  useEffect(() => {
+    const onHash = () => {
+      const hash = window.location.hash.replace("#", "") || "dashboard";
+      const valid = ["dashboard", "analyze", "competitors", "discover", "ideas", "watch", "calendar", "reports", "saved-ideas", "repurpose", "seo", "thumbnail-test", "trends", "comments", "publishing", "algo-shift", "agent", "pricing", "billing", "settings", "onboarding", "login", "register"];
+      if (valid.includes(hash)) setPage(hash);
+    };
+    window.addEventListener("hashchange", onHash);
+    onHash();
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  useEffect(() => {
+    window.location.hash = page;
+  }, [page]);
+  useEffect(() => {
+    if (user && !localStorage.getItem("ccr_onboarding_done")) {
+      localStorage.setItem("ccr_onboarding_done", "1");
+      setPage("onboarding");
+    }
+  }, [user]);
+  if (!user) {
+    if (page === "register") return React.createElement(RegisterPage);
+    if (page === "pricing") return React.createElement(PricingPage);
+    return React.createElement(LoginPage);
+  }
+  return React.createElement(AppShell, { page, setPage });
+}
+var root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  React.createElement(AuthProvider, null, React.createElement(App))
+);
+var style = document.createElement("style");
+style.textContent = `@media(max-width:768px){.menu-toggle{display:flex!important}}`;
+document.head.appendChild(style);
