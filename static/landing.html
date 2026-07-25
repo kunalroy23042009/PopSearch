@@ -16,151 +16,132 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #0f0f0f;
-            --bg2: #1a1a1a;
-            --bg3: #272727;
-            --bg4: #3a3a3a;
-            --text: #f1f1f1;
-            --text2: #aaa;
-            --text3: #717171;
-            --primary: #ff4444;
-            --primary-hover: #ff6666;
-            --accent: #3ea6ff;
-            --success: #2ba640;
-            --warning: #ffa73c;
-            --error: #ff4e45;
-            --border: #303030;
-            --radius: 8px;
+            --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #272727; --bg4: #3a3a3a;
+            --text: #f1f1f1; --text2: #aaa; --text3: #717171;
+            --primary: #ff4444; --primary-hover: #ff6666;
+            --accent: #3ea6ff; --success: #2ba640;
+            --warning: #ffa73c; --border: #303030; --radius: 8px;
         }
         @media (prefers-color-scheme: light) {
             :root {
-                --bg: #fff;
-                --bg2: #f9f9f9;
-                --bg3: #f0f0f0;
-                --bg4: #e5e5e5;
-                --text: #0f0f0f;
-                --text2: #606060;
-                --text3: #909090;
-                --border: #ddd;
+                --bg: #fff; --bg2: #f9f9f9; --bg3: #f0f0f0; --bg4: #e5e5e5;
+                --text: #0f0f0f; --text2: #606060; --text3: #909090; --border: #ddd;
             }
         }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            line-height: 1.6; min-height: 100vh; overflow-x: hidden;
         }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(255,68,68,.2); } 50% { box-shadow: 0 0 24px rgba(255,68,68,.4); } }
+        @keyframes countUp { from { opacity: 0; } to { opacity: 1; } }
+
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: .1s; }
+        .reveal-delay-2 { transition-delay: .2s; }
+        .reveal-delay-3 { transition-delay: .3s; }
+        .reveal-delay-4 { transition-delay: .4s; }
+
         .nav {
             display: flex; justify-content: space-between; align-items: center;
             padding: 0 24px; height: 56px; max-width: 1200px; margin: 0 auto;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border); animation: fadeIn .5s ease;
         }
         .nav .logo { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         .nav .logo svg { width: 22px; height: 22px; color: var(--primary); }
-        .nav .logo span { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav .logo span { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% auto; animation: shimmer 3s linear infinite; }
         .nav-links { display: flex; align-items: center; gap: 4px; }
-        .nav-links a { color: var(--text2); text-decoration: none; font-size: .88rem; padding: 8px 14px; border-radius: var(--radius); transition: all .15s; }
+        .nav-links a { color: var(--text2); text-decoration: none; font-size: .88rem; padding: 8px 14px; border-radius: var(--radius); transition: all .2s; }
         .nav-links a:hover { color: var(--text); background: var(--bg3); }
-        .nav-links .cta { background: var(--primary); color: #fff; padding: 8px 18px; font-weight: 600; }
+        .nav-links .cta { background: var(--primary); color: #fff; padding: 8px 18px; font-weight: 600; animation: pulse-glow 2.5s ease-in-out infinite; }
         .nav-links .cta:hover { background: var(--primary-hover); }
-        .hero {
-            text-align: center; padding: 80px 24px 60px; max-width: 800px; margin: 0 auto;
-        }
-        .hero h1 {
-            font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15;
-            margin-bottom: 16px; letter-spacing: -0.02em;
-        }
-        .hero h1 .highlight { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p {
-            font-size: 1.1rem; color: var(--text2); margin-bottom: 32px; max-width: 640px; margin-left: auto; margin-right: auto;
-        }
+
+        .hero { text-align: center; padding: 80px 24px 60px; max-width: 800px; margin: 0 auto; animation: fadeUp .7s ease; }
+        .hero h1 { font-size: clamp(2.2rem,5vw,3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; letter-spacing: -.02em; }
+        .hero h1 .highlight { background: linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% auto; animation: shimmer 3s linear infinite; }
+        .hero p { font-size: 1.1rem; color: var(--text2); margin-bottom: 32px; max-width: 640px; margin-left: auto; margin-right: auto; }
         .hero .cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .btn {
-            padding: 10px 24px; border-radius: var(--radius); font-weight: 600; font-size: .9rem;
-            text-decoration: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-            font-family: inherit; transition: all .15s;
-        }
+
+        .btn { padding: 10px 24px; border-radius: var(--radius); font-weight: 600; font-size: .9rem; text-decoration: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: all .2s; }
         .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,68,68,.3); }
         .btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-        .hero-input {
-            display: flex; gap: 0; max-width: 520px; margin: 0 auto 32px;
-            border: 2px solid var(--border); border-radius: var(--radius);
-            overflow: hidden; transition: border-color .2s;
-        }
-        .hero-input:focus-within { border-color: var(--accent); }
-        .hero-input input {
-            flex: 1; padding: 12px 16px; background: var(--bg2); border: none;
-            color: var(--text); font-size: .9rem; font-family: inherit;
-            outline: none;
-        }
+        .btn-ghost:hover { background: var(--bg4); transform: translateY(-2px); }
+
+        .hero-input { display: flex; gap: 0; max-width: 520px; margin: 0 auto 32px; border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color .3s, box-shadow .3s; }
+        .hero-input:focus-within { border-color: var(--accent); box-shadow: 0 0 20px rgba(62,166,255,.15); }
+        .hero-input input { flex: 1; padding: 12px 16px; background: var(--bg2); border: none; color: var(--text); font-size: .9rem; font-family: inherit; outline: none; }
         .hero-input input::placeholder { color: var(--text3); }
-        .hero-input button {
-            padding: 12px 24px; background: var(--primary); color: #fff;
-            border: none; font-weight: 600; font-size: .9rem;
-            cursor: pointer; font-family: inherit;
-            transition: background .15s;
-        }
+        .hero-input button { padding: 12px 24px; background: var(--primary); color: #fff; border: none; font-weight: 600; font-size: .9rem; cursor: pointer; font-family: inherit; transition: background .2s; }
         .hero-input button:hover { background: var(--primary-hover); }
-        .btn-ghost:hover { background: var(--bg4); }
+
         .section { max-width: 1080px; margin: 0 auto; padding: 60px 24px; }
         .section-header { text-align: center; margin-bottom: 40px; }
         .section-header h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
         .section-header p { color: var(--text3); font-size: .92rem; max-width: 500px; margin: 0 auto; }
+
         .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-        .feature {
-            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 20px; transition: all .15s; cursor: default;
-        }
-        .feature:hover { border-color: var(--text3); transform: translateY(-2px); }
-        .feature .icon {
-            width: 36px; height: 36px; border-radius: var(--radius);
-            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
-            margin-bottom: 12px;
-        }
+        .feature { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: all .25s; cursor: default; }
+        .feature:hover { border-color: var(--text3); transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+        .feature .icon { width: 36px; height: 36px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 12px; transition: transform .3s; }
+        .feature:hover .icon { transform: scale(1.15); }
         .feature h3 { font-size: .95rem; font-weight: 600; margin-bottom: 6px; }
         .feature p { color: var(--text2); font-size: .85rem; line-height: 1.5; }
+
         .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } .nav-links a:not(.cta) { display: none; } }
-        .step {
-            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 24px; text-align: center;
-        }
-        .step .num {
-            width: 40px; height: 40px; border-radius: 50%; background: var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; font-weight: 700; margin: 0 auto 12px; color: #fff;
-        }
+        .step { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; transition: all .25s; }
+        .step:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+        .step .num { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; margin: 0 auto 12px; color: #fff; transition: transform .3s; }
+        .step:hover .num { transform: scale(1.15); }
         .step h3 { font-weight: 600; font-size: .95rem; margin-bottom: 6px; }
         .step p { color: var(--text2); font-size: .85rem; }
+
         .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 800px; margin: 0 auto; }
         @media (max-width: 640px) { .pricing { grid-template-columns: 1fr; } }
-        .plan {
-            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 24px; text-align: center; position: relative;
-        }
+        .plan { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; position: relative; transition: all .25s; }
+        .plan:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
         .plan.featured { border-color: var(--accent); }
-        .plan .badge {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #fff; font-size: .72rem; font-weight: 600;
-            padding: 4px 14px; border-radius: 999px;
-        }
+        .plan .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: .72rem; font-weight: 600; padding: 4px 14px; border-radius: 999px; }
         .plan h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
         .plan .price { font-size: 2rem; font-weight: 800; margin: 12px 0; }
         .plan .price span { font-size: .88rem; font-weight: 400; color: var(--text3); }
         .plan ul { list-style: none; text-align: left; margin: 16px 0; }
         .plan li { padding: 8px 0; color: var(--text2); font-size: .85rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-        .plan li::before { content: "✓"; color: var(--success); font-weight: 700; }
+        .plan li::before { content: "âœ“"; color: var(--success); font-weight: 700; }
         .plan .btn { display: block; width: 100%; justify-content: center; margin-top: 12px; }
+
+        .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 12px; margin-top: 8px; }
+        .demo-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; transition: all .25s; cursor: pointer; }
+        .demo-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,.3); border-color: var(--accent); }
+        .demo-card .avatar { width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .demo-card .name { font-weight: 600; font-size: .9rem; }
+        .demo-card .subs { color: var(--text3); font-size: .78rem; }
+        .demo-card .tag { display: inline-block; padding: 2px 10px; background: var(--bg3); border-radius: 999px; font-size: .72rem; color: var(--text2); margin-top: 6px; }
+        .demo-card a { color: var(--accent); text-decoration: none; font-size: .78rem; display: inline-block; margin-top: 8px; }
+        .demo-card a:hover { text-decoration: underline; }
+
         .faq { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
-        .faq-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
-        .faq-item h3 { font-size: .9rem; font-weight: 600; margin-bottom: 4px; }
-        .faq-item p { color: var(--text2); font-size: .85rem; }
-        .footer {
-            text-align: center; padding: 32px 24px; color: var(--text3); font-size: .82rem;
-            border-top: 1px solid var(--border); margin-top: 20px;
-        }
+        .faq-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; cursor: pointer; transition: all .2s; }
+        .faq-item:hover { border-color: var(--text3); }
+        .faq-item h3 { font-size: .9rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .faq-item h3::after { content: '+'; font-size: 1.2rem; color: var(--text3); transition: transform .3s; }
+        .faq-item.open h3::after { transform: rotate(45deg); }
+        .faq-item p { color: var(--text2); font-size: .85rem; margin-top: 8px; display: none; }
+        .faq-item.open p { display: block; animation: fadeUp .3s ease; }
+
+        .stats-bar { display: flex; justify-content: center; gap: 48px; padding: 32px 0; flex-wrap: wrap; }
+        .stat-item { text-align: center; }
+        .stat-item .num { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-item .label { color: var(--text3); font-size: .82rem; margin-top: 4px; }
+
+        .footer { text-align: center; padding: 32px 24px; color: var(--text3); font-size: .82rem; border-top: 1px solid var(--border); margin-top: 20px; }
         .footer a { color: var(--accent); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
     </style>
@@ -174,7 +155,7 @@
     </div>
     <div class="nav-links">
         <a href="#features">Features</a>
-        <a href="#how">How it works</a>
+        <a href="#demos">Examples</a>
         <a href="#pricing">Pricing</a>
         <a href="/app" class="cta">Launch App</a>
     </div>
@@ -182,120 +163,107 @@
 
 <section class="hero">
     <h1>Know your <span class="highlight">niche</span>.<br>Beat your <span class="highlight">competitors</span>.<br>Grow your <span class="highlight">channel</span>.</h1>
-    <p>Paste your YouTube channel URL and get AI-powered niche profiling, competitor discovery, and trending content ideas from 7+ platforms — YouTube, Reddit, Google Trends, Twitter/X, Twitch, HN, and RSS feeds.</p>
-    <form class="hero-input" action="/app" method="GET" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app';return false}alert('Paste a YouTube URL first')">
+    <p>Paste your YouTube channel URL and get AI-powered niche profiling, competitor discovery, and trending content ideas from 7+ platforms.</p>
+    <form class="hero-input" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app';return false}alert('Paste a YouTube URL first')">
         <input type="text" placeholder="Paste YouTube URL or @handle..." required>
         <button type="submit">Analyze</button>
     </form>
     <div class="cta-group">
         <a href="/app" class="btn btn-primary">Try it free</a>
-        <a href="#how" class="btn btn-ghost">See how it works</a>
+        <a href="#demos" class="btn btn-ghost">See examples</a>
     </div>
 </section>
 
 <section class="section" id="features">
-    <div class="section-header">
-        <h2>Everything you need to grow</h2>
-        <p>AI-powered tools built specifically for YouTube creators</p>
-    </div>
+    <div class="section-header reveal"><h2>Everything you need to grow</h2><p>AI-powered tools built specifically for YouTube creators</p></div>
     <div class="features">
-        <div class="feature">
-            <div class="icon" style="background: rgba(255,68,68,.15); color: var(--primary);">🎯</div>
-            <h3>Niche Profiling</h3>
-            <p>AI analyzes your channel and identifies your exact niche, content style, target audience, and growth opportunities — like YouTube Studio on steroids.</p>
-        </div>
-        <div class="feature">
-            <div class="icon" style="background: rgba(62,166,255,.15); color: var(--accent);">🔍</div>
-            <h3>Competitor Discovery</h3>
-            <p>Find similar channels in your niche, ranked by relevance and audience size. Get competitor intelligence, overlap topics, and market positioning.</p>
-        </div>
-        <div class="feature">
-            <div class="icon" style="background: rgba(43,166,64,.15); color: var(--success);">📈</div>
-            <h3>Trending Topics</h3>
-            <p>Search across YouTube, Reddit, Google Trends, Twitter/X, Twitch, Hacker News & RSS feeds. Classified as trending, popular, or underrated.</p>
-        </div>
-        <div class="feature">
-            <div class="icon" style="background: rgba(255,167,60,.15); color: var(--warning);">💡</div>
-            <h3>AI Content Angles</h3>
-            <p>Get specific, actionable content ideas tailored to your channel's style and audience. Includes SEO keywords, thumbnail ideas, and best posting times.</p>
-        </div>
-        <div class="feature">
-            <div class="icon" style="background: rgba(62,166,255,.15); color: var(--accent);">📊</div>
-            <h3>Live Dashboard</h3>
-            <p>YouTube Studio-style dashboard with interactive charts, performance analytics, cross-platform content feed, and Google Trends integration.</p>
-        </div>
-        <div class="feature">
-            <div class="icon" style="background: rgba(255,68,68,.15); color: var(--primary);">🌐</div>
-            <h3>7+ Content Sources</h3>
-            <p>YouTube, Reddit, Google Trends, Twitter/X, Twitch, Hacker News, RSS feeds (TechCrunch, The Verge, Product Hunt, YouTube Blog).</p>
-        </div>
+        <div class="feature reveal reveal-delay-1"><div class="icon" style="background:rgba(255,68,68,.15);color:var(--primary)">🎯</div><h3>Niche Profiling</h3><p>AI analyzes your channel and identifies your exact niche, content style, target audience, and growth opportunities.</p></div>
+        <div class="feature reveal reveal-delay-2"><div class="icon" style="background:rgba(62,166,255,.15);color:var(--accent)">🔍</div><h3>Competitor Discovery</h3><p>Find similar channels ranked by relevance and audience size. Get competitor intelligence and market positioning.</p></div>
+        <div class="feature reveal reveal-delay-3"><div class="icon" style="background:rgba(43,166,64,.15);color:var(--success)">📈</div><h3>Trending Topics</h3><p>Search across YouTube, Reddit, Google Trends, Twitter/X, Twitch, HN & RSS feeds. Classified by popularity.</p></div>
+        <div class="feature reveal reveal-delay-1"><div class="icon" style="background:rgba(255,167,60,.15);color:var(--warning)">💡</div><h3>AI Content Angles</h3><p>Actionable content ideas with SEO keywords, thumbnail concepts, and optimal posting times.</p></div>
+        <div class="feature reveal reveal-delay-2"><div class="icon" style="background:rgba(62,166,255,.15);color:var(--accent)">📊</div><h3>Live Dashboard</h3><p>YouTube Studio-style dashboard with charts, performance analytics, and cross-platform content feed.</p></div>
+        <div class="feature reveal reveal-delay-3"><div class="icon" style="background:rgba(255,68,68,.15);color:var(--primary)">🌐</div><h3>7+ Content Sources</h3><p>YouTube, Reddit, Google Trends, Twitter/X, Twitch, Hacker News, RSS feeds — all in one place.</p></div>
     </div>
 </section>
 
-<section class="section" id="how">
-    <div class="section-header">
-        <h2>How it works</h2>
-        <p>Three steps from URL to content strategy</p>
+<section class="section" id="demos">
+    <div class="section-header reveal"><h2>Live examples</h2><p>Click any competitor card to visit their channel</p></div>
+    <div class="demo-grid">
+        <a href="https://youtube.com/@MrBeast" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-1" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#ff4444,#cc0000)">M</div>
+            <div class="name">MrBeast</div>
+            <div class="subs">368M subscribers • Entertainment</div>
+            <span class="tag">Competitor</span>
+        </a>
+        <a href="https://youtube.com/@Markiplier" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-2" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#3ea6ff,#0066cc)">M</div>
+            <div class="name">Markiplier</div>
+            <div class="subs">38M subscribers • Gaming</div>
+            <span class="tag">Competitor</span>
+        </a>
+        <a href="https://youtube.com/@MKBHD" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-3" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#2ba640,#1a7a2e)">M</div>
+            <div class="name">MKBHD</div>
+            <div class="subs">20M subscribers • Tech</div>
+            <span class="tag">Competitor</span>
+        </a>
+        <a href="https://youtube.com/@LinusTechTips" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-1" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#ffa73c,#cc8500)">L</div>
+            <div class="name">Linus Tech Tips</div>
+            <div class="subs">16M subscribers • Tech</div>
+            <span class="tag">Competitor</span>
+        </a>
+        <a href="https://youtube.com/@PewDiePie" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-2" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#ff6666,#cc3333)">P</div>
+            <div class="name">PewDiePie</div>
+            <div class="subs">111M subscribers • Comedy</div>
+            <span class="tag">Competitor</span>
+        </a>
+        <a href="https://youtube.com/@MarquesBrownlee" target="_blank" rel="noopener" class="demo-card reveal reveal-delay-3" style="text-decoration:none;color:inherit">
+            <div class="avatar" style="background:linear-gradient(135deg,#764ba2,#512e7a)">M</div>
+            <div class="name">Marques Brownlee</div>
+            <div class="subs">20M subscribers • Tech Reviews</div>
+            <span class="tag">Competitor</span>
+        </a>
     </div>
+</section>
+
+<section class="section">
+    <div class="section-header reveal"><h2>Trusted by creators</h2></div>
+    <div class="stats-bar">
+        <div class="stat-item reveal reveal-delay-1"><div class="num">7+</div><div class="label">Content Sources</div></div>
+        <div class="stat-item reveal reveal-delay-2"><div class="num">10K</div><div class="label">Analyses Run</div></div>
+        <div class="stat-item reveal reveal-delay-3"><div class="num">99%</div><div class="label">Uptime</div></div>
+        <div class="stat-item reveal reveal-delay-4"><div class="num">24h</div><div class="label">Cache Window</div></div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-header reveal"><h2>How it works</h2><p>Three steps from URL to content strategy</p></div>
     <div class="steps">
-        <div class="step">
-            <div class="num">1</div>
-            <h3>Paste your channel URL</h3>
-            <p>Drop in any YouTube channel link — @handle, /channel/, or /c/ format. We'll fetch the data.</p>
-        </div>
-        <div class="step">
-            <div class="num">2</div>
-            <h3>Get your niche profile</h3>
-            <p>AI analyzes your channel stats, recent videos, and content patterns to build a detailed niche profile.</p>
-        </div>
-        <div class="step">
-            <div class="num">3</div>
-            <h3>Discover & create</h3>
-            <p>Find competitors, search trending topics, and get AI-generated content angles tailored to your channel.</p>
-        </div>
+        <div class="step reveal reveal-delay-1"><div class="num">1</div><h3>Paste your channel URL</h3><p>Drop in any YouTube channel link — @handle, /channel/, or /c/ format. We'll fetch the data.</p></div>
+        <div class="step reveal reveal-delay-2"><div class="num">2</div><h3>Get your niche profile</h3><p>AI analyzes your channel stats, recent videos, and content patterns to build a detailed niche profile.</p></div>
+        <div class="step reveal reveal-delay-3"><div class="num">3</div><h3>Discover & create</h3><p>Find competitors, search trending topics, and get AI-generated content angles tailored to your channel.</p></div>
     </div>
 </section>
 
 <section class="section" id="pricing">
-    <div class="section-header">
-        <h2>Simple pricing</h2>
-        <p>Start free. Upgrade when you're ready.</p>
-    </div>
+    <div class="section-header reveal"><h2>Simple pricing</h2><p>Start free. Upgrade when you're ready.</p></div>
     <div class="pricing">
-        <div class="plan">
-            <h3>Free</h3>
-            <div class="price">$0<span>/mo</span></div>
-            <ul>
-                <li>3 analyses per month</li>
-                <li>YouTube + Reddit search</li>
-                <li>Basic niche profile</li>
-                <li>Competitor discovery</li>
-            </ul>
+        <div class="plan reveal reveal-delay-1">
+            <h3>Free</h3><div class="price">$0<span>/mo</span></div>
+            <ul><li>3 analyses per month</li><li>YouTube + Reddit search</li><li>Basic niche profile</li><li>Competitor discovery</li></ul>
             <a href="/app" class="btn btn-ghost">Start free</a>
         </div>
-        <div class="plan featured">
+        <div class="plan featured reveal reveal-delay-2">
             <div class="badge">Most popular</div>
-            <h3>Pro</h3>
-            <div class="price">$9<span>/mo</span></div>
-            <ul>
-                <li>50 analyses per month</li>
-                <li>Full competitor analysis</li>
-                <li>AI content suggestions</li>
-                <li>PDF & CSV export</li>
-                <li>Content gap identification</li>
-            </ul>
+            <h3>Pro</h3><div class="price">$9<span>/mo</span></div>
+            <ul><li>50 analyses per month</li><li>Full competitor analysis</li><li>AI content suggestions</li><li>PDF & CSV export</li><li>Content gap identification</li></ul>
             <a href="/app?upgrade=pro" class="btn btn-primary">Upgrade to Pro</a>
         </div>
-        <div class="plan">
-            <h3>Business</h3>
-            <div class="price">$29<span>/mo</span></div>
-            <ul>
-                <li>Unlimited analyses</li>
-                <li>Team seats</li>
-                <li>API access</li>
-                <li>Priority processing</li>
-                <li>Everything in Pro</li>
-            </ul>
+        <div class="plan reveal reveal-delay-3">
+            <h3>Business</h3><div class="price">$29<span>/mo</span></div>
+            <ul><li>Unlimited analyses</li><li>Team seats</li><li>API access</li><li>Priority processing</li><li>Everything in Pro</li></ul>
             <a href="/app?upgrade=business" class="btn btn-ghost">Upgrade to Business</a>
         </div>
     </div>
@@ -303,19 +271,19 @@
 
 <section class="section">
     <div class="faq">
-        <div class="faq-item">
+        <div class="faq-item reveal">
             <h3>What data sources does it use?</h3>
-            <p>YouTube Data API v3, Reddit (via PRAW + RSS), Google Trends (via pytrends), Twitter/X API v2, Twitch Helix API, Hacker News Firebase API, and RSS feeds (TechCrunch, The Verge, Product Hunt, YouTube Blog). Google Gemini (and optional Groq/OpenRouter) for AI analysis.</p>
+            <p>YouTube Data API v3, Reddit (via PRAW + RSS), Google Trends (via pytrends), Twitter/X API v2, Twitch Helix API, Hacker News Firebase API, and RSS feeds (TechCrunch, The Verge, Product Hunt, YouTube Blog). Google Gemini for AI analysis.</p>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal">
             <h3>How accurate is the niche profiling?</h3>
             <p>The AI analyzes your channel title, description, subscriber count, recent video titles, engagement metrics, and upload frequency to generate a niche profile. The more content you have, the more accurate it is.</p>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal">
             <h3>Can I use it without any API keys?</h3>
             <p>No — you need at minimum a YouTube Data API key and a Gemini API key. Both have free tiers. Check the .env.example file for setup instructions.</p>
         </div>
-        <div class="faq-item">
+        <div class="faq-item reveal">
             <h3>Is my data stored?</h3>
             <p>Analysis results are cached locally for 24 hours to avoid redundant API calls. No data is sent to third parties. On the SaaS version, your account data is stored securely.</p>
         </div>
@@ -324,8 +292,23 @@
 
 <footer class="footer">
     <p>Creator Content Radar — Built for YouTube creators who want to grow.</p>
-    <p style="margin-top: 6px;"><a href="/app">Launch App</a> · <a href="/docs">API Docs</a> · <a href="https://github.com/ajayraj14195-bit/creator-content-radar">GitHub</a></p>
+    <p style="margin-top:6px"><a href="/app">Launch App</a> · <a href="/docs">API Docs</a> · <a href="https://github.com/ajayraj14195-bit/creator-content-radar">GitHub</a></p>
 </footer>
+
+<script>
+(function() {
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) { e.target.classList.add('visible'); }
+        });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+
+    document.querySelectorAll('.faq-item').forEach(function(item) {
+        item.addEventListener('click', function() { this.classList.toggle('open'); });
+    });
+})();
+</script>
 
 </body>
 </html>
