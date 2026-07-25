@@ -103,6 +103,111 @@ class JobModel(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class NotificationPref(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", unique=True)
+    email_digest: bool = True
+    digest_frequency: str = "weekly"
+    digest_competitors: bool = True
+    digest_trends: bool = True
+    digest_ideas: bool = True
+    competitor_alerts: bool = True
+    trend_alerts: bool = True
+
+
+class WatchedCompetitor(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    channel_id: str = Field(index=True)
+    channel_title: str = ""
+    subscriber_count: int = 0
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_checked: datetime | None = None
+
+
+class CompetitorAlert(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    competitor_channel_id: str = ""
+    alert_type: str = ""
+    message: str = ""
+    read: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class UserChannel(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    channel_id: str = Field(index=True)
+    channel_title: str = ""
+    channel_url: str = ""
+    is_primary: bool = False
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class EmailDigestConfig(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", unique=True)
+    enabled: bool = True
+    frequency: str = "weekly"
+    include_competitors: bool = True
+    include_trends: bool = True
+    include_ideas: bool = True
+    include_performance: bool = True
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class ContentIdea(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    topic: str
+    title: str = ""
+    seo_keywords: str = ""
+    thumbnail_ideas: str = ""
+    best_posting_time: str = ""
+    predicted_performance: str = ""
+    platform_focus: str = ""
+    saved: bool = False
+    scheduled_date: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class CalendarEvent(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    title: str
+    description: str = ""
+    event_date: str
+    event_time: str = ""
+    event_type: str = "idea"
+    related_channel_id: str = ""
+    google_event_id: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class RepurposeTask(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    source_url: str
+    source_title: str = ""
+    target_platforms: str = ""
+    scripts_json: str = ""
+    status: str = "pending"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class SeoScorecard(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    channel_id: str = Field(index=True)
+    title_score: float = 0.0
+    description_score: float = 0.0
+    tags_score: float = 0.0
+    overall_score: float = 0.0
+    recommendations: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 def _get_engine():
     global _engine
     if _engine is not None:
@@ -486,3 +591,234 @@ def get_user_jobs(user_id: int, limit: int = 10) -> list[JobModel]:
             .limit(limit)
         )
         return list(session.exec(statement).all())
+
+
+def get_notification_prefs(user_id: int) -> NotificationPref | None:
+    with Session(_get_engine()) as session:
+        statement = select(NotificationPref).where(NotificationPref.user_id == user_id)
+        return session.exec(statement).first()
+
+
+def save_notification_prefs(user_id: int, prefs: dict) -> NotificationPref:
+    with Session(_get_engine()) as session:
+        existing = get_notification_prefs(user_id)
+        if existing:
+            for k, v in prefs.items():
+                setattr(existing, k, v)
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        pref = NotificationPref(user_id=user_id, **prefs)
+        session.add(pref)
+        session.commit()
+        session.refresh(pref)
+        return pref
+
+
+def get_watched_competitors(user_id: int) -> list[WatchedCompetitor]:
+    with Session(_get_engine()) as session:
+        statement = select(WatchedCompetitor).where(WatchedCompetitor.user_id == user_id)
+        return list(session.exec(statement).all())
+
+
+def add_watched_competitor(user_id: int, channel_id: str, channel_title: str, subs: int = 0) -> WatchedCompetitor:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(WatchedCompetitor).where(
+                WatchedCompetitor.user_id == user_id,
+                WatchedCompetitor.channel_id == channel_id,
+            )
+        ).first()
+        if existing:
+            return existing
+        wc = WatchedCompetitor(user_id=user_id, channel_id=channel_id, channel_title=channel_title, subscriber_count=subs)
+        session.add(wc)
+        session.commit()
+        session.refresh(wc)
+        return wc
+
+
+def remove_watched_competitor(user_id: int, channel_id: str) -> None:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(WatchedCompetitor).where(
+                WatchedCompetitor.user_id == user_id,
+                WatchedCompetitor.channel_id == channel_id,
+            )
+        ).first()
+        if existing:
+            session.delete(existing)
+            session.commit()
+
+
+def get_competitor_alerts(user_id: int, unread_only: bool = False) -> list[CompetitorAlert]:
+    with Session(_get_engine()) as session:
+        statement = select(CompetitorAlert).where(CompetitorAlert.user_id == user_id)
+        if unread_only:
+            statement = statement.where(CompetitorAlert.read == False)
+        statement = statement.order_by(CompetitorAlert.created_at.desc()).limit(20)
+        return list(session.exec(statement).all())
+
+
+def mark_alerts_read(user_id: int) -> None:
+    with Session(_get_engine()) as session:
+        statement = select(CompetitorAlert).where(CompetitorAlert.user_id == user_id, CompetitorAlert.read == False)
+        for alert in session.exec(statement).all():
+            alert.read = True
+            session.add(alert)
+        session.commit()
+
+
+def get_user_channels(user_id: int) -> list[UserChannel]:
+    with Session(_get_engine()) as session:
+        statement = select(UserChannel).where(UserChannel.user_id == user_id)
+        return list(session.exec(statement).all())
+
+
+def add_user_channel(user_id: int, channel_id: str, title: str, url: str, is_primary: bool = False) -> UserChannel:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(UserChannel).where(UserChannel.user_id == user_id, UserChannel.channel_id == channel_id)
+        ).first()
+        if existing:
+            existing.channel_title = title
+            existing.channel_url = url
+            existing.is_primary = is_primary
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        uc = UserChannel(user_id=user_id, channel_id=channel_id, channel_title=title, channel_url=url, is_primary=is_primary)
+        session.add(uc)
+        session.commit()
+        session.refresh(uc)
+        return uc
+
+
+def remove_user_channel(user_id: int, channel_id: str) -> None:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(UserChannel).where(UserChannel.user_id == user_id, UserChannel.channel_id == channel_id)
+        ).first()
+        if existing:
+            session.delete(existing)
+            session.commit()
+
+
+def get_email_digest_config(user_id: int) -> EmailDigestConfig | None:
+    with Session(_get_engine()) as session:
+        statement = select(EmailDigestConfig).where(EmailDigestConfig.user_id == user_id)
+        return session.exec(statement).first()
+
+
+def save_email_digest_config(user_id: int, cfg: dict) -> EmailDigestConfig:
+    with Session(_get_engine()) as session:
+        existing = get_email_digest_config(user_id)
+        if existing:
+            for k, v in cfg.items():
+                setattr(existing, k, v)
+            existing.updated_at = _utc_now()
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        config = EmailDigestConfig(user_id=user_id, **cfg)
+        session.add(config)
+        session.commit()
+        session.refresh(config)
+        return config
+
+
+def save_content_idea(user_id: int, data: dict) -> ContentIdea:
+    with Session(_get_engine()) as session:
+        idea = ContentIdea(user_id=user_id, **data)
+        session.add(idea)
+        session.commit()
+        session.refresh(idea)
+        return idea
+
+
+def get_content_ideas(user_id: int, saved_only: bool = False) -> list[ContentIdea]:
+    with Session(_get_engine()) as session:
+        statement = select(ContentIdea).where(ContentIdea.user_id == user_id)
+        if saved_only:
+            statement = statement.where(ContentIdea.saved == True)
+        statement = statement.order_by(ContentIdea.created_at.desc()).limit(50)
+        return list(session.exec(statement).all())
+
+
+def delete_content_idea(idea_id: int, user_id: int) -> None:
+    with Session(_get_engine()) as session:
+        idea = session.get(ContentIdea, idea_id)
+        if idea and idea.user_id == user_id:
+            session.delete(idea)
+            session.commit()
+
+
+def get_calendar_events(user_id: int, month: str = "") -> list[CalendarEvent]:
+    with Session(_get_engine()) as session:
+        statement = select(CalendarEvent).where(CalendarEvent.user_id == user_id)
+        if month:
+            statement = statement.where(CalendarEvent.event_date.startswith(month))
+        statement = statement.order_by(CalendarEvent.event_date)
+        return list(session.exec(statement).all())
+
+
+def save_calendar_event(user_id: int, data: dict) -> CalendarEvent:
+    with Session(_get_engine()) as session:
+        ev = CalendarEvent(user_id=user_id, **data)
+        session.add(ev)
+        session.commit()
+        session.refresh(ev)
+        return ev
+
+
+def delete_calendar_event(event_id: int, user_id: int) -> None:
+    with Session(_get_engine()) as session:
+        ev = session.get(CalendarEvent, event_id)
+        if ev and ev.user_id == user_id:
+            session.delete(ev)
+            session.commit()
+
+
+def save_repurpose_task(user_id: int, data: dict) -> RepurposeTask:
+    with Session(_get_engine()) as session:
+        task = RepurposeTask(user_id=user_id, **data)
+        session.add(task)
+        session.commit()
+        session.refresh(task)
+        return task
+
+
+def get_repurpose_tasks(user_id: int) -> list[RepurposeTask]:
+    with Session(_get_engine()) as session:
+        statement = select(RepurposeTask).where(RepurposeTask.user_id == user_id).order_by(RepurposeTask.created_at.desc())
+        return list(session.exec(statement).all())
+
+
+def save_seo_scorecard(user_id: int, data: dict) -> SeoScorecard:
+    with Session(_get_engine()) as session:
+        existing = session.exec(
+            select(SeoScorecard).where(SeoScorecard.user_id == user_id, SeoScorecard.channel_id == data["channel_id"])
+        ).first()
+        if existing:
+            for k, v in data.items():
+                setattr(existing, k, v)
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            return existing
+        sc = SeoScorecard(user_id=user_id, **data)
+        session.add(sc)
+        session.commit()
+        session.refresh(sc)
+        return sc
+
+
+def get_seo_scorecard(user_id: int, channel_id: str) -> SeoScorecard | None:
+    with Session(_get_engine()) as session:
+        statement = select(SeoScorecard).where(
+            SeoScorecard.user_id == user_id, SeoScorecard.channel_id == channel_id
+        )
+        return session.exec(statement).first()

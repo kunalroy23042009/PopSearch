@@ -35,6 +35,7 @@ from app.classifier import classify_results
 from app.db import User
 from app.routers.auth import router as auth_router
 from app.routers.billing import router as billing_router
+from app.routers.features import router as features_router
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +214,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(billing_router)
+app.include_router(features_router)
 
 try:
     from prometheus_fastapi_instrumentator import Instrumentator
