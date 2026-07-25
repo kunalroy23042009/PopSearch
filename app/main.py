@@ -602,15 +602,109 @@ async def export_analysis(
 
         output = io.StringIO()
         writer = csv.writer(output)
+
+        writer.writerow(["== Channel Profile =="])
         writer.writerow(["Field", "Value"])
         writer.writerow(["Channel", profile.title])
         writer.writerow(["Subscribers", profile.subscriber_count])
+        writer.writerow(["Total Views", profile.view_count])
+        writer.writerow(["Videos", profile.video_count])
         writer.writerow(["Niche", profile.niche])
+        writer.writerow(["Topics", ", ".join(profile.topics)])
         writer.writerow(["Content Style", profile.content_style])
         writer.writerow(["Target Audience", profile.target_audience])
         writer.writerow(["Engagement Rate", f"{profile.engagement_rate:.2f}%"])
+        writer.writerow(["Avg Views/Video", f"{profile.average_views_per_video:.0f}"])
+        writer.writerow(["Upload Frequency", profile.upload_frequency])
+        writer.writerow(["Channel Tier", profile.channel_tier])
+        writer.writerow(["Growth Potential", profile.growth_potential])
+        writer.writerow(["Posting Schedule", profile.posting_schedule])
+        writer.writerow(["AI Summary", profile.ai_summary or ""])
+        writer.writerow([])
+
+        writer.writerow(["== Content Recommendations =="])
         for i, rec in enumerate(profile.content_recommendations, 1):
             writer.writerow([f"Recommendation {i}", rec])
+        writer.writerow([])
+
+        writer.writerow(["== Optimization Tips =="])
+        for i, tip in enumerate(profile.optimization_tips, 1):
+            writer.writerow([f"Tip {i}", tip])
+        writer.writerow([])
+
+        writer.writerow(["== Content Gaps =="])
+        for i, gap in enumerate(profile.content_gaps, 1):
+            writer.writerow([f"Gap {i}", gap])
+        writer.writerow([])
+
+        writer.writerow(["== Title Patterns =="])
+        for i, pat in enumerate(profile.title_patterns, 1):
+            writer.writerow([f"Pattern {i}", pat])
+        writer.writerow([])
+
+        writer.writerow(["== Best Topics =="])
+        for i, bt in enumerate(profile.best_topics, 1):
+            writer.writerow([f"Topic {i}", bt])
+        writer.writerow([])
+
+        writer.writerow([f"== Top Performing Videos =="])
+        for i, v in enumerate(profile.top_performing_videos, 1):
+            writer.writerow([f"Video {i}", f"{v.title} | {v.views} views | {v.engagement_rate:.1f}% eng."])
+        writer.writerow([])
+
+        if profile.underperforming_videos:
+            writer.writerow([f"== Underperforming Videos =="])
+            for i, v in enumerate(profile.underperforming_videos, 1):
+                writer.writerow([f"Video {i}", f"{v.title} | {v.views} views"])
+            writer.writerow([])
+
+        if profile.performance_summary:
+            ps = profile.performance_summary
+            writer.writerow([f"== Performance Summary =="])
+            writer.writerow(["Avg Views/30d", f"{ps.average_views_last_30d:.0f}"])
+            writer.writerow(["Best Views/30d", f"{ps.best_video_views_last_30d:.0f}"])
+            writer.writerow(["Growth Rate", f"{ps.growth_rate:.1f}%"])
+            writer.writerow(["Subscribers/30d", f"{ps.subscribers_last_30d:.0f}"])
+            writer.writerow([])
+
+        # Try to load full dashboard data for cross-platform content + competitors
+        try:
+            report = get_report(channel_id)
+            if report and report.dashboard_json:
+                dd = json.loads(report.dashboard_json)
+
+                if dd.get("cross_platform_content"):
+                    writer.writerow([f"== Cross-Platform Content ({len(dd['cross_platform_content'])} items) =="])
+                    writer.writerow(["Platform", "Title", "Score", "URL"])
+                    for item in dd["cross_platform_content"]:
+                        writer.writerow([
+                            item.get("platform", ""),
+                            item.get("title", ""),
+                            f"{item.get('engagement_score', 0):.1f}",
+                            item.get("url", ""),
+                        ])
+                    writer.writerow([])
+
+                if dd.get("competitors") and dd["competitors"].get("competitors"):
+                    comps = dd["competitors"]["competitors"]
+                    writer.writerow([f"== Competitors ({len(comps)} found) =="])
+                    writer.writerow(["Channel", "Subscribers", "Relevance"])
+                    for comp in comps:
+                        writer.writerow([
+                            comp.get("title", ""),
+                            comp.get("subscriber_count", 0),
+                            comp.get("relevance_note", ""),
+                        ])
+                    writer.writerow([])
+
+                if dd.get("trends") and dd["trends"].get("interest_over_time"):
+                    writer.writerow([f"== Trend Data: {dd['trends'].get('topic', '')} =="])
+                    writer.writerow(["Date", "Interest"])
+                    for pt in dd["trends"]["interest_over_time"]:
+                        writer.writerow([pt.get("label", ""), pt.get("value", "")])
+                    writer.writerow([])
+        except Exception:
+            pass
 
         output.seek(0)
         return StreamingResponse(
