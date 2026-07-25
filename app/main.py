@@ -16,29 +16,33 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.requests import Request
 
+from app.auth import get_current_user, require_plan, create_access_token
+from app.config import settings
 from app.channel_analyzer import analyze_channel
 from app.competitor_finder import find_competitors
-from app.db import get_cached_channel_profile, get_session, get_user_reports, get_report, init_db, get_job
+from app.db import (
+    get_cached_channel_profile, get_session, get_user_reports,
+    get_report, init_db, get_job, track_user_event, update_user_usage,
+)
 from app.models import (
     ChannelProfile, CompetitorChannel, CompetitorAnalysis,
     ContentResult, DashboardData, SavedReport,
 )
 from app.tasks import submit_analysis_sync
-from app.topic_search import search_topic_with_insights
-
-from app.auth import get_current_user
+from app.topic_search import search_topic_with_insights, search_topic
+from app.classifier import classify_results
 from app.db import User
 from app.routers.auth import router as auth_router
 from app.routers.billing import router as billing_router
 
 logger = logging.getLogger(__name__)
 
-limiter = Limiter(key_func=get_remote_address)
-
 _VALID_YOUTUBE_RE = re.compile(
     r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+|@[\w.-]+|UC[\w-]{22}$",
     re.IGNORECASE,
 )
+
+PLAN_LIMITS = {"free": 3, "pro": 50, "business": -1}
 
 
 def _validate_youtube_url(url: str) -> None:
@@ -53,8 +57,41 @@ def _validate_youtube_url(url: str) -> None:
         )
 
 
+def _get_user_key_func(request: Request) -> str:
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        try:
+            from jose import JWTError, jwt
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            email = payload.get("sub")
+            if email:
+                return f"user:{email}"
+        except JWTError:
+            pass
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_get_user_key_func)
+
+
+def _check_usage_limit(user: User) -> None:
+    limit = PLAN_LIMITS.get(user.plan or "free", 3)
+    if limit != -1 and (user.analyses_this_month or 0) >= limit:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Monthly analysis limit reached ({limit}). Upgrade your plan at /api/billing/checkout.",
+        )
+
+
 class AnalyzeChannelRequest(BaseModel):
     channel_url: str = Field(..., description="YouTube channel URL or ID")
+
+
+class AnalyzeChannelResponse(BaseModel):
+    job_id: str
+    status_url: str = ""
+    profile: ChannelProfile | None = None
 
 
 class FindCompetitorsRequest(BaseModel):
@@ -66,7 +103,7 @@ class SearchTopicRequest(BaseModel):
     topic: str = Field(..., description="Topic to search for")
     competitor_channel_ids: list[str] = Field(
         default_factory=list,
-        description="List of competitor channel IDs to include in search",
+        description="List of competitor channel IDs",
     )
 
 
@@ -111,7 +148,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Creator Content Radar",
     description="AI-powered YouTube channel analyzer and cross-platform content discovery tool",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan,
 )
 
@@ -123,6 +160,7 @@ ALLOWED_ORIGINS = [
     "https://www.creatorcontentradar.com",
     "http://localhost:8000",
     "http://localhost:3000",
+    "http://127.0.0.1:8000",
 ]
 
 app.add_middleware(
@@ -143,12 +181,14 @@ except ImportError:
     logger.info("prometheus-fastapi-instrumentator not installed — /metrics disabled")
 
 
-@app.post("/analyze-channel", response_model=ChannelProfile)
-@limiter.limit("5/minute")
+@app.post("/analyze-channel", response_model=AnalyzeChannelResponse)
+@limiter.limit("10/minute")
 async def analyze_channel_endpoint(
     request: Request,
     body: AnalyzeChannelRequest,
-) -> ChannelProfile:
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+) -> AnalyzeChannelResponse:
     try:
         _validate_youtube_url(body.channel_url)
     except ValueError as exc:
@@ -157,42 +197,29 @@ async def analyze_channel_endpoint(
             detail=str(exc),
         ) from exc
 
-    logger.info("POST /analyze-channel - channel_url=%s", body.channel_url)
+    _check_usage_limit(user)
 
-    try:
-        profile = analyze_channel(body.channel_url)
-        logger.info(
-            "POST /analyze-channel SUCCESS - channel_id=%s, title=%s",
-            profile.channel_id,
-            profile.title,
-        )
-        return profile
-    except ValueError as exc:
-        logger.error("POST /analyze-channel BAD_INPUT - %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
-    except Exception as exc:
-        logger.error("POST /analyze-channel ERROR - %s", exc)
-        if "quota" in str(exc).lower() or "403" in str(exc):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="YouTube API quota exhausted. Try again in a few hours.",
-            ) from exc
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Upstream API failure: {str(exc)}",
-        ) from exc
+    job_id = submit_analysis_sync(background_tasks, body.channel_url, "", user.id)
+    update_user_usage(user.id, 1)
+
+    track_user_event(user.id, "analysis_started", {
+        "channel_url": body.channel_url,
+    })
+
+    return AnalyzeChannelResponse(
+        job_id=job_id,
+        status_url=f"/api/jobs/{job_id}",
+    )
 
 
 @app.post("/find-competitors", response_model=list[CompetitorChannel])
-@limiter.limit("10/minute")
+@limiter.limit("20/minute")
 async def find_competitors_endpoint(
     request: Request,
     body: FindCompetitorsRequest,
+    user: User = Depends(get_current_user),
 ) -> list[CompetitorChannel]:
-    logger.info("POST /find-competitors - channel_id=%s", body.channel_id)
+    logger.info("POST /find-competitors - channel_id=%s, user=%d", body.channel_id, user.id)
 
     try:
         profile = get_cached_channel_profile(body.channel_id)
@@ -204,20 +231,13 @@ async def find_competitors_endpoint(
             )
 
         competitors = find_competitors(profile, exclude_channel_id=body.channel_id)
-        logger.info(
-            "POST /find-competitors SUCCESS - channel_id=%s, found=%d competitors",
-            body.channel_id,
-            len(competitors),
-        )
+        track_user_event(user.id, "competitors_found", {
+            "channel_id": body.channel_id,
+            "count": len(competitors),
+        })
         return competitors
     except HTTPException:
         raise
-    except ValueError as exc:
-        logger.error("POST /find-competitors BAD_INPUT - %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
     except Exception as exc:
         logger.error("POST /find-competitors ERROR - %s", exc)
         raise HTTPException(
@@ -227,16 +247,17 @@ async def find_competitors_endpoint(
 
 
 @app.post("/search-topic", response_model=SearchTopicResponse)
-@limiter.limit("10/minute")
+@limiter.limit("20/minute")
 async def search_topic_endpoint(
     request: Request,
     body: SearchTopicRequest,
+    user: User = Depends(get_current_user),
 ) -> SearchTopicResponse:
+    _check_usage_limit(user)
+
     logger.info(
-        "POST /search-topic - channel_id=%s, topic=%s, competitors=%d",
-        body.channel_id,
-        body.topic,
-        len(body.competitor_channel_ids),
+        "POST /search-topic - channel_id=%s, topic=%s, user=%d",
+        body.channel_id, body.topic, user.id,
     )
 
     try:
@@ -255,24 +276,19 @@ async def search_topic_endpoint(
             subreddits=None,
         )
 
-        logger.info(
-            "POST /search-topic SUCCESS - channel_id=%s, topic=%s, results=%d",
-            body.channel_id,
-            body.topic,
-            len(classified_results),
-        )
+        update_user_usage(user.id, 1)
+        track_user_event(user.id, "topic_search", {
+            "channel_id": body.channel_id,
+            "topic": body.topic,
+            "results": len(classified_results),
+        })
+
         return SearchTopicResponse(
             results=classified_results,
             insight=insight.model_dump(),
         )
     except HTTPException:
         raise
-    except ValueError as exc:
-        logger.error("POST /search-topic BAD_INPUT - %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
     except Exception as exc:
         logger.error("POST /search-topic ERROR - %s", exc)
         raise HTTPException(
@@ -287,14 +303,17 @@ async def health_check():
 
 
 @app.post("/multi-source-search", response_model=DashboardData)
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def multi_source_search_endpoint(
     request: Request,
     body: MultiSourceSearchRequest,
+    user: User = Depends(get_current_user),
 ) -> DashboardData:
+    _check_usage_limit(user)
+
     logger.info(
-        "POST /multi-source-search - channel_id=%s, topic=%s",
-        body.channel_id, body.topic,
+        "POST /multi-source-search - channel_id=%s, topic=%s, user=%d",
+        body.channel_id, body.topic, user.id,
     )
 
     try:
@@ -302,8 +321,7 @@ async def multi_source_search_endpoint(
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Channel profile not found for channel_id={body.channel_id}. "
-                "Please analyze the channel first using /analyze-channel.",
+                detail=f"Channel profile not found for channel_id={body.channel_id}.",
             )
 
         from app.services.content_gatherer import ContentGatherer
@@ -314,10 +332,13 @@ async def multi_source_search_endpoint(
             include_trends=body.include_trends,
         )
 
-        logger.info(
-            "POST /multi-source-search SUCCESS - topic=%s, sources=%d, results=%d",
-            body.topic, dashboard.total_sources_checked, len(dashboard.cross_platform_content),
-        )
+        update_user_usage(user.id, 1)
+        track_user_event(user.id, "multi_source_search", {
+            "channel_id": body.channel_id,
+            "topic": body.topic,
+            "sources": dashboard.total_sources_checked,
+        })
+
         return dashboard
 
     except HTTPException:
@@ -331,19 +352,22 @@ async def multi_source_search_endpoint(
 
 
 @app.post("/dashboard", response_model=DashboardData)
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def dashboard_endpoint(
     request: Request,
     body: DashboardRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
 ) -> DashboardData:
-    logger.info("POST /dashboard - channel_url=%s, topic=%s", body.channel_url, body.topic)
+    _check_usage_limit(user)
+    logger.info("POST /dashboard - channel_url=%s, user=%d", body.channel_url, user.id)
 
     try:
         profile = analyze_channel(body.channel_url)
         from app.services.content_gatherer import ContentGatherer
         gatherer = ContentGatherer()
 
-        topic = body.topic or profile.niche or profile.topics[0] if profile.topics else "content creation"
+        topic = body.topic or profile.niche or (profile.topics[0] if profile.topics else "content creation")
         dashboard = gatherer.gather_all(topic=topic, profile=profile)
 
         from app.competitor_finder import find_competitors
@@ -355,10 +379,12 @@ async def dashboard_endpoint(
             threat_level="Medium" if len(competitors) > 5 else "Low",
         )
 
-        logger.info(
-            "POST /dashboard SUCCESS - channel=%s, sources=%d",
-            profile.title, dashboard.total_sources_checked,
-        )
+        update_user_usage(user.id, 1)
+        track_user_event(user.id, "dashboard_viewed", {
+            "channel_id": profile.channel_id,
+            "channel_title": profile.title,
+        })
+
         return dashboard
 
     except HTTPException:
@@ -377,7 +403,6 @@ async def analyze_async(
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
 ):
-    """Submit an async analysis job with progress tracking."""
     try:
         _validate_youtube_url(body.channel_url)
     except ValueError as exc:
@@ -386,12 +411,10 @@ async def analyze_async(
             detail=str(exc),
         ) from exc
 
-    job_id = submit_analysis_sync(
-        background_tasks,
-        body.channel_url,
-        body.topic,
-        user.id if user else 0,
-    )
+    _check_usage_limit(user)
+
+    job_id = submit_analysis_sync(background_tasks, body.channel_url, body.topic, user.id)
+    update_user_usage(user.id, 1)
 
     return AnalyzeResponse(
         job_id=job_id,
@@ -400,8 +423,7 @@ async def analyze_async(
 
 
 @app.get("/api/jobs/{job_id}")
-async def get_job_status(job_id: str):
-    """Get the status and result of an analysis job."""
+async def get_job_status(job_id: str, user: User = Depends(get_current_user)):
     job = get_job(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -418,7 +440,6 @@ async def get_job_status(job_id: str):
 
 @app.get("/api/reports")
 async def list_reports(user: User = Depends(get_current_user)):
-    """List saved analysis reports for the current user."""
     reports = get_user_reports(user.id)
     return [
         {
@@ -434,7 +455,6 @@ async def list_reports(user: User = Depends(get_current_user)):
 
 @app.get("/api/reports/{report_id}")
 async def get_report_detail(report_id: str, user: User = Depends(get_current_user)):
-    """Get a saved analysis report."""
     report = get_report(report_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -492,7 +512,6 @@ async def export_analysis(
         try:
             from fastapi.responses import StreamingResponse
             import io
-
             from reportlab.lib.pagesizes import letter
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
             from reportlab.lib.styles import getSampleStyleSheet
@@ -539,7 +558,7 @@ static_dir = Path(__file__).parent.parent / "static"
 
 
 @app.get("/app")
-async def serve_app():
+async def serve_app(user: User = Depends(get_current_user)):
     return FileResponse(str(static_dir / "index.html"))
 
 

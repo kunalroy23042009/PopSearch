@@ -56,6 +56,8 @@ def search_youtube(topic: str, competitor_channel_ids: list[str]) -> list[Conten
     results: list[ContentResult] = []
     video_ids = list(snippets.keys())
 
+    channel_ids_for_stats: set[str] = set()
+
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i : i + 50]
         try:
@@ -74,6 +76,10 @@ def search_youtube(topic: str, competitor_channel_ids: list[str]) -> list[Conten
             stats = item.get("statistics", {})
             views = int(stats.get("viewCount", 0))
             likes = int(stats.get("likeCount", 0))
+            channel_id = snippet.get("channelId", "")
+
+            if channel_id:
+                channel_ids_for_stats.add(channel_id)
 
             results.append(
                 ContentResult(
@@ -85,9 +91,30 @@ def search_youtube(topic: str, competitor_channel_ids: list[str]) -> list[Conten
                         snippet.get("publishedAt", "1970-01-01T00:00:00Z")
                     ),
                     source=snippet.get("channelTitle", "Unknown"),
-                    raw_metrics={"views": views, "likes": likes},
+                    raw_metrics={"views": views, "likes": likes, "channel_id": channel_id},
                 )
             )
+
+    if channel_ids_for_stats:
+        try:
+            for i in range(0, len(channel_ids_for_stats), 50):
+                channel_batch = list(channel_ids_for_stats)[i : i + 50]
+                channel_resp = (
+                    youtube.channels()
+                    .list(part="statistics", id=",".join(channel_batch))
+                    .execute()
+                )
+                sub_map: dict[str, int] = {}
+                for ch in channel_resp.get("items", []):
+                    ch_stats = ch.get("statistics", {})
+                    sub_map[ch["id"]] = int(ch_stats.get("subscriberCount", 0))
+
+                for r in results:
+                    ch_id = r.raw_metrics.get("channel_id", "")
+                    if ch_id in sub_map:
+                        r.raw_metrics["channel_subscriber_count"] = sub_map[ch_id]
+        except Exception as exc:
+            logger.warning("YouTube channel statistics fetch failed: %s", exc)
 
     return results
 

@@ -16,12 +16,13 @@ def _youtube_search_item(video_id: str, channel_title: str = "Tech Channel") -> 
     }
 
 
-def _youtube_video_item(video_id: str, views: int = 1000, likes: int = 50) -> dict:
+def _youtube_video_item(video_id: str, views: int = 1000, likes: int = 50, channel_id: str = "UCtest") -> dict:
     return {
         "id": video_id,
         "snippet": {
             "title": f"Video {video_id}",
             "channelTitle": "Tech Channel",
+            "channelId": channel_id,
             "publishedAt": "2025-06-01T12:00:00Z",
         },
         "statistics": {"viewCount": str(views), "likeCount": str(likes)},
@@ -59,9 +60,19 @@ def test_search_youtube_deduplicates_and_populates_fields():
         ]
     }
 
+    channel_response = {
+        "items": [
+            {
+                "id": "UCtest",
+                "statistics": {"subscriberCount": "15000"},
+            }
+        ]
+    }
+
     mock_youtube = MagicMock()
     mock_youtube.search.return_value.list.return_value.execute.side_effect = search_responses
     mock_youtube.videos.return_value.list.return_value.execute.return_value = video_response
+    mock_youtube.channels.return_value.list.return_value.execute.return_value = channel_response
 
     with patch("app.topic_search._build_youtube_client", return_value=mock_youtube):
         results = search_youtube("budget laptop", ["UCcompetitor111111111111111"])
@@ -72,7 +83,7 @@ def test_search_youtube_deduplicates_and_populates_fields():
 
     by_id = {r.url.split("v=")[1]: r for r in results}
     assert by_id["vid1"].engagement_score == 5000.0
-    assert by_id["vid1"].raw_metrics == {"views": 5000, "likes": 200}
+    assert by_id["vid1"].raw_metrics == {"views": 5000, "likes": 200, "channel_id": "UCtest", "channel_subscriber_count": 15000}
     assert by_id["vid1"].source == "Tech Channel"
     assert by_id["vid1"].published_at == datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc)
 

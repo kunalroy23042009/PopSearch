@@ -103,6 +103,32 @@ def _compute_velocity_direction(
     return current_velocity, direction
 
 
+def _percentile_per_platform(
+    results: list[ContentResult],
+    velocities: list[float],
+    scores: list[float],
+    pct_velocity: float,
+    pct_popular: float,
+) -> tuple[dict[str, float], dict[str, float]]:
+    platform_groups: dict[str, dict[str, list[float]]] = {}
+    for i, r in enumerate(results):
+        p = r.platform
+        if p not in platform_groups:
+            platform_groups[p] = {"velocities": [], "scores": []}
+        platform_groups[p]["velocities"].append(velocities[i])
+        platform_groups[p]["scores"].append(scores[i])
+
+    velocity_floors: dict[str, float] = {}
+    popular_floors: dict[str, float] = {}
+
+    for platform, data in platform_groups.items():
+        v = [x for x in data["velocities"] if x > 0]
+        velocity_floors[platform] = _percentile(v, pct_velocity) if v else 0.0
+        popular_floors[platform] = _percentile(data["scores"], 100 - pct_popular) if data["scores"] else 0.0
+
+    return velocity_floors, popular_floors
+
+
 def classify_results(
     results: list[ContentResult],
     *,
@@ -120,11 +146,10 @@ def classify_results(
     velocities = [v for v, _ in velocities_and_directions]
     scores = [r.engagement_score for r in results]
 
-    trending_velocity_floor = _percentile(
-        [v for v in velocities if v > 0],
-        TRENDING_VELOCITY_PERCENTILE,
+    velocity_floors, popular_floors = _percentile_per_platform(
+        results, velocities, scores,
+        TRENDING_VELOCITY_PERCENTILE, POPULAR_TOP_PERCENT,
     )
-    popular_floor = _percentile(scores, 100 - POPULAR_TOP_PERCENT)
 
     ratios: list[float | None] = [_engagement_ratio(r) for r in results]
 
@@ -134,6 +159,9 @@ def classify_results(
     for i, result in enumerate(results):
         age_h = _age_hours(result.published_at, now)
         velocity, direction = velocities_and_directions[i]
+
+        trending_velocity_floor = velocity_floors.get(result.platform, 0.0)
+        popular_floor = popular_floors.get(result.platform, 0.0)
 
         is_trending = (
             age_h <= TRENDING_MAX_AGE_HOURS

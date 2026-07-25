@@ -150,6 +150,46 @@ async def stripe_webhook(
                 db_session.commit()
                 logger.info("Reset monthly usage for customer %s", customer_id)
 
+    elif event_type in ("customer.subscription.deleted", "customer.subscription.updated"):
+        subscription_status = event_data.get("status")
+        customer_id = event_data.get("customer")
+
+        if not customer_id:
+            logger.warning("Webhook %s missing customer ID", event_type)
+            return {"status": "ignored"}
+
+        statement = select(User).where(User.stripe_customer_id == customer_id)
+        user = db_session.exec(statement).first()
+
+        if not user:
+            logger.warning("No user found for Stripe customer %s", customer_id)
+            return {"status": "ignored"}
+
+        if event_type == "customer.subscription.deleted" or subscription_status in ("canceled", "incomplete_expired", "unpaid"):
+            user.plan = "free"
+            logger.info(
+                "Downgraded user %d to free plan (subscription %s, status=%s)",
+                user.id, event_type, subscription_status,
+            )
+        elif subscription_status == "active" or subscription_status == "trialing":
+            items = event_data.get("items", {}).get("data", [])
+            plan = "free"
+            if items:
+                price_id = items[0].get("price", {}).get("id", "")
+                if price_id == settings.STRIPE_PRICE_PRO_MONTHLY:
+                    plan = "pro"
+                elif price_id == settings.STRIPE_PRICE_BUSINESS_MONTHLY:
+                    plan = "business"
+            user.plan = plan
+            user.analyses_this_month = 0
+            logger.info(
+                "Updated user %d to plan %s (subscription %s, status=%s)",
+                user.id, plan, event_type, subscription_status,
+            )
+
+        db_session.add(user)
+        db_session.commit()
+
     return {"status": "success"}
 
 

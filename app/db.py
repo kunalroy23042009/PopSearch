@@ -462,6 +462,15 @@ def get_job(job_id: str) -> JobModel | None:
         return session.get(JobModel, job_id)
 
 
+def update_user_usage(user_id: int, increment: int = 1) -> None:
+    with Session(_get_engine()) as session:
+        user = session.get(User, user_id)
+        if user:
+            user.analyses_this_month = (user.analyses_this_month or 0) + increment
+            session.add(user)
+            session.commit()
+
+
 def get_user_jobs(user_id: int, limit: int = 10) -> list[JobModel]:
     with Session(_get_engine()) as session:
         statement = (
