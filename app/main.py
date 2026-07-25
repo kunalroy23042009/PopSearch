@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -186,11 +187,15 @@ async def lifespan(app: FastAPI):
         scheduler.shutdown()
 
 
+_show_docs = settings.DEBUG or os.getenv("RENDER") != "1"
 app = FastAPI(
     title="Creator Content Radar",
     description="AI-powered YouTube channel analyzer and cross-platform content discovery tool",
     version="0.4.0",
     lifespan=lifespan,
+    docs_url="/docs" if _show_docs else None,
+    redoc_url="/redoc" if _show_docs else None,
+    openapi_url="/openapi.json" if _show_docs else None,
 )
 
 app.state.limiter = limiter
@@ -198,6 +203,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 ALLOWED_ORIGINS = [
     "https://creator-content-radar.onrender.com",
+    "https://creator-content-radar-2.onrender.com",
     "https://www.creatorcontentradar.com",
     "http://localhost:8000",
     "http://localhost:3000",

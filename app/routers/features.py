@@ -4,7 +4,7 @@ import logging
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlmodel import Session
 
@@ -24,7 +24,23 @@ from app.db import (
 )
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api", tags=["features"])
+
+
+async def _rate_limit(request: Request):
+    """Per-IP rate limit for all feature router endpoints."""
+    try:
+        from app.main import limiter
+        from starlette.responses import Response
+        ok, _ = await limiter.check(request, None, "30/minute", limiter.key_func)
+        if not ok:
+            raise HTTPException(status_code=429, detail="Rate limit exceeded (30/min)")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Rate limit check failed (fail-open): %s", exc)
+
+
+router = APIRouter(prefix="/api", tags=["features"], dependencies=[Depends(_rate_limit)])
 
 
 # ── API Keys ───────────────────────────────────────────────────────────
