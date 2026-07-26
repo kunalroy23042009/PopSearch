@@ -384,7 +384,7 @@ function RegisterPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  DASHBOARD
+//  UNIFIED DASHBOARD — channel stats, trends, competitors, cross-platform, YT Analytics
 // ═══════════════════════════════════════════════════════════════
 function DashboardPage() {
   const { api } = useAuth();
@@ -392,18 +392,31 @@ function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [watched, setWatched] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  useEffect(() => {
+    api('/api/watched-competitors').then(async r => { if (r?.ok) setWatched(await r.json()); });
+  }, []);
+
   const load = async () => {
     if (!url.trim()) return;
-    setLoading(true); setErr(''); setData(null);
+    setLoading(true); setErr(''); setData(null); setAnalytics(null);
     try {
       localStorage.setItem('ccr_last_url', url);
       const res = await api('/dashboard', { method: 'POST', body: JSON.stringify({ channel_url: url, topic: '' }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setData(d); setTimeout(() => renderCharts(d), 150); }
+      if (res.ok) { setData(d); setTimeout(() => renderCharts(d), 150); loadAnalytics(); }
       else { setErr(d.detail || 'Analysis failed'); }
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
+  };
+  const loadAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try { const res = await api('/api/analytics/overview?days=28'); if (res?.ok) { const d = await res.json(); if (!d.needs_auth) setAnalytics(d); } } catch {}
+    finally { setAnalyticsLoading(false); }
   };
   const renderCharts = (d) => {
     const c = chartColors();
@@ -421,49 +434,165 @@ function DashboardPage() {
       safeChart('dash-donut', { type: 'doughnut', data: { labels: ['Views', 'Engagement', 'Growth'], datasets: [{ data: [ps.average_views_last_30d || 0, profile.engagement_rate || 0, ps.growth_rate || 0].map(v => Math.max(v, 1)), backgroundColor: [c.primary, c.accent, c.success], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: c.text, padding: 12, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } }, cutout: '68%' } } });
     }
   };
+  const watchCompetitor = async (ch) => {
+    await api('/api/watched-competitors', { method: 'POST', body: JSON.stringify({ channel_id: ch.channel_id, channel_title: ch.title, thumbnail_url: ch.thumbnail_url || '' }) });
+    setWatched(prev => { const exists = prev.find(c => c.channel_id === ch.channel_id); return exists ? prev : [...prev, ch]; });
+  };
+  const unwatch = async (cid) => {
+    await api(`/api/watched-competitors/${cid}`, { method: 'DELETE' });
+    setWatched(prev => prev.filter(c => c.channel_id !== cid));
+  };
   useEffect(() => { const u = localStorage.getItem('ccr_last_url'); if (u) setUrl(u); }, []);
   const p = data?.profile;
   const ps = p?.performance_summary;
+  const comp = data?.competitors;
+  const trends = data?.trends;
+  const cpc = data?.cross_platform_content || data?.content_items;
+  const isTracked = (cid) => watched.some(c => c.channel_id === cid);
+  const fmtAz = (n) => { if (!n) return '0'; if (n >= 1e6) return (n/1e6).toFixed(1)+'M'; if (n >= 1e3) return (n/1e3).toFixed(1)+'K'; return String(n); };
   return React.createElement('div', null,
-    PageHeader({ title: 'Dashboard', subtitle: 'Your YouTube channel at a glance',
+    PageHeader({ title: 'Dashboard', subtitle: 'Unified channel intelligence — stats, trends, competitors, cross-platform, and analytics',
       action: data ? React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => window.open(`/api/analyze/${p?.channel_id}/export?format=csv`, '_blank') },
         Icon({ name: 'download', size: 14 }), ' Export') : null }),
     React.createElement('div', { className: 'flex gap-8 mb-16' },
       React.createElement('input', { className: 'input', value: url, onChange: e => setUrl(e.target.value), placeholder: 'Paste YouTube channel URL...', style: { flex: 1 }, onKeyDown: e => e.key === 'Enter' && load() }),
       React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'search', size: 16 }), loading ? 'Analyzing' : 'Analyze'),
     ),
-    loading ? Skeleton({ count: 3 }) : err ? ErrorBox({ message: err }) : data ? React.createElement('div', null,
+    loading ? Skeleton({ count: 4 }) : err ? ErrorBox({ message: err }) : data ? React.createElement('div', null,
+      // ── Stats row ──
       React.createElement('div', { className: 'stats' },
-        StatCard({ icon: 'eye', label: 'Total Views', value: p?.subscriber_count || ps?.total_views }),
+        StatCard({ icon: 'eye', label: 'Total Views', value: p?.view_count }),
         StatCard({ icon: 'users', label: 'Subscribers', value: p?.subscriber_count }),
-        StatCard({ icon: 'like', label: 'Avg Engagement', value: p?.engagement_rate ? p.engagement_rate.toFixed(2) + '%' : null }),
+        StatCard({ icon: 'video', label: 'Videos', value: p?.video_count }),
+        StatCard({ icon: 'like', label: 'Engagement', value: p?.engagement_rate ? p.engagement_rate.toFixed(2) + '%' : null }),
         StatCard({ icon: 'chart', label: 'Growth Rate', value: ps?.growth_rate ? ps.growth_rate.toFixed(1) + '%' : null }),
+        StatCard({ icon: 'target', label: 'Niche', value: p?.niche || null }),
       ),
+      // ── Charts ──
       React.createElement('div', { className: 'chart-grid mb-16' },
-        React.createElement('div', { className: 'card' },
+        trends?.interest_over_time?.length ? React.createElement('div', { className: 'card' },
           React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Interest Over Time')),
           React.createElement('div', { className: 'chart-container' }, React.createElement('canvas', { id: 'dash-trend' })),
-        ),
-        React.createElement('div', { className: 'card' },
+        ) : null,
+        ps ? React.createElement('div', { className: 'card' },
           React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Performance Breakdown')),
           React.createElement('div', { className: 'chart-container' }, React.createElement('canvas', { id: 'dash-donut' })),
-        ),
+        ) : null,
       ),
-      p?.recent_videos?.length ? React.createElement('div', { className: 'card' },
+      // ── Channel info ──
+      p?.niche ? React.createElement('div', { className: 'card mb-16 flex items-center gap-12', style: { padding: '12px 16px' } },
+        React.createElement('span', { style: { fontSize: '.88rem', color: 'var(--text-3)' } }, 'Detected niche:'),
+        React.createElement('span', { style: { fontWeight: 700, color: 'var(--primary)' } }, p.niche),
+        p?.channel_tier ? React.createElement('span', { style: { marginLeft: 'auto', fontWeight: 600, color: 'var(--accent)', fontSize: '.85rem' } }, p.channel_tier + ' creator') : null,
+      ) : null,
+      // ── Content themes ──
+      p?.content_themes?.length ? React.createElement('div', { className: 'card mb-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Content Themes')),
+        p.content_themes.map((t, i) => React.createElement('div', { key: i, className: 'info-tip' }, t)),
+      ) : null,
+      // ── Performance summary ──
+      ps ? React.createElement('div', { className: 'stats mb-16' },
+        StatCard({ label: 'Avg Views (30d)', value: ps.average_views_last_30d ? fmtNum(ps.average_views_last_30d) : null }),
+        StatCard({ label: 'Upload Frequency', value: ps.upload_frequency }),
+        StatCard({ label: 'Best Upload Day', value: ps.best_upload_day }),
+        ps.top_video_views ? StatCard({ label: 'Top Video Views', value: fmtNum(ps.top_video_views) }) : null,
+      ) : null,
+      // ── Recent videos ──
+      p?.recent_videos?.length ? React.createElement('div', { className: 'card mb-16' },
         React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recent Videos')),
         React.createElement('table', { className: 'table' },
           React.createElement('thead', null, React.createElement('tr', null,
-            React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'))),
+            React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'), React.createElement('th', { className: 'num' }, 'Comments'))),
           React.createElement('tbody', null, p.recent_videos.slice(0, 10).map(v =>
             React.createElement('tr', { key: v.video_id },
-              React.createElement('td', { style: { maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, v.title),
+              React.createElement('td', { style: { maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+                React.createElement('a', { href: 'https://youtube.com/watch?v=' + v.video_id, target: '_blank', style: { color: 'var(--text)', textDecoration: 'none' } }, v.title)),
               React.createElement('td', { className: 'num' }, fmtNum(v.view_count)),
               React.createElement('td', { className: 'num' }, fmtNum(v.like_count)),
+              React.createElement('td', { className: 'num' }, fmtNum(v.comment_count)),
             )
           )),
         ),
       ) : null,
-    ) : EmptyState({ icon: 'chart', title: 'No data yet', text: 'Enter a channel URL above to see analytics, trends, and performance metrics.', action: React.createElement('button', { className: 'btn btn-ghost', onClick: () => { setUrl('https://www.youtube.com/@MrBeast'); load(); } }, Icon({ name: 'sparkles', size: 16 }), ' Try with MrBeast') }),
+      // ── Competitors ──
+      comp?.competitors?.length ? React.createElement('div', { className: 'card mb-16' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('h3', null, 'Similar Channels'),
+          comp.market_position ? React.createElement('span', { className: 'text-xs text-muted' }, comp.market_position) : null,
+        ),
+        React.createElement('div', { className: 'grid-2' },
+          comp.competitors.slice(0, 8).map((c, i) => React.createElement('div', { key: i, className: 'flex items-center gap-12 p-16 border' },
+            c.thumbnail_url ? React.createElement('img', { src: c.thumbnail_url, alt: '', style: { width: 40, height: 40, borderRadius: 20 } }) : React.createElement('div', { style: { width: 40, height: 40, borderRadius: 20, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 16 })),
+            React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+              React.createElement('div', { className: 'truncate font-semibold text-sm' }, c.title),
+              React.createElement('div', { className: 'text-xs text-muted' }, fmtNum(c.subscriber_count) + ' subs'),
+            ),
+            isTracked(c.channel_id) ? React.createElement('button', { className: 'icon-btn', onClick: () => unwatch(c.channel_id), title: 'Untrack' }, Icon({ name: 'check', size: 16 }))
+              : React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => watchCompetitor(c) }, Icon({ name: 'plus', size: 14 }), ' Track'),
+          )),
+        ),
+      ) : null,
+      // ── Tracked competitors (from /api/watched-competitors) ──
+      watched.length > 0 ? React.createElement('div', { className: 'card mb-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Tracked Competitors')),
+        React.createElement('div', { className: 'grid-2' },
+          watched.map(ch => React.createElement('div', { key: ch.channel_id, className: 'flex items-center gap-12 p-16 border' },
+            ch.thumbnail_url ? React.createElement('img', { src: ch.thumbnail_url, alt: '', style: { width: 36, height: 36, borderRadius: 18 } }) : React.createElement('div', { style: { width: 36, height: 36, borderRadius: 18, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 16 })),
+            React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+              React.createElement('div', { className: 'truncate font-semibold text-sm' }, ch.channel_title || ch.title),
+              React.createElement('div', { className: 'text-xs text-muted' }, ch.channel_id),
+            ),
+            React.createElement('button', { className: 'icon-btn', onClick: () => unwatch(ch.channel_id), title: 'Remove' }, Icon({ name: 'trash', size: 16 })),
+          )),
+        ),
+      ) : null,
+      // ── Cross-platform content ──
+      cpc?.length ? React.createElement('div', { className: 'card mb-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Cross-Platform Content')),
+        cpc.slice(0, 10).map((item, i) => ContentItem({ item, key: i })),
+      ) : null,
+      // ── YouTube Analytics ──
+      React.createElement('div', { className: 'card mb-16' },
+        React.createElement('div', { className: 'card-header' },
+          React.createElement('h3', null, 'YouTube Analytics'),
+          analytics ? React.createElement('span', { className: 'text-xs text-muted' }, 'Connected') : React.createElement('span', { className: 'text-xs text-muted' }, 'Connect for detailed metrics'),
+        ),
+        analyticsLoading ? React.createElement('div', { style: { textAlign: 'center', padding: 32 } }, React.createElement('span', { className: 'spinner' }))
+          : analytics ? React.createElement('div', null,
+              analytics.timeseries?.totals ? React.createElement('div', { className: 'stats' },
+                StatCard({ label: 'Views (period)', value: fmtAz(analytics.timeseries.totals.views) }),
+                StatCard({ label: 'Watch Time (min)', value: fmtAz(analytics.timeseries.totals.estimatedMinutesWatched) }),
+                StatCard({ label: 'Subs Gained', value: '+' + fmtAz(analytics.timeseries.totals.subscribersGained) }),
+                StatCard({ label: 'Likes', value: fmtAz(analytics.timeseries.totals.likes) }),
+                StatCard({ label: 'Comments', value: fmtAz(analytics.timeseries.totals.comments) }),
+                StatCard({ label: 'Shares', value: fmtAz(analytics.timeseries.totals.shares) }),
+              ) : null,
+              analytics.top_videos?.length ? React.createElement('div', { className: 'table-container' },
+                React.createElement('table', { className: 'table' },
+                  React.createElement('thead', null, React.createElement('tr', null,
+                    React.createElement('th', null, 'Title'), React.createElement('th', null, 'Views'), React.createElement('th', null, 'Watch (min)'), React.createElement('th', null, 'Avg Duration'), React.createElement('th', null, 'Retention %'))),
+                  React.createElement('tbody', null, analytics.top_videos.slice(0, 5).map((v, i) => React.createElement('tr', { key: i },
+                    React.createElement('td', { style: { maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, v.title),
+                    React.createElement('td', null, fmtAz(v.views)),
+                    React.createElement('td', null, fmtAz(v.watch_minutes)),
+                    React.createElement('td', null, v.avg_view_duration ? (() => { const m = Math.floor(v.avg_view_duration/60); const s = Math.round(v.avg_view_duration%60); return m+'m '+s+'s'; })() : '-'),
+                    React.createElement('td', null, v.avg_view_percentage != null ? v.avg_view_percentage + '%' : '-'),
+                  ))),
+                ),
+              ) : null,
+              analytics.traffic_sources?.length ? React.createElement('div', { style: { padding: '0 16px 16px' } },
+                React.createElement('h4', { style: { fontSize: '.82rem', fontWeight: 600, marginBottom: 8, color: 'var(--text-3)' } }, 'Traffic Sources'),
+                analytics.traffic_sources.map((t, i) => React.createElement('div', { key: i, className: 'info-tip' },
+                  React.createElement('span', { style: { fontWeight: 600 } }, t.source), ' — ', fmtAz(t.views), ' views',
+                )),
+              ) : null,
+            )
+          : React.createElement('div', { style: { textAlign: 'center', padding: 32 } },
+              React.createElement('p', { className: 'text-sm text-2 mb-16' }, 'Connect your YouTube account to see detailed analytics including watch time, traffic sources, demographics, and more.'),
+              React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
+            ),
+      ),
+    ) : EmptyState({ icon: 'chart', title: 'Enter a channel URL', text: 'Enter a YouTube channel URL above to see analytics, trends, competitors, and cross-platform content — all in one place.', action: React.createElement('button', { className: 'btn btn-ghost', onClick: () => { setUrl('https://www.youtube.com/@MrBeast'); load(); } }, Icon({ name: 'sparkles', size: 16 }), ' Try with MrBeast') }),
   );
 }
 
@@ -1693,10 +1822,7 @@ function AppShell({ page, setPage }) {
   }, []);
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Main' },
-    { id: 'analyze', label: 'Channel Analysis', icon: 'analyze', section: 'Main' },
-    { id: 'analytics', label: 'YT Analytics', icon: 'dashboard', section: 'Main' },
-    { id: 'competitors', label: 'Competitors', icon: 'competitors', section: 'Main' },
-    { id: 'discover', label: 'Content Discovery', icon: 'discover', section: 'Main' },
+
     { id: 'ideas', label: 'Idea Generator', icon: 'ideas', section: 'Content' },
     { id: 'watch', label: 'Monitored', icon: 'watch', section: 'Content' },
     { id: 'calendar', label: 'Calendar', icon: 'calendar', section: 'Content' },
