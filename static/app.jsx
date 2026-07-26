@@ -1,7 +1,79 @@
 /* global React, ReactDOM, Chart */
 const { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
 
-// ── Contexts ──
+// ═══════════════════════════════════════════════════════════════
+//  ICONS — professional stroke-based SVG icon system
+// ═══════════════════════════════════════════════════════════════
+const Icon = ({ name, size = 18, className = '' }) => {
+  const icons = {
+    dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
+    analyze: 'M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z',
+    competitors: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm14 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
+    discover: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+    ideas: 'M9 18h6m-5 4h4M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z',
+    watch: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7zM12 15a3 3 0 100-6 3 3 0 000 6z',
+    calendar: 'M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',
+    repurpose: 'M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-3M20 14a8 8 0 01-14 3',
+    seo: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M19 5l-7 7m0 0l-3 3 3-3zm0 0l3 3-3-3z',
+    thumbnail: 'M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zm3 3l4 3 4-3M8 14h8',
+    trends: 'M13 17l5-5-5-5M4 12h14M4 7l5-5M4 17l5 5',
+    comments: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z',
+    publishing: 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z',
+    algo: 'M3 12h4l3-9 4 18 3-9h4',
+    editing: 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z',
+    agent: 'M12 2a4 4 0 014 4v1a4 4 0 11-8 0V6a4 4 0 014-3zm10 14a6 6 0 00-6-6M2 16a6 6 0 016-6',
+    reports: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6M8 13h8M8 17h5',
+    saved: 'M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z',
+    pricing: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6',
+    billing: 'M3 6h18M3 12h18M3 18h12',
+    settings: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z',
+    logout: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
+    search: 'M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z',
+    bell: 'M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0',
+    moon: 'M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z',
+    sun: 'M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 7a5 5 0 100 10 5 5 0 000-10z',
+    download: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3',
+    trash: 'M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2',
+    plus: 'M12 5v14m-7-7h14',
+    check: 'M20 6L9 17l-5-5',
+    x: 'M18 6L6 18M6 6l12 12',
+    arrowUp: 'M12 19V5m-7 7l7-7 7 7',
+    arrowDown: 'M12 5v14m7-7l-7 7-7-7',
+    arrowRight: 'M5 12h14m-7-7l7 7-7 7',
+    eye: 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7zM12 15a3 3 0 100-6 3 3 0 000 6z',
+    like: 'M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3',
+    refresh: 'M23 4v6h-6M1 20v-6h6M3.5 9a9 9 0 0114.85-3.36L23 10M1 14l4.65 4.36A9 9 0 0020.5 15',
+    sparkles: 'M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z',
+    youtube: 'M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 00.5 6.2C0 8 0 12 0 12s0 4 .5 5.8a3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1C24 16 24 12 24 12s0-4-.5-5.8zM9.5 15.5v-7l6.3 3.5-6.3 3.5z',
+    chart: 'M3 3v18h18M7 14l4-4 4 4 5-7',
+    users: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z',
+    clock: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 6v6l4 2',
+    zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+    globe: 'M12 22a10 10 0 100-20 10 10 0 000 20zM2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20',
+    filter: 'M22 3H2l8 9.46V19l4 2v-8.54L22 3z',
+    link: 'M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71',
+    alert: 'M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01',
+    video: 'M23 7l-7 5 7 5V7zM14 5H3a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2z',
+    mail: 'M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm0 2l8 6 8-6',
+    key: 'M21 2l-2 2m-7.5 7.5a4 4 0 11-5.66 5.66 4 4 0 015.66-5.66zM21 2L14 9m0 0l3 3',
+    target: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 18a6 6 0 100-12 6 6 0 000 12zM12 14a2 2 0 100-4 2 2 0 000 4z',
+    rocket: 'M4.5 16.5l-2 2.5h5l2-4M12 2c2 4 2 8 0 12-2-4-2-8 0-12zM8 20c2-1 3-3 4-6 1 3 2 5 4 6M5 12c0-1 1-4 3-6',
+    fileText: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6M8 13h8M8 17h5',
+    inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z',
+    bookmark: 'M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z',
+    tag: 'M20.59 13.41L12 22l-9-9V3h10l7.59 7.59a2 2 0 010 2.82zM7 7h.01',
+    chevronDown: 'M6 9l6 6 6-6',
+    chevronRight: 'M9 18l6-6-6-6',
+  };
+  return React.createElement('svg', {
+    width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', className,
+  }, React.createElement('path', { d: icons[name] || icons.dashboard }));
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  CONTEXTS
+// ═══════════════════════════════════════════════════════════════
 const AuthContext = createContext(null);
 const ToastContext = createContext(null);
 
@@ -12,15 +84,14 @@ function ToastProvider({ children }) {
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
+  const icons = { success: Icon({ name: 'check', size: 16 }), error: Icon({ name: 'x', size: 16 }), info: Icon({ name: 'bell', size: 16 }) };
   const container = toasts.length ? React.createElement('div', { className: 'toast-container' },
     ...toasts.map(t => React.createElement('div', { key: t.id, className: `toast ${t.type}` },
-      t.type === 'success' ? '\u2705' : t.type === 'error' ? '\u274C' : '\u2139\uFE0F', ' ', t.message,
+      icons[t.type], ' ', t.message,
     )),
   ) : null;
   return React.createElement(React.Fragment, null,
-    React.createElement(ToastContext.Provider, { value: add }, children),
-    container,
-  );
+    React.createElement(ToastContext.Provider, { value: add }, children), container);
 }
 function useToast() { return useContext(ToastContext); }
 
@@ -40,22 +111,24 @@ function AuthProvider({ children }) {
 }
 function useAuth() { return useContext(AuthContext); }
 
-// ── Utilities ──
+// ═══════════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════════
 function fmtNum(n) {
   if (n == null) return '\u2014';
   if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
   if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-  return n.toLocaleString();
+  return String(n);
 }
 function isDark() { return (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark'; }
 function chartColors() {
   const cs = getComputedStyle(document.body);
   return {
-    text: cs.getPropertyValue('--text-2').trim() || '#a0a0b0',
-    grid: cs.getPropertyValue('--border').trim() || 'rgba(255,255,255,.06)',
-    primary: cs.getPropertyValue('--primary').trim() || '#ff2d55',
-    accent: cs.getPropertyValue('--accent').trim() || '#3b82f6',
-    success: cs.getPropertyValue('--success').trim() || '#22c55e',
+    text: cs.getPropertyValue('--text-2').trim() || '#aaa',
+    grid: cs.getPropertyValue('--border').trim() || 'rgba(255,255,255,.08)',
+    primary: cs.getPropertyValue('--primary').trim() || '#3ea6ff',
+    accent: cs.getPropertyValue('--accent').trim() || '#ff2d55',
+    success: cs.getPropertyValue('--success').trim() || '#2dba4e',
     error: cs.getPropertyValue('--error').trim() || '#ef4444',
   };
 }
@@ -66,151 +139,100 @@ function safeChart(id, config) {
   if (!canvas) return;
   chartInstances[id] = new Chart(canvas, config);
 }
+function scoreColor(s) {
+  s = Number(s);
+  return s >= 80 ? 'var(--success)' : s >= 50 ? 'var(--warning)' : 'var(--error)';
+}
+function scoreClass(s) {
+  s = Number(s);
+  return s >= 80 ? 'success' : s >= 50 ? 'warning' : 'error';
+}
 
 const PLATFORM_CONFIG = {
-  youtube: { icon: '\u25B6', color: '#ff0000', bg: 'rgba(255,0,0,.15)' },
-  reddit: { icon: 'R', color: '#ff4500', bg: 'rgba(255,69,0,.15)' },
-  twitter: { icon: 'X', color: '#1da1f2', bg: 'rgba(29,161,242,.15)' },
-  twitch: { icon: '\uD83C\uDFAE', color: '#a970ff', bg: 'rgba(169,112,255,.15)' },
-  hn: { icon: 'Y', color: '#f60', bg: 'rgba(255,102,0,.15)' },
-  trends: { icon: '\uD83D\uDCC8', color: '#4285f4', bg: 'rgba(66,133,244,.15)' },
-  rss: { icon: '\uD83D\uDCE1', color: '#ffa500', bg: 'rgba(255,165,0,.15)' },
-  instagram: { icon: '\uD83D\uDCF7', color: '#e1306c', bg: 'rgba(225,48,108,.15)' },
-  tiktok: { icon: '\uD83C\uDFA7', color: '#00f2ea', bg: 'rgba(0,242,234,.15)' },
-  google: { icon: 'G', color: '#4285f4', bg: 'rgba(66,133,244,.15)' },
+  youtube: { label: 'YouTube', color: '#ff0000', bg: 'rgba(255,0,0,.12)' },
+  reddit: { label: 'Reddit', color: '#ff4500', bg: 'rgba(255,69,0,.12)' },
+  twitter: { label: 'X', color: '#1da1f2', bg: 'rgba(29,161,242,.12)' },
+  twitch: { label: 'Twitch', color: '#a970ff', bg: 'rgba(169,112,255,.12)' },
+  hn: { label: 'HN', color: '#ff6600', bg: 'rgba(255,102,0,.12)' },
+  trends: { label: 'Trends', color: '#3ea6ff', bg: 'rgba(62,166,255,.12)' },
+  rss: { label: 'RSS', color: '#f59e0b', bg: 'rgba(245,158,11,.12)' },
+  instagram: { label: 'Instagram', color: '#e1306c', bg: 'rgba(225,48,108,.12)' },
+  tiktok: { label: 'TikTok', color: '#00f2ea', bg: 'rgba(0,242,234,.12)' },
+  google: { label: 'Google', color: '#4285f4', bg: 'rgba(66,133,244,.12)' },
 };
-function getPlatformConfig(p) { return PLATFORM_CONFIG[p] || { icon: '?', color: '#888', bg: 'rgba(128,128,128,.15)' }; }
+function getPlatformConfig(p) { return PLATFORM_CONFIG[p] || { label: p, color: '#717171', bg: 'rgba(113,113,113,.12)' }; }
 
-// ── Shared Components ──
+// ═══════════════════════════════════════════════════════════════
+//  SHARED COMPONENTS
+// ═══════════════════════════════════════════════════════════════
 function Skeleton({ count = 3 }) {
   return React.createElement('div', null,
     Array.from({ length: count }, (_, i) =>
       React.createElement('div', { key: i, className: 'card' },
-        React.createElement('div', { className: 'skeleton', style: { height: 24, width: '60%', marginBottom: 8 } }),
-        React.createElement('div', { className: 'skeleton', style: { height: 16, width: '80%', marginBottom: 8 } }),
-        React.createElement('div', { className: 'skeleton', style: { height: 120, width: '100%' } }),
+        React.createElement('div', { className: 'skeleton', style: { height: 20, width: '50%', marginBottom: 12 } }),
+        React.createElement('div', { className: 'skeleton', style: { height: 14, width: '80%', marginBottom: 8 } }),
+        React.createElement('div', { className: 'skeleton', style: { height: 100, width: '100%' } }),
       )
     ),
   );
 }
-
 function ErrorBox({ message }) {
   if (!message) return null;
-  return React.createElement('div', { className: 'error-box' }, message);
+  return React.createElement('div', { className: 'error-box', style: { display: 'flex', alignItems: 'center', gap: 8 } },
+    Icon({ name: 'alert', size: 16 }), message);
 }
-
-function StatCard({ label, value, change, changeDir = 'up' }) {
+function StatCard({ icon, label, value, change, changeDir = 'up' }) {
   return React.createElement('div', { className: 'stat' },
-    React.createElement('div', { className: 'label' }, label),
+    React.createElement('div', { className: 'label' }, icon ? Icon({ name: icon, size: 14 }) : null, label),
     React.createElement('div', { className: 'value' }, fmtNum(value)),
-    change ? React.createElement('div', { className: `change ${changeDir}` }, change) : null,
+    change ? React.createElement('div', { className: `change ${changeDir}` },
+      Icon({ name: changeDir === 'up' ? 'arrowUp' : 'arrowDown', size: 12 }), change) : null,
   );
 }
-
 function ContentItem({ item }) {
   const cfg = getPlatformConfig(item.platform);
   const m = item.raw_metrics || {};
   return React.createElement('a', { href: item.url, target: '_blank', className: 'content-item' },
-    React.createElement('div', { className: 'platform-badge', style: { background: cfg.bg, color: cfg.color } }, cfg.icon),
+    React.createElement('div', { className: 'platform-badge', style: { background: cfg.bg, color: cfg.color } }, cfg.label[0]),
     React.createElement('div', { style: { flex: 1, minWidth: 0 } },
-      React.createElement('div', { style: { fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.9rem' } }, item.title),
-      React.createElement('div', { style: { display: 'flex', gap: 12, fontSize: '.8rem', color: 'var(--text-3)', flexWrap: 'wrap' } },
-        React.createElement('span', null, `\uD83D\uDCCD ${item.source || item.platform}`),
-        React.createElement('span', null, `\uD83D\uDCCA ${fmtNum(item.engagement_score)}`),
-        m.views ? React.createElement('span', null, `\uD83D\uDC41 ${fmtNum(m.views)}`) : null,
-        m.likes ? React.createElement('span', null, `\uD83D\uDC4D ${fmtNum(m.likes)}`) : null,
+      React.createElement('div', { style: { fontWeight: 600, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.88rem' } }, item.title),
+      React.createElement('div', { style: { display: 'flex', gap: 12, fontSize: '.78rem', color: 'var(--text-3)', flexWrap: 'wrap', alignItems: 'center' } },
+        React.createElement('span', null, item.source || item.platform),
+        m.views ? React.createElement('span', null, fmtNum(m.views), ' views') : null,
+        m.likes ? React.createElement('span', null, fmtNum(m.likes), ' likes') : null,
         item.classification ? React.createElement('span', { className: `badge badge-${item.classification === 'trending' ? 'primary' : item.classification === 'popular' ? 'accent' : 'success'}` }, item.classification) : null,
       ),
     ),
   );
 }
-
 function EmptyState({ icon, title, text, action }) {
   return React.createElement('div', { className: 'empty-state' },
-    React.createElement('div', { className: 'emoji' }, icon || '\uD83D\uDCC2'),
+    React.createElement('div', { className: 'empty-icon' }, Icon({ name: icon || 'inbox', size: 28 })),
     title ? React.createElement('h2', null, title) : null,
     React.createElement('p', null, text || 'No data yet'),
     action || null,
   );
 }
-
 function PageHeader({ title, subtitle, action }) {
-  return React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 } },
+  return React.createElement('div', { className: 'flex-between mb-24' },
     React.createElement('div', null,
-      React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, title),
-      subtitle ? React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.9rem', lineHeight: 1.5 } }, subtitle) : null,
+      React.createElement('h1', { className: 'section-title' }, title),
+      subtitle ? React.createElement('p', { className: 'section-subtitle' }, subtitle) : null,
     ),
     action || null,
   );
 }
 
-function scoreColor(s) {
-  s = Number(s);
-  return s >= 80 ? 'var(--success)' : s >= 50 ? 'var(--warning)' : 'var(--error)';
-}
-
-function GoogleBtn({ onClick, label, loading }) {
-  const [hover, setHover] = useState(false);
-  return React.createElement('button', {
-    type: 'button', onClick, disabled: loading,
-    onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false),
-    style: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '11px 20px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: hover ? 'var(--bg-elevated)' : 'var(--bg-surface)', color: 'var(--text)', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', fontSize: '.88rem', fontWeight: 600, transition: 'all .2s', opacity: loading ? .6 : 1 },
-  },
-    React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 48 48' },
-      React.createElement('path', { fill: '#EA4335', d: 'M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' }),
-      React.createElement('path', { fill: '#4285F4', d: 'M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' }),
-      React.createElement('path', { fill: '#FBBC05', d: 'M10.54 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.99 23.99 0 0 0 0 24c0 3.77.87 7.35 2.56 10.56l7.98-5.97z' }),
-      React.createElement('path', { fill: '#34A853', d: 'M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.97C6.51 42.62 14.62 48 24 48z' }),
-    ),
-    loading ? 'Please wait...' : label,
-  );
-}
-
-
-// ── Google Sign-In Button ──
+// ═══════════════════════════════════════════════════════════════
+//  GOOGLE SIGN-IN
+// ═══════════════════════════════════════════════════════════════
 function GoogleSignInButton() {
-  const handleGoogle = () => {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      window.google.accounts.id.initialize({
-        client_id: window.__GOOGLE_CLIENT_ID__,
-        callback: async (response) => {
-          try {
-            const res = await fetch('/api/auth/google', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id_token: response.credential }),
-            });
-            const d = await res.json();
-            if (res.ok) {
-              localStorage.setItem('ccr_token', d.access_token);
-              localStorage.setItem('ccr_user', JSON.stringify(d.user));
-              window.location.hash = '#dashboard';
-              window.location.reload();
-            } else {
-              alert(d.detail || 'Google sign-in failed');
-            }
-          } catch (e) { alert('Network error during Google sign-in'); }
-        },
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-btn'),
-        { theme: 'outline', size: 'large', width: 320, text: 'continue_with', shape: 'pill' }
-      );
-      // Prompt if not already rendered (fallback)
-      window.google.accounts.id.prompt();
-    } else {
-      alert('Google sign-in is not available. Please use email/password.');
-    }
-  };
-
-  return React.createElement('div', {
-    id: 'google-signin-btn',
-    style: { display: 'flex', justifyContent: 'center', width: '100%' },
-    onClick: handleGoogle,
-  });
+  return React.createElement('div', { id: 'google-signin-btn', style: { display: 'flex', justifyContent: 'center', width: '100%' } });
 }
 
-// ── Auth Pages ──
+// ═══════════════════════════════════════════════════════════════
+//  AUTH PAGES
+// ═══════════════════════════════════════════════════════════════
 function LoginPage() {
   const { login } = useAuth();
   const toast = useToast();
@@ -218,54 +240,44 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
       const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const d = await res.json();
-      if (res.ok) { login(d.access_token, d.user); toast('Welcome back!', 'success'); }
+      if (res.ok) { login(d.access_token, d.user); toast('Welcome back', 'success'); }
       else { setErr(d.detail || 'Login failed'); setLoading(false); }
     } catch { setErr('Network error'); setLoading(false); }
   };
-
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('div', { className: 'auth-card' },
-      React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
-        React.createElement('div', { style: { width: 52, height: 52, borderRadius: '50%', background: 'var(--primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '1.5rem' } },
-          React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--primary)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('circle', { cx: 12, cy: 12, r: 10 }), React.createElement('path', { d: 'M12 6v6l4 2' })),
-        ),
-        React.createElement('h1', null, 'Welcome back'),
-        React.createElement('p', { className: 'subtitle' }, 'Sign in to PopSearch'),
-      ),
+      React.createElement('div', { className: 'auth-logo' }, Icon({ name: 'youtube', size: 24 })),
+      React.createElement('h1', null, 'Welcome back'),
+      React.createElement('p', { className: 'subtitle' }, 'Sign in to PopSearch'),
       err ? React.createElement('div', { className: 'error-box', style: { marginBottom: 16 } }, err) : null,
       React.createElement('form', { onSubmit: handleSubmit },
         React.createElement('div', { className: 'form-group' },
           React.createElement('label', null, 'Email'),
-          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
+          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true, autoFocus: true }),
         ),
         React.createElement('div', { className: 'form-group' },
           React.createElement('label', null, 'Password'),
           React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: 'Enter your password', required: true }),
         ),
-        React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center', marginTop: 4 }, disabled: loading },
-          loading ? React.createElement('span', { className: 'spinner' }) : null, loading ? 'Signing in...' : 'Sign In',
-        ),
+        React.createElement('button', { type: 'submit', className: 'btn btn-primary w-full', style: { marginTop: 4 }, disabled: loading },
+          loading ? React.createElement('span', { className: 'spinner' }) : null, loading ? 'Signing in' : 'Sign In'),
       ),
-      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' },
-        },
-        React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
-        React.createElement('span', { style: { fontSize: '.8rem', color: 'var(--text-3)', whiteSpace: 'nowrap' } }, 'or continue with'),
-        React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+      React.createElement('div', { className: 'auth-divider' },
+        React.createElement('div', { className: 'auth-divider-line' }),
+        React.createElement('span', { className: 'auth-divider-text' }, 'or continue with'),
+        React.createElement('div', { className: 'auth-divider-line' }),
       ),
       React.createElement(GoogleSignInButton, null),
-      React.createElement('p', { style: { textAlign: 'center', marginTop: 20, fontSize: '.85rem', color: 'var(--text-3)' } },
-        "Don't have an account? ", React.createElement('a', { href: '#register', style: { color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 } }, 'Create one'),
-      ),
+      React.createElement('p', { className: 'auth-link' },
+        "Don't have an account? ", React.createElement('a', { href: '#register' }, 'Create one')),
     ),
   );
 }
-
 function RegisterPage() {
   const { login } = useAuth();
   const toast = useToast();
@@ -273,56 +285,54 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
       const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
       const d = await res.json();
-      if (res.ok) { login(d.access_token, d.user); toast('Account created!', 'success'); }
+      if (res.ok) { login(d.access_token, d.user); toast('Account created', 'success'); }
       else { setErr(d.detail || 'Registration failed'); setLoading(false); }
     } catch { setErr('Network error'); setLoading(false); }
   };
-
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('div', { className: 'auth-card' },
-      React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
-        React.createElement('div', { style: { width: 52, height: 52, borderRadius: '50%', background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '1.5rem' } },
-          React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--accent)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('path', { d: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }), React.createElement('circle', { cx: 8.5, cy: 7, r: 4 }), React.createElement('line', { x1: 20, y1: 8, x2: 20, y2: 14 }), React.createElement('line', { x1: 23, y1: 11, x2: 17, y2: 11 })),
-        ),
-        React.createElement('h1', null, 'Create your account'),
-        React.createElement('p', { className: 'subtitle' }, 'Join PopSearch for free'),
-      ),
+      React.createElement('div', { className: 'auth-logo' }, Icon({ name: 'youtube', size: 24 })),
+      React.createElement('h1', null, 'Create your account'),
+      React.createElement('p', { className: 'subtitle' }, 'Join PopSearch for free'),
       err ? React.createElement('div', { className: 'error-box', style: { marginBottom: 16 } }, err) : null,
       React.createElement('form', { onSubmit: handleSubmit },
         React.createElement('div', { className: 'form-group' },
           React.createElement('label', null, 'Email'),
-          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true }),
+          React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@example.com', required: true, autoFocus: true }),
         ),
         React.createElement('div', { className: 'form-group' },
           React.createElement('label', null, 'Password'),
           React.createElement('input', { className: 'input', type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: 'Minimum 8 characters', required: true, minLength: 8 }),
         ),
-        React.createElement('button', { type: 'submit', className: 'btn btn-primary', style: { width: '100%', justifyContent: 'center', marginTop: 4 }, disabled: loading },
-          loading ? React.createElement('span', { className: 'spinner' }) : null, loading ? 'Creating account...' : 'Create Account',
-        ),
+        React.createElement('button', { type: 'submit', className: 'btn btn-primary w-full', style: { marginTop: 4 }, disabled: loading },
+          loading ? React.createElement('span', { className: 'spinner' }) : null, loading ? 'Creating account' : 'Create Account'),
       ),
-      React.createElement('p', { style: { textAlign: 'center', marginTop: 20, fontSize: '.85rem', color: 'var(--text-3)' } },
-        'Already have an account? ', React.createElement('a', { href: '#login', style: { color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 } }, 'Sign in'),
+      React.createElement('div', { className: 'auth-divider' },
+        React.createElement('div', { className: 'auth-divider-line' }),
+        React.createElement('span', { className: 'auth-divider-text' }, 'or continue with'),
+        React.createElement('div', { className: 'auth-divider-line' }),
       ),
+      React.createElement(GoogleSignInButton, null),
+      React.createElement('p', { className: 'auth-link' },
+        'Already have an account? ', React.createElement('a', { href: '#login' }, 'Sign in')),
     ),
   );
 }
 
-// ── Dashboard Page ──
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════
 function DashboardPage() {
   const { api } = useAuth();
-  const toast = useToast();
   const [url, setUrl] = useState(() => localStorage.getItem('ccr_last_url') || '');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const load = async () => {
     if (!url.trim()) return;
     setLoading(true); setErr(''); setData(null);
@@ -336,1174 +346,985 @@ function DashboardPage() {
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
   const renderCharts = (d) => {
     const c = chartColors();
     const profile = d.profile;
     if (d.trends?.interest_over_time?.length) {
       const labels = d.trends.interest_over_time.map(x => x.label);
       const values = d.trends.interest_over_time.map(x => x.value);
-      safeChart('dash-trend', {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Interest', data: values, borderColor: c.primary, backgroundColor: c.primary + '15', fill: true, tension: .4, pointRadius: 3, borderWidth: 2 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: c.grid }, ticks: { color: c.text, maxTicksLimit: 8 } }, y: { grid: { color: c.grid }, ticks: { color: c.text } } } },
-      });
+      const ctx = document.getElementById('dash-trend')?.getContext('2d');
+      const grad = ctx?.createLinearGradient(0, 0, 0, 250);
+      if (grad) { grad.addColorStop(0, c.primary + '40'); grad.addColorStop(1, c.primary + '00'); }
+      safeChart('dash-trend', { type: 'line', data: { labels, datasets: [{ label: 'Interest', data: values, borderColor: c.primary, backgroundColor: grad || c.primary + '10', fill: true, tension: .4, pointRadius: 0, pointHoverRadius: 5, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: c.text, maxTicksLimit: 8 } }, y: { grid: { color: c.grid }, ticks: { color: c.text } } } } });
     }
     if (profile?.performance_summary) {
       const ps = profile.performance_summary;
-      const engLabels = ['Views', 'Engagement', 'Growth'];
-      const engValues = [ps.average_views_last_30d || 0, profile.engagement_rate || 0, ps.growth_rate || 0];
-      safeChart('dash-donut', {
-        type: 'doughnut',
-        data: { labels: engLabels, datasets: [{ data: engValues.map(v => Math.max(v, 1)), backgroundColor: [c.primary, c.accent, c.success], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: c.text, padding: 12, font: { size: 11 } } } }, cutout: '65%' },
-      });
+      safeChart('dash-donut', { type: 'doughnut', data: { labels: ['Views', 'Engagement', 'Growth'], datasets: [{ data: [ps.average_views_last_30d || 0, profile.engagement_rate || 0, ps.growth_rate || 0].map(v => Math.max(v, 1)), backgroundColor: [c.primary, c.accent, c.success], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: c.text, padding: 12, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } }, cutout: '68%' } } });
     }
   };
-
-  useEffect(() => {
-    const u = localStorage.getItem('ccr_last_url');
-    if (u) { setUrl(u); }
-  }, []);
-
+  useEffect(() => { const u = localStorage.getItem('ccr_last_url'); if (u) setUrl(u); }, []);
   const p = data?.profile;
   const ps = p?.performance_summary;
-
   return React.createElement('div', null,
     PageHeader({ title: 'Dashboard', subtitle: 'Your YouTube channel at a glance',
-      action: data ? React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => {
-        const fn = `/api/analyze/${p?.channel_id}/export?format=csv`;
-        window.open(fn, '_blank');
-      } }, '\uD83D\uDCC4 Export CSV') : null,
-    }),
-    React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 24, maxWidth: 500 } },
-      React.createElement('input', { className: 'input', placeholder: 'YouTube URL or @handle...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && load() }),
-      React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : '\uD83D\uDD0D Analyze'),
+      action: data ? React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => window.open(`/api/analyze/${p?.channel_id}/export?format=csv`, '_blank') },
+        Icon({ name: 'download', size: 14 }), ' Export') : null }),
+    React.createElement('div', { className: 'flex gap-8 mb-16' },
+      React.createElement('input', { className: 'input', value: url, onChange: e => setUrl(e.target.value), placeholder: 'Paste YouTube channel URL...', style: { flex: 1 }, onKeyDown: e => e.key === 'Enter' && load() }),
+      React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'search', size: 16 }), loading ? 'Analyzing' : 'Analyze'),
     ),
-    React.createElement(ErrorBox, { message: err }),
-    loading ? React.createElement(Skeleton, { count: 4 }) : null,
-    !data && !loading ? EmptyState({ icon: '\uD83D\uDCFA', title: 'Welcome to PopSearch', text: 'Enter a YouTube channel URL above to analyze performance, find competitors, and discover content ideas.', action: React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 16 }, onClick: () => window.location.hash = 'pricing' }, 'View Plans') }) : null,
-    data && p ? React.createElement('div', null,
+    loading ? Skeleton({ count: 3 }) : err ? ErrorBox({ message: err }) : data ? React.createElement('div', null,
       React.createElement('div', { className: 'stats' },
-        React.createElement(StatCard, { label: 'Subscribers', value: p.subscriber_count, change: p.channel_tier || 'Niche: ' + (p.niche || 'N/A') }),
-        React.createElement(StatCard, { label: 'Total Views', value: p.view_count, change: fmtNum(p.total_uploads || p.video_count) + ' videos' }),
-        React.createElement(StatCard, { label: 'Engagement Rate', value: (p.engagement_rate || 0).toFixed(1) + '%', change: 'Avg ' + fmtNum(Math.round(p.average_views_per_video || 0)) + ' views' }),
-        React.createElement(StatCard, { label: 'Uploads', value: p.total_uploads || p.video_count || 0, change: p.upload_frequency || 'per month' }),
+        StatCard({ icon: 'eye', label: 'Total Views', value: p?.subscriber_count || ps?.total_views }),
+        StatCard({ icon: 'users', label: 'Subscribers', value: p?.subscriber_count }),
+        StatCard({ icon: 'like', label: 'Avg Engagement', value: p?.engagement_rate ? p.engagement_rate.toFixed(2) + '%' : null }),
+        StatCard({ icon: 'chart', label: 'Growth Rate', value: ps?.growth_rate ? ps.growth_rate.toFixed(1) + '%' : null }),
       ),
-      React.createElement('div', { className: 'chart-grid' },
+      React.createElement('div', { className: 'chart-grid mb-16' },
         React.createElement('div', { className: 'card' },
-          React.createElement('div', { className: 'card-header' },
-            React.createElement('div', { className: 'card-icon', style: { background: 'var(--primary-muted)', color: 'var(--primary)' } }, '\uD83D\uDCC8'),
-            React.createElement('h3', null, 'Performance Trend'),
-          ),
+          React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Interest Over Time')),
           React.createElement('div', { className: 'chart-container' }, React.createElement('canvas', { id: 'dash-trend' })),
         ),
         React.createElement('div', { className: 'card' },
-          React.createElement('div', { className: 'card-header' },
-            React.createElement('div', { className: 'card-icon', style: { background: 'var(--accent-muted)', color: 'var(--accent)' } }, '\uD83C\uDF10'),
-            React.createElement('h3', null, 'Engagement Breakdown'),
-          ),
+          React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Performance Breakdown')),
           React.createElement('div', { className: 'chart-container' }, React.createElement('canvas', { id: 'dash-donut' })),
         ),
       ),
-      React.createElement('div', { className: 'chart-grid-2' },
-        React.createElement('div', { className: 'card' },
-          React.createElement('div', { className: 'card-header' },
-            React.createElement('div', { className: 'card-icon', style: { background: 'rgba(34,197,94,.12)', color: 'var(--success)' } }, '\u2B50'),
-            React.createElement('h3', null, 'Top Videos'),
-          ),
-          p.top_performing_videos?.length ? React.createElement('table', { className: 'table' },
-            React.createElement('thead', null,
-              React.createElement('tr', null,
-                React.createElement('th', null, 'Title'),
-                React.createElement('th', { className: 'num' }, 'Views'),
-                React.createElement('th', { className: 'num' }, 'Eng.'),
-              ),
-            ),
-            React.createElement('tbody', null,
-              p.top_performing_videos.slice(0, 5).map((v, i) =>
-                React.createElement('tr', { key: i },
-                  React.createElement('td', { style: { maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.85rem' } }, v.title || `Video ${i + 1}`),
-                  React.createElement('td', { className: 'num', style: { fontSize: '.85rem' } }, fmtNum(v.views)),
-                  React.createElement('td', { className: 'num', style: { color: (v.engagement_rate || 0) > 5 ? 'var(--success)' : 'var(--text-2)', fontSize: '.85rem' } }, (v.engagement_rate || 0).toFixed(1) + '%'),
-                )
-              ),
-            ),
-          ) : React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem', textAlign: 'center', padding: 20 } }, 'No video data yet'),
-        ),
-        React.createElement('div', { className: 'card' },
-          React.createElement('div', { className: 'card-header' },
-            React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)', color: 'var(--accent)' } }, '\uD83E\uDD16'),
-            React.createElement('h3', null, 'AI Insights'),
-          ),
-          p.ai_summary ? React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.7 } }, p.ai_summary) : null,
-          p.content_recommendations?.length ? React.createElement('ul', { className: 'rec-list', style: { marginTop: 12 } },
-            p.content_recommendations.slice(0, 4).map((r, i) => React.createElement('li', { key: i, style: { padding: '8px 0 8px 24px', borderBottom: '1px solid var(--border)', fontSize: '.85rem', color: 'var(--text-2)', position: 'relative', listStyle: 'none' } },
-              React.createElement('span', { style: { position: 'absolute', left: 0, color: 'var(--primary)' }, dangerouslySetInnerHTML: { __html: '&rarr;' } }),
-              r,
-            )),
-          ) : null,
-        ),
-      ),
-      p.content_gaps?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(245,158,11,.12)', color: 'var(--warning)' } }, '\uD83D\uDD0D'),
-          React.createElement('h3', null, 'Content Gaps'),
-        ),
-        React.createElement('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 4 } },
-          p.content_gaps.map((g, i) => React.createElement('span', { key: i, className: 'tag' }, g)),
+      p?.recent_videos?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recent Videos')),
+        React.createElement('table', { className: 'table' },
+          React.createElement('thead', null, React.createElement('tr', null,
+            React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'))),
+          React.createElement('tbody', null, p.recent_videos.slice(0, 10).map(v =>
+            React.createElement('tr', { key: v.video_id },
+              React.createElement('td', { style: { maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, v.title),
+              React.createElement('td', { className: 'num' }, fmtNum(v.view_count)),
+              React.createElement('td', { className: 'num' }, fmtNum(v.like_count)),
+            )
+          )),
         ),
       ) : null,
-    ) : null,
+    ) : EmptyState({ icon: 'chart', title: 'No data yet', text: 'Enter a channel URL above to see analytics, trends, and performance metrics.', action: React.createElement('button', { className: 'btn btn-ghost', onClick: () => { setUrl('https://www.youtube.com/@MrBeast'); load(); } }, Icon({ name: 'sparkles', size: 16 }), ' Try with MrBeast') }),
   );
 }
 
-// ── Channel Analysis Page ──
+// ═══════════════════════════════════════════════════════════════
+//  CHANNEL ANALYSIS
+// ═══════════════════════════════════════════════════════════════
 function AnalyzePage() {
   const { api } = useAuth();
-  const toast = useToast();
   const [url, setUrl] = useState('');
-  const [result, setResult] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
-  const analyze = async () => {
+  const load = async () => {
     if (!url.trim()) return;
-    setLoading(true); setErr(''); setResult(null);
+    setLoading(true); setErr(''); setData(null);
     try {
       const res = await api('/analyze-channel', { method: 'POST', body: JSON.stringify({ channel_url: url }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setResult(d); toast('Analysis complete!', 'success'); }
-      else { setErr(d.detail || 'Analysis failed'); }
-    } catch { setErr('Network error'); }
-    finally { setLoading(false); }
+      if (res.ok) {
+        if (d.job_id) {
+          const poll = setInterval(async () => {
+            const sr = await api(`/api/jobs/${d.job_id}`);
+            if (!sr) { clearInterval(poll); return; }
+            const sd = await sr.json();
+            if (sd.status === 'completed') { clearInterval(poll); setData(sd.result); setLoading(false); }
+            else if (sd.status === 'failed') { clearInterval(poll); setErr(sd.error || 'Analysis failed'); setLoading(false); }
+          }, 2000);
+        } else { setData(d); setLoading(false); }
+      } else { setErr(d.detail || 'Analysis failed'); setLoading(false); }
+    } catch { setErr('Network error'); setLoading(false); }
   };
-
-  const renderCharts = (d) => {
-    const c = chartColors();
-    if (d.upload_frequency_by_month?.length) {
-      safeChart('analyze-upload', {
-        type: 'bar',
-        data: { labels: d.upload_frequency_by_month.map(x => x.month), datasets: [{ label: 'Uploads', data: d.upload_frequency_by_month.map(x => x.count), backgroundColor: c.accent + '60', borderColor: c.accent, borderWidth: 1, borderRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: c.grid }, ticks: { color: c.text } }, y: { grid: { color: c.grid }, ticks: { color: c.text } } } },
-      });
-    }
-  };
-
-  useEffect(() => { if (result) setTimeout(() => renderCharts(result), 100); }, [result]);
-
-  const p = result?.profile || result;
-
+  const p = data?.profile || data;
   return React.createElement('div', null,
-    PageHeader({ title: 'Channel Analysis', subtitle: 'Deep dive into channel performance' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 600 } },
-        React.createElement('input', { className: 'input', placeholder: 'YouTube URL, @handle, or channel ID...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
-        React.createElement('button', { className: 'btn btn-primary', onClick: analyze, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Analyze'),
-      ),
-      React.createElement(ErrorBox, { message: err }),
+    PageHeader({ title: 'Channel Analysis', subtitle: 'Deep-dive into any YouTube channel' }),
+    React.createElement('div', { className: 'flex gap-8 mb-16' },
+      React.createElement('input', { className: 'input', value: url, onChange: e => setUrl(e.target.value), placeholder: 'https://www.youtube.com/@channel', style: { flex: 1 }, onKeyDown: e => e.key === 'Enter' && load() }),
+      React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'analyze', size: 16 }), loading ? 'Analyzing' : 'Analyze'),
     ),
-    loading ? React.createElement(Skeleton, { count: 3 }) : null,
-    result ? React.createElement('div', null,
-      p?.title ? React.createElement('div', { style: { background: 'linear-gradient(135deg, var(--primary), var(--accent))', borderRadius: 'var(--radius)', padding: '28px 24px', marginBottom: 20 } },
-        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 16 } },
-          React.createElement('div', { style: { width: 64, height: 64, borderRadius: '50%', background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 700, color: '#fff', border: '3px solid rgba(255,255,255,.3)' } }, (p.title || '?')[0].toUpperCase()),
-          React.createElement('div', null,
-            React.createElement('h2', { style: { color: '#fff', fontSize: '1.3rem', fontWeight: 700, marginBottom: 2 } }, p.title),
-            React.createElement('p', { style: { color: 'rgba(255,255,255,.8)', fontSize: '.85rem' } }, `${fmtNum(p.subscriber_count)} subs \u00B7 ${p.niche || 'N/A'} \u00B7 ${p.channel_tier || ''}`),
-          ),
-        ),
-      ) : null,
+    loading ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
+      React.createElement('span', { className: 'spinner', style: { display: 'inline-block', width: 32, height: 32, borderWidth: 3 } }),
+      React.createElement('p', { style: { marginTop: 16, color: 'var(--text-3)' }, className: 'text-sm' }, 'Fetching channel data... This may take a few seconds.'),
+    ) : err ? ErrorBox({ message: err }) : data ? React.createElement('div', null,
       React.createElement('div', { className: 'stats' },
-        React.createElement(StatCard, { label: 'Subscribers', value: p.subscriber_count }),
-        React.createElement(StatCard, { label: 'Views', value: p.view_count }),
-        React.createElement(StatCard, { label: 'Videos', value: p.video_count }),
-        React.createElement(StatCard, { label: 'Engagement', value: (p.engagement_rate || 0).toFixed(1) + '%' }),
+        StatCard({ icon: 'users', label: 'Subscribers', value: p?.subscriber_count }),
+        StatCard({ icon: 'video', label: 'Total Videos', value: p?.video_count }),
+        StatCard({ icon: 'eye', label: 'Total Views', value: p?.total_view_count }),
+        StatCard({ icon: 'like', label: 'Avg Engagement', value: p?.engagement_rate ? p.engagement_rate.toFixed(2) + '%' : null }),
       ),
-      result.upload_frequency_by_month?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'var(--accent-muted)', color: 'var(--accent)' } }, '\uD83D\uDCC8'),
-          React.createElement('h3', null, 'Upload Frequency'),
+      p?.recent_videos?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recent Uploads')),
+        React.createElement('table', { className: 'table' },
+          React.createElement('thead', null, React.createElement('tr', null,
+            React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'), React.createElement('th', { className: 'num' }, 'Comments'))),
+          React.createElement('tbody', null, p.recent_videos.slice(0, 15).map(v =>
+            React.createElement('tr', { key: v.video_id },
+              React.createElement('td', { style: { maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+                React.createElement('a', { href: `https://youtube.com/watch?v=${v.video_id}`, target: '_blank', style: { color: 'var(--text)', textDecoration: 'none' } }, v.title)),
+              React.createElement('td', { className: 'num' }, fmtNum(v.view_count)),
+              React.createElement('td', { className: 'num' }, fmtNum(v.like_count)),
+              React.createElement('td', { className: 'num' }, fmtNum(v.comment_count)),
+            )
+          )),
         ),
-        React.createElement('div', { className: 'chart-container chart-container-sm' }, React.createElement('canvas', { id: 'analyze-upload' })),
       ) : null,
-      p.ai_summary ? React.createElement('div', { className: 'card', style: { background: 'var(--bg-surface)', border: '1px solid var(--accent-muted)' } },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)', color: 'var(--accent)' } }, '\uD83E\uDD16'),
-          React.createElement('h3', null, 'AI Summary'),
-        ),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.9rem', lineHeight: 1.7 } }, p.ai_summary),
-      ) : null,
-      p.content_recommendations?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(34,197,94,.12)', color: 'var(--success)' } }, '\uD83D\uDCA1'),
-          React.createElement('h3', null, 'Recommendations'),
-        ),
-        React.createElement('ul', { className: 'rec-list' }, p.content_recommendations.map((r, i) => React.createElement('li', { key: i, style: { padding: '10px 0 10px 28px', borderBottom: '1px solid var(--border)', color: 'var(--text-2)', fontSize: '.88rem', position: 'relative', listStyle: 'none' } },
-          React.createElement('span', { style: { position: 'absolute', left: 0, color: 'var(--primary)' } }, '\u2192'),
-          r,
-        ))),
-      ) : null,
-      p.content_gaps?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(245,158,11,.12)', color: 'var(--warning)' } }, '\uD83D\uDD0D'),
-          React.createElement('h3', null, 'Content Gaps'),
-        ),
-        React.createElement('div', null, p.content_gaps.map((g, i) => React.createElement('span', { key: i, className: 'tag' }, g))),
-      ) : null,
-      p.title_patterns?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)', color: 'var(--accent)' } }, '\uD83D\uDCDD'),
-          React.createElement('h3', null, 'Title Patterns'),
-        ),
-        React.createElement('div', null, p.title_patterns.map((t, i) => React.createElement('span', { key: i, className: 'tag' }, t))),
-      ) : null,
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDD0D', title: 'Enter a channel URL', text: 'Paste a YouTube channel URL to get a complete analysis' }) : null,
+    ) : EmptyState({ icon: 'analyze', title: 'Analyze a channel', text: 'Enter a YouTube channel URL to get detailed statistics, recent videos, and engagement metrics.' }),
   );
 }
 
-// ── Competitors Page ──
+// ═══════════════════════════════════════════════════════════════
+//  COMPETITORS
+// ═══════════════════════════════════════════════════════════════
 function CompetitorsPage() {
   const { api } = useAuth();
-  const toast = useToast();
-  const [channelId, setChannelId] = useState(() => localStorage.getItem('ccr_last_url') || '');
-  const [competitors, setCompetitors] = useState(null);
+  const [channelId, setChannelId] = useState('');
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
+  const [watched, setWatched] = useState([]);
+  useEffect(() => { api('/api/competitors/watched').then(async r => { if (r?.ok) setWatched(await r.json()); }); }, []);
   const find = async () => {
     if (!channelId.trim()) return;
-    setLoading(true); setErr(''); setCompetitors(null);
+    setLoading(true); setErr(''); setResults(null);
     try {
-      const res = await api('/find-competitors', { method: 'POST', body: JSON.stringify({ channel_url: channelId, niche: '' }) });
+      const res = await api('/find-competitors', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setCompetitors(d); toast('Competitors found!', 'success'); }
-      else { setErr(d.detail || 'Search failed'); }
+      if (res.ok) setResults(d); else setErr(d.detail || 'Search failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
-  const items = Array.isArray(competitors) ? competitors : competitors?.competitors || [];
-
+  const watch = async (ch) => {
+    await api('/api/competitors/watched', { method: 'POST', body: JSON.stringify({ channel_id: ch.channel_id, channel_title: ch.title, thumbnail_url: ch.thumbnail_url }) });
+    setWatched(prev => [...prev, ch]);
+  };
+  const unwatch = async (cid) => {
+    await api(`/api/competitors/watched/${cid}`, { method: 'DELETE' });
+    setWatched(prev => prev.filter(c => c.channel_id !== cid));
+  };
   return React.createElement('div', null,
-    PageHeader({ title: 'Competitor Analysis', subtitle: 'Discover and analyze competing channels' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
-        React.createElement('input', { className: 'input', placeholder: 'YouTube channel URL or @handle...', value: channelId, onChange: e => setChannelId(e.target.value), onKeyDown: e => e.key === 'Enter' && find() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: find, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Find Competitors'),
-      ),
-      React.createElement(ErrorBox, { message: err }),
+    PageHeader({ title: 'Competitors', subtitle: 'Find and track channels in your niche' }),
+    React.createElement('div', { className: 'flex gap-8 mb-16' },
+      React.createElement('input', { className: 'input', value: channelId, onChange: e => setChannelId(e.target.value), placeholder: 'Channel ID (e.g. UCxxxx...)', style: { flex: 1 }, onKeyDown: e => e.key === 'Enter' && find() }),
+      React.createElement('button', { className: 'btn btn-primary', onClick: find, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'search', size: 16 }), ' Find'),
     ),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    items.length ? React.createElement('div', { className: 'competitor-grid', style: { marginTop: 16 } },
-      items.map((co, i) =>
-        React.createElement('div', { key: i, className: 'competitor-card', style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20, cursor: 'pointer', transition: 'all .15s' } },
-          React.createElement('div', { className: 'name', style: { fontWeight: 700, marginBottom: 4, fontSize: '.95rem' } }, co.title || 'Unknown'),
-          React.createElement('div', { className: 'note', style: { fontSize: '.82rem', color: 'var(--text-2)', marginBottom: 8, lineHeight: 1.5 } }, co.relevance_note || ''),
-          React.createElement('div', { className: 'subs', style: { fontSize: '.8rem', color: 'var(--accent)', fontWeight: 600 } }, `${fmtNum(co.subscriber_count)} subs`),
-          React.createElement('div', { style: { display: 'flex', gap: 4, marginTop: 8 } },
-            React.createElement('span', { className: 'badge', style: { background: (co.overlap_score || 0) > 70 ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.12)', color: (co.overlap_score || 0) > 70 ? 'var(--success)' : 'var(--warning)', border: '1px solid', borderColor: (co.overlap_score || 0) > 70 ? 'rgba(34,197,94,.25)' : 'rgba(245,158,11,.25)', fontSize: '.65rem' } }, `${co.overlap_score || 0}% overlap`),
+    err ? ErrorBox({ message: err }) : null,
+    watched.length > 0 ? React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Tracked Competitors')),
+      React.createElement('div', { className: 'grid-2' },
+        watched.map(ch => React.createElement('div', { key: ch.channel_id, className: 'flex items-center gap-12 p-16 border' },
+          ch.thumbnail_url ? React.createElement('img', { src: ch.thumbnail_url, alt: '', style: { width: 36, height: 36, borderRadius: 18 } }) : React.createElement('div', { style: { width: 36, height: 36, borderRadius: 18, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 16 })),
+          React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+            React.createElement('div', { className: 'truncate font-semibold text-sm' }, ch.channel_title || ch.title),
+            React.createElement('div', { className: 'text-xs text-muted' }, ch.channel_id),
           ),
-        )
+          React.createElement('button', { className: 'icon-btn', onClick: () => unwatch(ch.channel_id), title: 'Remove' }, Icon({ name: 'trash', size: 16 })),
+        )),
       ),
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDC65', title: 'No competitors yet', text: 'Enter a channel to discover similar channels and analyze their performance.' }) : null,
-    competitors?.market_position ? React.createElement('div', { className: 'card', style: { marginTop: 16 } },
-      React.createElement('div', { className: 'card-header' },
-        React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)', color: 'var(--accent)' } }, '\uD83D\uDCCA'),
-        React.createElement('h3', null, 'Market Position'),
-      ),
-      React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem' } }, competitors.market_position),
-      competitors.competitive_advantage ? React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem', marginTop: 8 } }, competitors.competitive_advantage) : null,
     ) : null,
+    loading ? Skeleton({ count: 2 }) : results ? React.createElement('div', { className: 'card' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Similar Channels')),
+      React.createElement('div', { className: 'grid-2' },
+        results.map(ch => React.createElement('div', { key: ch.channel_id, className: 'flex items-center gap-12 p-16 border mb-8' },
+          ch.thumbnail_url ? React.createElement('img', { src: ch.thumbnail_url, alt: '', style: { width: 40, height: 40, borderRadius: 20 } }) : React.createElement('div', { style: { width: 40, height: 40, borderRadius: 20, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 18 })),
+          React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+            React.createElement('div', { className: 'truncate font-semibold text-sm' }, ch.title),
+            React.createElement('div', { className: 'text-xs text-muted' }, fmtNum(ch.subscriber_count), ' subs'),
+          ),
+          React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => watch(ch) }, Icon({ name: 'plus', size: 14 }), ' Track'),
+        )),
+      ),
+    ) : EmptyState({ icon: 'competitors', title: 'Find competitors', text: 'Enter a channel ID to discover similar channels in your niche.' }),
   );
 }
 
-// ── Content Discovery Page ──
+// ═══════════════════════════════════════════════════════════════
+//  CONTENT DISCOVERY
+// ═══════════════════════════════════════════════════════════════
 function DiscoverPage() {
   const { api } = useAuth();
+  const [channelId, setChannelId] = useState('');
   const [topic, setTopic] = useState('');
-  const [channelUrl, setChannelUrl] = useState('');
-  const [data, setData] = useState(null);
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [platforms, setPlatforms] = useState({ youtube: true, reddit: true, twitter: true, twitch: true, hn: true, rss: true, tiktok: true, instagram: true });
-
   const search = async () => {
-    if (!topic.trim()) { setErr('Enter a topic to search'); return; }
-    setLoading(true); setErr(''); setData(null);
+    if (!channelId.trim() || !topic.trim()) return;
+    setLoading(true); setErr(''); setResults(null);
     try {
-      const enabled = Object.entries(platforms).filter(([, v]) => v).map(([k]) => k);
-      const res = await api('/search-topic', {
-        method: 'POST',
-        body: JSON.stringify({ topic, platforms: enabled, channel_url: channelUrl || undefined }),
-      });
+      const res = await api('/multi-source-search', { method: 'POST', body: JSON.stringify({ channel_id: channelId, topic }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setData(d); setActiveTab('all'); }
-      else { setErr(d.detail || 'Search failed'); }
+      if (res.ok) setResults(d); else setErr(d.detail || 'Search failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
-  const results = data?.results || data?.cross_platform_content || data?.content || [];
-  const groups = {};
-  results.forEach(r => { const p = r.platform || 'other'; if (!groups[p]) groups[p] = []; groups[p].push(r); });
-
   return React.createElement('div', null,
-    PageHeader({ title: 'Content Discovery', subtitle: 'Find trending topics across 9+ platforms' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-        React.createElement('input', { className: 'input', style: { flex: 1, minWidth: 200 }, placeholder: 'Search topic (e.g. "AI tools")...', value: topic, onChange: e => setTopic(e.target.value), onKeyDown: e => e.key === 'Enter' && search() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: search, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Search'),
-      ),
-      React.createElement('div', { style: { display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap', fontSize: '.82rem' } },
-        Object.entries(platforms).map(([k, v]) =>
-          React.createElement('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: 'var(--text-2)' } },
-            React.createElement('input', { type: 'checkbox', checked: v, onChange: () => setPlatforms(s => ({ ...s, [k]: !s[k] })) }),
-            ` ${k.charAt(0).toUpperCase() + k.slice(1)}`,
-          )
+    PageHeader({ title: 'Content Discovery', subtitle: 'Find trending content across multiple platforms' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'grid-2 mb-16' },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Your Channel ID'),
+          React.createElement('input', { className: 'input', value: channelId, onChange: e => setChannelId(e.target.value), placeholder: 'UCxxxx...' }),
+        ),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Topic / Niche'),
+          React.createElement('input', { className: 'input', value: topic, onChange: e => setTopic(e.target.value), placeholder: 'e.g. AI, cooking, gaming', onKeyDown: e => e.key === 'Enter' && search() }),
         ),
       ),
-      React.createElement(ErrorBox, { message: err }),
+      React.createElement('button', { className: 'btn btn-primary w-full', onClick: search, disabled: loading },
+        loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'discover', size: 16 }), loading ? 'Searching' : 'Search All Platforms'),
     ),
-    loading ? React.createElement(Skeleton, { count: 3 }) : null,
-    results.length ? React.createElement('div', null,
-      React.createElement('div', { className: 'tabs' },
-        React.createElement('button', { className: `tab${activeTab === 'all' ? ' active' : ''}`, onClick: () => setActiveTab('all') }, 'All ', React.createElement('span', { className: 'badge', style: { background: 'var(--bg-elevated)', color: 'var(--text-2)', fontSize: '.6rem', padding: '1px 6px', marginLeft: 4 } }, results.length)),
-        Object.entries(groups).map(([k, v]) =>
-          React.createElement('button', { key: k, className: `tab${activeTab === k ? ' active' : ''}`, onClick: () => setActiveTab(k) }, k, ' ', React.createElement('span', { className: 'badge', style: { background: 'var(--bg-elevated)', color: 'var(--text-2)', fontSize: '.6rem', padding: '1px 6px', marginLeft: 4 } }, v.length)),
-        ),
-      ),
-      React.createElement('div', { className: 'content-list' },
-        (activeTab === 'all' ? results : groups[activeTab] || []).slice(0, 20).map((item, i) => React.createElement(ContentItem, { key: i, item })),
-      ),
-    ) : !loading ? EmptyState({ icon: '\uD83C\uDF0D', title: 'Search for content', text: 'Enter a topic to discover content across 9+ platforms.' }) : null,
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 3 }) : results ? React.createElement('div', null,
+      results.content_items?.length ? results.content_items.map((item, i) => ContentItem({ item, key: i })) : null,
+      results.content_items?.length === 0 ? EmptyState({ icon: 'discover', title: 'No results', text: 'Try a different topic or channel ID.' }) : null,
+    ) : EmptyState({ icon: 'discover', title: 'Discover content', text: 'Search across YouTube, Reddit, X, TikTok, Twitch, and more for trending content in your niche.' }),
   );
 }
 
-// ── Idea Generator Page ──
+// ═══════════════════════════════════════════════════════════════
+//  IDEA GENERATOR
+// ═══════════════════════════════════════════════════════════════
 function IdeasPage() {
   const { api } = useAuth();
-  const toast = useToast();
-  const [topic, setTopic] = useState('');
+  const [channelId, setChannelId] = useState('');
+  const [niche, setNiche] = useState('');
   const [ideas, setIdeas] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const generate = async () => {
-    if (!topic.trim()) return;
+    if (!channelId.trim() || !niche.trim()) return;
     setLoading(true); setErr(''); setIdeas(null);
     try {
-      const res = await api('/api/ideas/generate', { method: 'POST', body: JSON.stringify({ topic, channel_url: '' }) });
+      const res = await api('/api/ideas/generate', { method: 'POST', body: JSON.stringify({ channel_id: channelId, niche }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setIdeas(d); toast('Ideas generated!', 'success'); }
-      else { setErr(d.detail || 'Generation failed'); }
+      if (res.ok) setIdeas(d); else setErr(d.detail || 'Generation failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
   const saveIdea = async (idea) => {
-    await api('/api/ideas/save', { method: 'POST', body: JSON.stringify({ topic, title: idea.title, description: idea.description }) });
-    toast('Idea saved!', 'success');
+    await api('/api/ideas/save', { method: 'POST', body: JSON.stringify({ title: idea.title, description: idea.description || '', tags: idea.tags || [] }) });
   };
-
-  const ideaList = ideas?.ideas || ideas?.results || (Array.isArray(ideas) ? ideas : []);
-
   return React.createElement('div', null,
-    PageHeader({ title: 'Content Idea Generator', subtitle: 'AI-powered video concepts with SEO keywords' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
-        React.createElement('input', { className: 'input', placeholder: 'e.g. "AI tools for creators"', value: topic, onChange: e => setTopic(e.target.value), onKeyDown: e => e.key === 'Enter' && generate() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: generate, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Generate'),
+    PageHeader({ title: 'Idea Generator', subtitle: 'AI-powered content ideas tailored to your channel' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'grid-2 mb-16' },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Channel ID'),
+          React.createElement('input', { className: 'input', value: channelId, onChange: e => setChannelId(e.target.value), placeholder: 'UCxxxx...' }),
+        ),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Niche / Topic'),
+          React.createElement('input', { className: 'input', value: niche, onChange: e => setNiche(e.target.value), placeholder: 'e.g. tech reviews', onKeyDown: e => e.key === 'Enter' && generate() }),
+        ),
       ),
-      React.createElement(ErrorBox, { message: err }),
+      React.createElement('button', { className: 'btn btn-primary w-full', onClick: generate, disabled: loading },
+        loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'sparkles', size: 16 }), loading ? 'Generating' : 'Generate Ideas'),
     ),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    ideaList.length ? React.createElement('div', { className: 'grid-2', style: { marginTop: 16 } },
-      ideaList.slice(0, 6).map((idea, i) =>
-        React.createElement('div', { key: i, className: 'card' },
-          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 } },
-            React.createElement('h3', { style: { fontSize: '.95rem', fontWeight: 700, flex: 1 } }, idea.title),
-            idea.confidence_score ? React.createElement('span', { className: `badge ${idea.confidence_score > 0.7 ? 'badge-success' : 'badge-warning'}`, style: { fontSize: '.65rem' } }, `${Math.round(idea.confidence_score * 100)}%`) : null,
-          ),
-          React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.85rem', marginBottom: 12 } }, idea.description),
-          idea.seo_keywords?.length ? React.createElement('div', null,
-            React.createElement('div', { style: { fontSize: '.75rem', color: 'var(--text-3)', marginBottom: 4, fontWeight: 600 } }, 'SEO Keywords'),
-            React.createElement('div', null, idea.seo_keywords.map((kw, j) => React.createElement('span', { key: j, className: 'tag' }, kw))),
-          ) : null,
-          idea.viral_probability !== undefined ? React.createElement('div', { style: { marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', fontSize: '.82rem' } },
-            React.createElement('span', { className: `badge ${idea.viral_probability > 70 ? 'badge-primary' : 'badge-warning'}`, style: { fontSize: '.65rem' } }, `\uD83D\uDCA5 Viral: ${idea.viral_probability}%`),
-            idea.expected_view_min ? React.createElement('span', { style: { color: 'var(--text-3)' } }, `${(idea.expected_view_min || 0).toLocaleString()} views`) : null,
-          ) : null,
-          idea.best_time_to_post ? React.createElement('div', { style: { marginTop: 8, fontSize: '.82rem', color: 'var(--accent)' } }, `\u23F0 Best: ${idea.best_time_to_post}`) : null,
-          React.createElement('button', { className: 'btn btn-ghost btn-sm', style: { marginTop: 12, width: '100%', justifyContent: 'center' }, onClick: () => saveIdea(idea) }, '\uD83D\uDCBE Save Idea'),
-        )
-      ),
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDCA1', title: 'Enter a topic', text: 'Get AI-powered video ideas with SEO keywords and thumbnail concepts.' }) : null,
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 3 }) : ideas?.ideas?.length ? React.createElement('div', { className: 'grid-2' },
+      ideas.ideas.map((idea, i) => React.createElement('div', { key: i, className: 'card' },
+        React.createElement('div', { className: 'flex items-center gap-8 mb-8' },
+          React.createElement('span', { className: 'badge badge-primary' }, '#' + (i + 1)),
+          idea.viral_score ? React.createElement('span', { className: `badge badge-${scoreClass(idea.viral_score)}` }, 'Viral: ' + idea.viral_score) : null,
+        ),
+        React.createElement('h3', { style: { fontSize: '.95rem', fontWeight: 700, marginBottom: 8 } }, idea.title),
+        idea.description ? React.createElement('p', { className: 'text-sm text-2', style: { marginBottom: 12 } }, idea.description) : null,
+        idea.tags?.length ? React.createElement('div', { className: 'flex flex-wrap gap-8 mb-16' },
+          idea.tags.map((t, ti) => React.createElement('span', { key: ti, className: 'badge badge-neutral' }, t))
+        ) : null,
+        React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => saveIdea(idea) }, Icon({ name: 'bookmark', size: 14 }), ' Save'),
+      ))
+    ) : EmptyState({ icon: 'ideas', title: 'Generate ideas', text: 'Enter your channel ID and niche to get AI-powered content ideas with viral potential scores.' }),
   );
 }
 
-// ── All other pages follow the same pattern ──
-
+// ═══════════════════════════════════════════════════════════════
+//  MONITORED CHANNELS
+// ═══════════════════════════════════════════════════════════════
 function WatchPage() {
   const { api } = useAuth();
-  const [watched, setWatched] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => { (async () => { const r = await api('/api/watched-competitors'); if (r?.ok) setWatched(await r.json()); setLoading(false); })(); }, [api]);
-  if (loading) return React.createElement(Skeleton);
+  useEffect(() => {
+    api('/api/channels').then(async r => { if (r?.ok) { setChannels(await r.json()); } setLoading(false); });
+  }, []);
   return React.createElement('div', null,
-    PageHeader({ title: 'Competitor Monitoring', subtitle: 'Track competitors and get alerts' }),
-    watched.length ? React.createElement('div', { className: 'competitor-grid' },
-      watched.map(w => React.createElement('div', { key: w.id, className: 'card', style: { padding: 16 } },
-        React.createElement('div', { style: { fontWeight: 700, fontSize: '.95rem', marginBottom: 4 } }, w.channel_title || w.channel_id),
-        React.createElement('div', { style: { color: 'var(--text-3)', fontSize: '.82rem', marginBottom: 8 } }, `${fmtNum(w.subscriber_count)} subs`),
-        React.createElement('button', { className: 'btn btn-ghost btn-sm', style: { width: '100%', justifyContent: 'center', borderColor: 'var(--error)', color: 'var(--error)' }, onClick: async () => { await api(`/api/watched-competitors/${w.channel_id}`, { method: 'DELETE' }); setWatched(watched.filter(x => x.id !== w.id)); } }, 'Stop Watching'),
-      )),
-    ) : EmptyState({ icon: '\uD83D\uDC40', title: 'No competitors watched', text: 'Find competitors from the Competitors page and click "Watch" to monitor them.' }),
+    PageHeader({ title: 'Monitored', subtitle: 'Channels you are tracking' }),
+    loading ? Skeleton({ count: 2 }) : channels?.length ? React.createElement('div', { className: 'grid-2' },
+      channels.map(ch => React.createElement('div', { key: ch.id, className: 'card flex items-center gap-16' },
+        ch.thumbnail_url ? React.createElement('img', { src: ch.thumbnail_url, alt: '', style: { width: 48, height: 48, borderRadius: 24 } }) : React.createElement('div', { style: { width: 48, height: 48, borderRadius: 24, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 20 })),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'font-semibold' }, ch.channel_title || ch.title),
+          React.createElement('div', { className: 'text-xs text-muted' }, ch.channel_id),
+        ),
+      ))
+    ) : EmptyState({ icon: 'watch', title: 'No monitored channels', text: 'Add channels from the Competitors page to monitor them here.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════════════════════════
 function CalendarPage() {
   const { api } = useAuth();
-  const now = new Date();
-  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', event_date: '', event_type: 'idea', related_channel_id: '' });
-
-  useEffect(() => { (async () => { const r = await api(`/api/calendar?month=${month}`); if (r?.ok) setEvents(await r.json()); setLoading(false); })(); }, [api, month]);
-
-  const daysInMonth = new Date(parseInt(month), parseInt(month.split('-')[1]), 0).getDate();
-  const firstDay = new Date(parseInt(month), parseInt(month.split('-')[1]) - 1, 1).getDay();
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-  if (loading) return React.createElement(Skeleton);
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', description: '' });
+  useEffect(() => {
+    api('/api/calendar').then(async r => { if (r?.ok) { setEvents(await r.json()); } setLoading(false); });
+  }, []);
+  const addEvent = async () => {
+    if (!newEvent.title || !newEvent.date) return;
+    const res = await api('/api/calendar', { method: 'POST', body: JSON.stringify(newEvent) });
+    if (res?.ok) { const ev = await res.json(); setEvents(prev => [...prev, ev]); setNewEvent({ title: '', date: '', description: '' }); setShowForm(false); }
+  };
+  const delEvent = async (id) => { await api(`/api/calendar/${id}`, { method: 'DELETE' }); setEvents(prev => prev.filter(e => e.id !== id)); };
   return React.createElement('div', null,
-    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 } },
-      React.createElement('div', null,
-        React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Content Calendar'),
-        React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.9rem' } }, 'Plan and schedule your content'),
+    PageHeader({ title: 'Calendar', subtitle: 'Plan your content schedule',
+      action: React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: () => setShowForm(!showForm) }, Icon({ name: 'plus', size: 14 }), ' Add Event') }),
+    showForm ? React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Title'), React.createElement('input', { className: 'input', value: newEvent.title, onChange: e => setNewEvent(p => ({ ...p, title: e.target.value })), placeholder: 'Video title or event' }),
       ),
-      React.createElement('button', { className: 'btn btn-primary', onClick: () => setShowForm(!showForm) }, showForm ? 'Cancel' : '+ Add Event'),
-    ),
-    showForm ? React.createElement('div', { className: 'card', style: { marginBottom: 16 } },
-      React.createElement('div', { style: { display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' } },
-        React.createElement('input', { className: 'input', placeholder: 'Event title', value: form.title, onChange: e => setForm(f => ({ ...f, title: e.target.value })) }),
-        React.createElement('input', { className: 'input', type: 'date', value: form.event_date, onChange: e => setForm(f => ({ ...f, event_date: e.target.value })) }),
-        React.createElement('select', { className: 'input', value: form.event_type, onChange: e => setForm(f => ({ ...f, event_type: e.target.value })) },
-          React.createElement('option', { value: 'idea' }, 'Content Idea'),
-          React.createElement('option', { value: 'upload' }, 'Upload'),
-          React.createElement('option', { value: 'meeting' }, 'Meeting'),
-        ),
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Date'), React.createElement('input', { className: 'input', type: 'date', value: newEvent.date, onChange: e => setNewEvent(p => ({ ...p, date: e.target.value })) }),
       ),
-      React.createElement('button', { className: 'btn btn-accent', style: { marginTop: 8 }, onClick: async () => {
-        const r = await api('/api/calendar', { method: 'POST', body: JSON.stringify(form) });
-        if (r?.ok) { setShowForm(false); setForm({ title: '', description: '', event_date: '', event_type: 'idea', related_channel_id: '' }); const fr = await api(`/api/calendar?month=${month}`); if (fr?.ok) setEvents(await fr.json()); }
-      }, disabled: !form.title || !form.event_date }, 'Save Event'),
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Description (optional)'), React.createElement('textarea', { className: 'input', value: newEvent.description, onChange: e => setNewEvent(p => ({ ...p, description: e.target.value })) }),
+      ),
+      React.createElement('button', { className: 'btn btn-primary', onClick: addEvent }, 'Save Event'),
     ) : null,
-    React.createElement('div', { style: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 } },
-      React.createElement('button', { className: 'btn btn-ghost', style: { padding: '6px 12px' }, onClick: () => { const [y, m] = month.split('-').map(Number); const d = new Date(y, m - 2, 1); setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`); } }, '\u2190'),
-      React.createElement('h2', { style: { fontSize: '1.1rem', fontWeight: 600, minWidth: 160, textAlign: 'center' } }, new Date(parseInt(month), parseInt(month.split('-')[1]) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })),
-      React.createElement('button', { className: 'btn btn-ghost', style: { padding: '6px 12px' }, onClick: () => { const [y, m] = month.split('-').map(Number); const d = new Date(y, m, 1); setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`); } }, '\u2192'),
-      React.createElement('button', { className: 'btn btn-ghost', style: { padding: '6px 12px', fontSize: '.8rem' }, onClick: () => { const n = new Date(); setMonth(`${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`); } }, 'Today'),
-    ),
-    React.createElement('div', { style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' } },
-      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' } },
-        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => React.createElement('div', { key: d, style: { padding: '8px', textAlign: 'center', fontSize: '.75rem', color: 'var(--text-3)', fontWeight: 600 } }, d)),
-      ),
-      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' } },
-        Array.from({ length: firstDay }, (_, i) => React.createElement('div', { key: `e${i}`, style: { padding: '4px', minHeight: 70, background: 'var(--bg-surface)' } })),
-        days.map(d => {
-          const dateStr = `${month}-${String(d).padStart(2, '0')}`;
-          const dayEvents = events.filter(e => e.event_date === dateStr);
-          return React.createElement('div', { key: d, style: { padding: '4px', minHeight: 70, borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' } },
-            React.createElement('div', { style: { fontSize: '.78rem', fontWeight: 600, color: 'var(--text-2)', marginBottom: 2 } }, d),
-            dayEvents.slice(0, 2).map(ev => React.createElement('div', { key: ev.id, style: { fontSize: '.68rem', padding: '2px 4px', marginBottom: 2, background: ev.event_type === 'upload' ? 'rgba(255,45,85,.12)' : 'rgba(59,130,246,.12)', borderRadius: 4, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, ev.title)),
-            dayEvents.length > 2 ? React.createElement('div', { style: { fontSize: '.62rem', color: 'var(--text-3)' } }, `+${dayEvents.length - 2} more`) : null,
-          );
-        }),
-      ),
-    ),
+    loading ? Skeleton({ count: 2 }) : events?.length ? React.createElement('div', null,
+      events.sort((a, b) => new Date(a.date) - new Date(b.date)).map(ev => React.createElement('div', { key: ev.id, className: 'card flex items-center gap-16' },
+        React.createElement('div', { style: { width: 48, height: 48, borderRadius: 12, background: 'var(--primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } },
+          React.createElement('div', { style: { textAlign: 'center' } },
+            React.createElement('div', { style: { fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' } }, new Date(ev.date).getDate()),
+            React.createElement('div', { style: { fontSize: '.6rem', textTransform: 'uppercase', color: 'var(--text-3)' } }, new Date(ev.date).toLocaleDateString('en', { month: 'short' })),
+          ),
+        ),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'font-semibold' }, ev.title),
+          ev.description ? React.createElement('div', { className: 'text-sm text-2 mt-8' }, ev.description) : null,
+        ),
+        React.createElement('button', { className: 'icon-btn', onClick: () => delEvent(ev.id) }, Icon({ name: 'trash', size: 16 })),
+      ))
+    ) : EmptyState({ icon: 'calendar', title: 'No scheduled events', text: 'Add events to plan your content calendar.', action: React.createElement('button', { className: 'btn btn-ghost', onClick: () => setShowForm(true) }, Icon({ name: 'plus', size: 16 }), ' Add your first event') }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  REPORTS
+// ═══════════════════════════════════════════════════════════════
 function ReportsPage() {
   const { api } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState(null);
-
-  useEffect(() => { (async () => { const r = await api('/api/reports'); if (r?.ok) setReports(await r.json()); setLoading(false); })(); }, [api]);
-  if (loading) return React.createElement(Skeleton);
+  useEffect(() => {
+    api('/api/reports').then(async r => { if (r?.ok) { setReports(await r.json()); } setLoading(false); });
+  }, []);
   return React.createElement('div', null,
-    PageHeader({ title: 'Reports & Exports', subtitle: 'View saved analyses and export reports' }),
-    reports.length ? React.createElement('div', { className: 'card' },
-      reports.map(r => React.createElement('div', { key: r.report_id, className: 'content-item', style: { marginBottom: 4 }, onClick: () => setSelectedReport(r) },
-        React.createElement('div', null,
-          React.createElement('div', { style: { fontWeight: 600, fontSize: '.9rem' } }, r.channel_title || r.channel_url),
-          React.createElement('div', { style: { color: 'var(--text-3)', fontSize: '.8rem' } }, r.topic || 'Channel analysis', ' \u00B7 ', new Date(r.created_at).toLocaleDateString()),
+    PageHeader({ title: 'Reports', subtitle: 'Weekly performance summaries' }),
+    loading ? Skeleton({ count: 2 }) : reports?.length ? React.createElement('div', null,
+      reports.map(r => React.createElement('div', { key: r.id, className: 'card' },
+        React.createElement('div', { className: 'flex items-center gap-12 mb-16' },
+          Icon({ name: 'fileText', size: 20 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'font-semibold' }, r.title || `Report ${r.period || ''}`),
+            React.createElement('div', { className: 'text-xs text-muted' }, new Date(r.created_date).toLocaleDateString()),
+          ),
         ),
-      )),
-    ) : EmptyState({ icon: '\uD83D\uDCC4', title: 'No reports yet', text: 'Analyze a channel to see reports here.' }),
-    selectedReport ? React.createElement('div', { className: 'card', style: { marginTop: 16 } },
-      React.createElement('h3', null, selectedReport.channel_title || 'Report'),
-      React.createElement('div', { style: { display: 'flex', gap: 8, marginTop: 12 } },
-        React.createElement('button', { className: 'btn btn-accent btn-sm', onClick: () => { const fn = `/api/analyze/${selectedReport.channel_id || selectedReport.report_id}/export?format=csv`; window.open(fn, '_blank'); } }, '\uD83D\uDCC4 CSV'),
-        React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: () => { const fn = `/api/analyze/${selectedReport.channel_id || selectedReport.report_id}/export?format=pdf`; window.open(fn, '_blank'); } }, '\uD83D\uDCC4 PDF'),
-        React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: () => setSelectedReport(null) }, 'Close'),
-      ),
-    ) : null,
+        r.summary ? React.createElement('p', { className: 'text-sm text-2' }, r.summary) : null,
+      ))
+    ) : EmptyState({ icon: 'reports', title: 'No reports yet', text: 'Weekly reports are generated automatically. Check back soon.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  SAVED IDEAS
+// ═══════════════════════════════════════════════════════════════
 function SavedIdeasPage() {
   const { api } = useAuth();
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { (async () => { const r = await api('/api/ideas?saved_only=true'); if (r?.ok) setIdeas(await r.json()); setLoading(false); })(); }, [api]);
-  if (loading) return React.createElement(Skeleton);
+  useEffect(() => {
+    api('/api/ideas').then(async r => { if (r?.ok) { setIdeas(await r.json()); } setLoading(false); });
+  }, []);
+  const delIdea = async (id) => { await api(`/api/ideas/${id}`, { method: 'DELETE' }); setIdeas(prev => prev.filter(i => i.id !== id)); };
   return React.createElement('div', null,
-    PageHeader({ title: 'Saved Ideas', subtitle: 'Your saved content ideas' }),
-    ideas.length ? React.createElement('div', { className: 'content-list' },
+    PageHeader({ title: 'Saved Ideas', subtitle: 'Your bookmarked content ideas' }),
+    loading ? Skeleton({ count: 2 }) : ideas?.length ? React.createElement('div', { className: 'grid-2' },
       ideas.map(idea => React.createElement('div', { key: idea.id, className: 'card' },
-        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
-          React.createElement('div', null,
-            React.createElement('h3', { style: { fontSize: '.95rem', fontWeight: 600 } }, idea.title),
-            React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.8rem' } }, 'Topic: ', idea.topic),
-          ),
-          React.createElement('button', { className: 'btn btn-ghost btn-sm', style: { borderColor: 'var(--error)', color: 'var(--error)' }, onClick: async () => { await api(`/api/ideas/${idea.id}`, { method: 'DELETE' }); setIdeas(ideas.filter(i => i.id !== idea.id)); } }, 'Delete'),
+        React.createElement('h3', { style: { fontSize: '.95rem', fontWeight: 700, marginBottom: 8 } }, idea.title),
+        idea.description ? React.createElement('p', { className: 'text-sm text-2 mb-16' }, idea.description) : null,
+        idea.tags?.length ? React.createElement('div', { className: 'flex flex-wrap gap-8' },
+          idea.tags.map((t, ti) => React.createElement('span', { key: ti, className: 'badge badge-neutral' }, t))
+        ) : null,
+        React.createElement('div', { className: 'card-footer' },
+          React.createElement('span', { className: 'text-xs text-muted' }, new Date(idea.created_date).toLocaleDateString()),
+          React.createElement('button', { className: 'icon-btn ml-auto', onClick: () => delIdea(idea.id) }, Icon({ name: 'trash', size: 16 })),
         ),
-      )),
-    ) : EmptyState({ icon: '\uD83D\uDCBE', title: 'No saved ideas', text: 'Generate ideas from the Ideas page and save them here.' }),
+      ))
+    ) : EmptyState({ icon: 'saved', title: 'No saved ideas', text: 'Save ideas from the Idea Generator to find them here.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  REPURPOSE
+// ═══════════════════════════════════════════════════════════════
 function RepurposePage() {
   const { api } = useAuth();
-  const toast = useToast();
-  const [url, setUrl] = useState('');
-  const [platforms, setPlatforms] = useState({ tiktok: true, instagram: true });
+  const [videoUrl, setVideoUrl] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const repurpose = async () => {
-    if (!url.trim()) return;
+    if (!videoUrl.trim()) return;
     setLoading(true); setErr(''); setResult(null);
     try {
-      const target = Object.entries(platforms).filter(([, v]) => v).map(([k]) => k);
-      if (!target.length) { setErr('Select at least one platform'); setLoading(false); return; }
-      const res = await api('/api/repurpose/generate', { method: 'POST', body: JSON.stringify({ video_url: url, platforms: target }) });
+      const res = await api('/api/repurpose', { method: 'POST', body: JSON.stringify({ video_url: videoUrl }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setResult(d); toast('Scripts generated!', 'success'); }
-      else { setErr(d.detail || 'Failed'); }
+      if (res.ok) setResult(d); else setErr(d.detail || 'Failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
-  const scripts = result?.scripts || result?.results || [];
-
   return React.createElement('div', null,
-    PageHeader({ title: 'Cross-Platform Repurposing', subtitle: 'Turn YouTube videos into short-form content' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-        React.createElement('input', { className: 'input', style: { flex: 2, minWidth: 250 }, placeholder: 'YouTube video URL...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && repurpose() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: repurpose, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Repurpose'),
+    PageHeader({ title: 'Repurpose', subtitle: 'Turn one video into content for every platform' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Video URL'),
+        React.createElement('input', { className: 'input', value: videoUrl, onChange: e => setVideoUrl(e.target.value), placeholder: 'https://youtube.com/watch?v=...', onKeyDown: e => e.key === 'Enter' && repurpose() }),
       ),
-      React.createElement('div', { style: { display: 'flex', gap: 16, marginTop: 12, fontSize: '.82rem' } },
-        Object.entries(platforms).map(([k, v]) =>
-          React.createElement('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: 'var(--text-2)' } },
-            React.createElement('input', { type: 'checkbox', checked: v, onChange: () => setPlatforms(p => ({ ...p, [k]: !p[k] })) }), ' ', k.charAt(0).toUpperCase() + k.slice(1),
-          )
-        ),
-      ),
-      React.createElement(ErrorBox, { message: err }),
+      React.createElement('button', { className: 'btn btn-primary', onClick: repurpose, disabled: loading },
+        loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'repurpose', size: 16 }), loading ? 'Processing' : 'Repurpose'),
     ),
-    scripts.length ? React.createElement('div', { className: 'grid-2', style: { marginTop: 16 } },
-      scripts.map((s, i) => React.createElement('div', { key: i, className: 'card' },
-        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 } },
-          React.createElement('span', { className: 'platform-badge', style: { background: getPlatformConfig(s.platform).bg, color: getPlatformConfig(s.platform).color, width: 28, height: 28, fontSize: '.7rem' } }, getPlatformConfig(s.platform).icon),
-          React.createElement('h3', { style: { fontSize: '.9rem' } }, s.platform, ' Script', s.duration_seconds ? ` (${s.duration_seconds}s)` : ''),
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 2 }) : result ? React.createElement('div', { className: 'card' },
+      result.platforms ? Object.entries(result.platforms).map(([platform, content]) => React.createElement('div', { key: platform, className: 'mb-16', style: { paddingBottom: 16, borderBottom: '1px solid var(--border)' } },
+        React.createElement('div', { className: 'flex items-center gap-8 mb-8' },
+          React.createElement('span', { className: 'badge badge-accent' }, platform),
         ),
-        React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.82rem', color: 'var(--text-2)', background: 'var(--bg)', padding: 12, borderRadius: 'var(--radius-sm)', marginBottom: 8, lineHeight: 1.5, maxHeight: 200, overflowY: 'auto' } }, s.script),
-        s.tips?.length ? s.tips.map((t, j) => React.createElement('div', { key: j, style: { fontSize: '.78rem', color: 'var(--text-3)', padding: '2px 0' } }, `\uD83D\uDCA1 ${t}`)) : null,
-      )),
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDD04', title: 'Enter a video URL', text: 'Paste a YouTube video URL to generate platform-specific scripts.' }) : null,
+        React.createElement('p', { className: 'text-sm' }, content),
+      )) : (result.suggestions || result.repurposed_content) ? React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem', lineHeight: 1.6 } }, JSON.stringify(result.suggestions || result.repurposed_content, null, 2)) : React.createElement('p', { className: 'text-sm text-2' }, JSON.stringify(result))
+    ) : EmptyState({ icon: 'repurpose', title: 'Repurpose content', text: 'Paste a YouTube URL to generate content variations for multiple platforms.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  SEO SCORECARD
+// ═══════════════════════════════════════════════════════════════
 function SeoPage() {
   const { api } = useAuth();
   const [channelId, setChannelId] = useState('');
-  const [scorecard, setScorecard] = useState(null);
+  const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const analyze = async () => {
     if (!channelId.trim()) return;
-    setLoading(true); setErr(''); setScorecard(null);
+    setLoading(true); setErr(''); setScore(null);
     try {
-      const res = await api('/api/seo/score', { method: 'POST', body: JSON.stringify({ channel_url: channelId }) });
+      const res = await api('/api/seo', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setScorecard(d); }
-      else { setErr(d.detail || 'Failed'); }
+      if (res.ok) setScore(d); else setErr(d.detail || 'Analysis failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
   return React.createElement('div', null,
-    PageHeader({ title: 'SEO Scorecard', subtitle: 'Analyze search optimization for your channel' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
-        React.createElement('input', { className: 'input', placeholder: 'Channel URL...', value: channelId, onChange: e => setChannelId(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: analyze, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Score'),
+    PageHeader({ title: 'SEO Score', subtitle: "Audit your channel's search optimization" }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Channel ID'),
+        React.createElement('div', { className: 'flex gap-8' },
+          React.createElement('input', { className: 'input', value: channelId, onChange: e => setChannelId(e.target.value), placeholder: 'UCxxxx...', onKeyDown: e => e.key === 'Enter' && analyze() }),
+          React.createElement('button', { className: 'btn btn-primary', onClick: analyze, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'seo', size: 16 }), ' Score'),
+        ),
       ),
-      React.createElement(ErrorBox, { message: err }),
     ),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    scorecard ? React.createElement('div', null,
-      React.createElement('div', { className: 'stats', style: { gridTemplateColumns: 'repeat(4, 1fr)' } },
-        React.createElement('div', { className: 'stat', style: { textAlign: 'center' } },
-          React.createElement('div', { style: { fontSize: '2.2rem', fontWeight: 800, color: scoreColor(scorecard.overall_score) } }, scorecard.overall_score),
-          React.createElement('div', { className: 'label' }, 'Overall SEO'),
-        ),
-        ['title_score', 'description_score', 'tags_score'].map(f => {
-          const label = f.replace('_score', '').replace('_', ' ');
-          return React.createElement('div', { key: f, className: 'stat', style: { textAlign: 'center' } },
-            React.createElement('div', { style: { fontSize: '1.8rem', fontWeight: 700, color: scoreColor(scorecard[f]) } }, scorecard[f]),
-            React.createElement('div', { className: 'label' }, label),
-          );
-        }),
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 1 }) : score ? React.createElement('div', null,
+      React.createElement('div', { className: 'stats' },
+        StatCard({ label: 'Overall Score', value: score.overall_score || score.score, changeDir: 'up' }),
+        StatCard({ label: 'Title Quality', value: score.title_score }),
+        StatCard({ label: 'Description', value: score.description_score }),
+        StatCard({ label: 'Tags', value: score.tags_score }),
       ),
-      scorecard.recommendations?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)', color: 'var(--accent)' } }, '\uD83D\uDCA1'),
-          React.createElement('h3', null, 'Recommendations'),
-        ),
-        React.createElement('ul', { className: 'rec-list' }, scorecard.recommendations.map((r, i) => React.createElement('li', { key: i, style: { padding: '8px 0 8px 24px', borderBottom: '1px solid var(--border)', fontSize: '.85rem', color: 'var(--text-2)', position: 'relative', listStyle: 'none' } },
-          React.createElement('span', { style: { position: 'absolute', left: 0, color: 'var(--primary)' } }, '\u2192'), r,
-        ))),
+      score.recommendations?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recommendations')),
+        score.recommendations.map((rec, i) => React.createElement('div', { key: i, className: 'info-tip' }, rec)),
       ) : null,
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDD0D', title: 'Enter a channel', text: 'Get an SEO scorecard with optimization recommendations.' }) : null,
+    ) : EmptyState({ icon: 'seo', title: 'SEO Scorecard', text: 'Enter a channel ID to get an SEO score with actionable recommendations.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  THUMBNAIL A/B TEST
+// ═══════════════════════════════════════════════════════════════
 function ThumbnailTestPage() {
   const { api } = useAuth();
-  const [urlA, setUrlA] = useState('');
-  const [urlB, setUrlB] = useState('');
+  const [thumbA, setThumbA] = useState('');
+  const [thumbB, setThumbB] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const test = async () => {
-    if (!urlA.trim() || !urlB.trim()) { setErr('Both thumbnail URLs are required'); return; }
+    if (!thumbA.trim() || !thumbB.trim()) return;
     setLoading(true); setErr(''); setResult(null);
     try {
-      const res = await api('/api/thumbnail-test', { method: 'POST', body: JSON.stringify({ thumbnail_a_url: urlA, thumbnail_b_url: urlB }) });
+      const res = await api('/api/thumbnail-test', { method: 'POST', body: JSON.stringify({ thumbnail_a_url: thumbA, thumbnail_b_url: thumbB }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) { setResult(d); }
-      else { setErr(d.detail || 'Test failed'); }
+      if (res.ok) setResult(d); else setErr(d.detail || 'Test failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
   return React.createElement('div', null,
-    PageHeader({ title: 'A/B Thumbnail Tester', subtitle: 'AI predicts which thumbnail performs better' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr', maxWidth: 600 } },
-        React.createElement('input', { className: 'input', placeholder: 'Thumbnail A URL...', value: urlA, onChange: e => setUrlA(e.target.value) }),
-        React.createElement('input', { className: 'input', placeholder: 'Thumbnail B URL...', value: urlB, onChange: e => setUrlB(e.target.value) }),
+    PageHeader({ title: 'A/B Thumbnails', subtitle: 'Test thumbnail variations before publishing' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'grid-2 mb-16' },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Thumbnail A URL'),
+          React.createElement('input', { className: 'input', value: thumbA, onChange: e => setThumbA(e.target.value), placeholder: 'https://...' }),
+        ),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Thumbnail B URL'),
+          React.createElement('input', { className: 'input', value: thumbB, onChange: e => setThumbB(e.target.value), placeholder: 'https://...' }),
+        ),
       ),
-      React.createElement('button', { className: 'btn btn-accent', style: { marginTop: 8 }, onClick: test, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Compare'),
-      React.createElement(ErrorBox, { message: err }),
+      React.createElement('button', { className: 'btn btn-primary', onClick: test, disabled: loading },
+        loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'thumbnail', size: 16 }), loading ? 'Testing' : 'Run Test'),
     ),
-    result ? React.createElement('div', { className: 'grid-2', style: { marginTop: 16 } },
-      ['a', 'b'].map(side => {
-        const data = result[`thumbnail_${side}`];
-        return React.createElement('div', { key: side, className: 'card', style: { border: result.winner === side.toUpperCase() ? '2px solid var(--success)' : '1px solid var(--border)', textAlign: 'center' } },
-          React.createElement('div', { style: { fontSize: '2.5rem', fontWeight: 800, color: scoreColor(data?.score * 10) } }, data?.score || 0),
-          React.createElement('div', { className: 'label', style: { fontSize: '.9rem', marginBottom: 8 } }, `Thumbnail ${side.toUpperCase()}${result.winner === side.toUpperCase() ? ' \uD83C\uDFC6' : ''}`),
-          data?.factors?.length ? data.factors.map((f, i) => React.createElement('div', { key: i, style: { fontSize: '.8rem', color: 'var(--text-2)', padding: '4px 0', borderBottom: '1px solid var(--border)' } }, f)) : null,
-        );
-      }),
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDDBC', title: 'Compare thumbnails', text: 'Enter two thumbnail URLs to see which one performs better.' }) : null,
+    err ? ErrorBox({ message: err }) : null,
+    result ? React.createElement('div', { className: 'card' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Test Results')),
+      React.createElement('div', { className: 'grid-2' },
+        React.createElement('div', { className: 'p-16 border', style: { textAlign: 'center' } },
+          React.createElement('div', { className: 'text-xs text-muted mb-8' }, 'Thumbnail A'),
+          React.createElement('div', { style: { fontSize: '2rem', fontWeight: 800, color: scoreColor(result.a_score || 50) } }, result.a_score || '\u2014'),
+        ),
+        React.createElement('div', { className: 'p-16 border', style: { textAlign: 'center' } },
+          React.createElement('div', { className: 'text-xs text-muted mb-8' }, 'Thumbnail B'),
+          React.createElement('div', { style: { fontSize: '2rem', fontWeight: 800, color: scoreColor(result.b_score || 50) } }, result.b_score || '\u2014'),
+        ),
+      ),
+      result.winner ? React.createElement('div', { className: 'info-tip mt-16', style: { textAlign: 'center' } },
+        'Winner: Thumbnail ', result.winner.toUpperCase(), ' (', result.confidence || 'high', ' confidence)') : null,
+    ) : EmptyState({ icon: 'thumbnail', title: 'A/B Thumbnail Testing', text: 'Compare two thumbnail designs to see which will perform better.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  TREND ALERTS
+// ═══════════════════════════════════════════════════════════════
 function TrendAlertsPage() {
   const { api } = useAuth();
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const check = async () => {
-    setLoading(true);
-    try {
-      const res = await api('/api/trends/check', { method: 'POST', body: JSON.stringify({}) });
-      if (res?.ok) { const d = await res.json(); setAlerts(d.alerts || d.results || d || []); }
-    } catch { }
-    finally { setLoading(false); }
-  };
-
-  const items = Array.isArray(alerts) ? alerts : [];
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    api('/api/alerts').then(async r => { if (r?.ok) { setAlerts(await r.json()); } setLoading(false); });
+  }, []);
   return React.createElement('div', null,
-    PageHeader({ title: 'Trend Alerts', subtitle: 'Discover trending topics in your niche',
-      action: React.createElement('button', { className: 'btn btn-accent', onClick: check, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : '\uD83D\uDD14 Check Trends'),
-    }),
-    items.length ? React.createElement('div', { className: 'content-list' },
-      items.map((a, i) => React.createElement('div', { key: i, className: 'card', style: { padding: 16, borderLeft: `4px solid ${(a.strength || a.severity) === 'high' ? 'var(--primary)' : 'var(--warning)'}` } },
-        React.createElement('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-start' } },
-          React.createElement('span', { style: { fontSize: '1.1rem' } }, '\uD83D\uDD25'),
-          React.createElement('div', null,
-            React.createElement('p', { style: { fontWeight: 600, fontSize: '.88rem' } }, a.topic || a.title),
-            React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.82rem' } }, a.message || a.description),
-            a.platform ? React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.75rem', marginTop: 4 } }, `Platform: ${a.platform} \u00B7 Strength: ${a.strength || a.severity}`) : null,
-          ),
+    PageHeader({ title: 'Trend Alerts', subtitle: 'Stay on top of trending topics in your niche' }),
+    loading ? Skeleton({ count: 2 }) : alerts?.length ? React.createElement('div', null,
+      alerts.map((alert, i) => React.createElement('div', { key: i, className: 'card flex items-center gap-16' },
+        React.createElement('div', { style: { width: 40, height: 40, borderRadius: 10, background: 'var(--accent-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 } }, Icon({ name: 'trends', size: 18 })),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'font-semibold' }, alert.topic || alert.title || 'Trend'),
+          alert.description ? React.createElement('div', { className: 'text-sm text-2 mt-8' }, alert.description) : null,
+          alert.score ? React.createElement('div', { className: 'mt-8' }, React.createElement('div', { className: 'progress-bar', style: { width: 120 } }, React.createElement('div', { className: `progress-bar-fill ${scoreClass(alert.score)}`, style: { width: alert.score + '%' } }))) : null,
         ),
-      )),
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDCA1', title: 'Check for trends', text: 'Click "Check Trends" to discover trending topics in your niche.' }) : null,
+        alert.platform ? React.createElement('span', { className: 'badge badge-primary' }, alert.platform) : null,
+      ))
+    ) : EmptyState({ icon: 'trends', title: 'No trend alerts', text: 'Trend alerts are generated based on your niche and monitored channels. Check back soon.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  COMMENT ANALYZER
+// ═══════════════════════════════════════════════════════════════
 function CommentsPage() {
   const { api } = useAuth();
-  const [url, setUrl] = useState('');
-  const [data, setData] = useState(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
   const analyze = async () => {
-    if (!url.trim()) return;
-    setLoading(true); setErr(''); setData(null);
+    if (!videoUrl.trim()) return;
+    setLoading(true); setErr(''); setResult(null);
     try {
-      const res = await api('/api/comments/analyze', { method: 'POST', body: JSON.stringify({ video_url: url }) });
+      const res = await api('/api/comments/analyze', { method: 'POST', body: JSON.stringify({ video_url: videoUrl }) });
       if (!res) return;
       const d = await res.json();
-      if (res.ok) setData(d);
-      else setErr(d.detail || 'Failed');
+      if (res.ok) setResult(d); else setErr(d.detail || 'Analysis failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
-
-  const sen = data?.sentiment_breakdown || {};
-  const total = (sen.positive || 0) + (sen.neutral || 0) + (sen.negative || 0) || 1;
-  const pct = (v) => Math.round((v / total) * 100);
-
   return React.createElement('div', null,
-    PageHeader({ title: 'Comment Analyzer', subtitle: 'Analyze audience sentiment and extract topics' }),
-    React.createElement('div', { className: 'card' },
-      React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
-        React.createElement('input', { className: 'input', placeholder: 'https://youtube.com/watch?v=...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
-        React.createElement('button', { className: 'btn btn-accent', onClick: analyze, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : 'Analyze'),
+    PageHeader({ title: 'Comments', subtitle: 'AI-powered comment sentiment analysis' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'form-group' },
+        React.createElement('label', null, 'Video URL'),
+        React.createElement('div', { className: 'flex gap-8' },
+          React.createElement('input', { className: 'input', value: videoUrl, onChange: e => setVideoUrl(e.target.value), placeholder: 'https://youtube.com/watch?v=...', onKeyDown: e => e.key === 'Enter' && analyze() }),
+          React.createElement('button', { className: 'btn btn-primary', onClick: analyze, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'comments', size: 16 }), ' Analyze'),
+        ),
       ),
-      React.createElement(ErrorBox, { message: err }),
     ),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    data ? React.createElement('div', null,
-      React.createElement('div', { className: 'card' },
-        React.createElement('h3', { style: { marginBottom: 4 } }, data.video_title || 'Untitled Video'),
-        React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem' } }, `${data.total_comments || total} comments analyzed`),
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 1 }) : result ? React.createElement('div', null,
+      React.createElement('div', { className: 'stats' },
+        StatCard({ label: 'Total Comments', value: result.total_comments }),
+        StatCard({ label: 'Positive', value: result.sentiment?.positive || 0 }),
+        StatCard({ label: 'Negative', value: result.sentiment?.negative || 0 }),
+        StatCard({ label: 'Neutral', value: result.sentiment?.neutral || 0 }),
       ),
-      React.createElement('div', { className: 'stats', style: { gridTemplateColumns: 'repeat(3, 1fr)' } },
-        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid var(--success)' } },
-          React.createElement('div', { className: 'label' }, 'Positive'),
-          React.createElement('div', { className: 'value' }, `${pct(sen.positive)}%`),
-          React.createElement('div', { className: 'change', style: { color: 'var(--success)' } }, `${sen.positive || 0} comments`),
-        ),
-        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid var(--warning)' } },
-          React.createElement('div', { className: 'label' }, 'Neutral'),
-          React.createElement('div', { className: 'value' }, `${pct(sen.neutral)}%`),
-          React.createElement('div', { className: 'change', style: { color: 'var(--warning)' } }, `${sen.neutral || 0} comments`),
-        ),
-        React.createElement('div', { className: 'stat', style: { borderLeft: '4px solid var(--error)' } },
-          React.createElement('div', { className: 'label' }, 'Negative'),
-          React.createElement('div', { className: 'value' }, `${pct(sen.negative)}%`),
-          React.createElement('div', { className: 'change', style: { color: 'var(--error)' } }, `${sen.negative || 0} comments`),
-        ),
-      ),
-      data.topics?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)' } }, '\uD83D\uDCDD'),
-          React.createElement('h3', null, 'Topics Mentioned'),
-        ),
-        React.createElement('div', null, data.topics.map((t, i) => React.createElement('span', { key: i, className: 'tag' }, t))),
+      result.top_themes?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Top Themes')),
+        result.top_themes.map((theme, i) => React.createElement('div', { key: i, className: 'info-tip' }, theme.theme || theme.label || theme, ' (', theme.count || theme.score || '', ')')),
       ) : null,
-      data.summary ? React.createElement('div', { className: 'card', style: { background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.2)' } },
-        React.createElement('h3', { style: { fontSize: '.85rem', color: 'var(--accent)', marginBottom: 8 } }, '\uD83E\uDD16 AI Summary'),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.6 } }, data.summary),
+      result.summary ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Summary')),
+        React.createElement('p', { className: 'text-sm text-2' }, result.summary),
       ) : null,
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDCAC', title: 'Enter a video URL', text: 'Analyze audience comments with AI sentiment and topic extraction.' }) : null,
+    ) : EmptyState({ icon: 'comments', title: 'Comment Analyzer', text: 'Analyze sentiment and themes in your video comments with AI.' }),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  PUBLISHING ASSISTANT
+// ═══════════════════════════════════════════════════════════════
 function PublishingPage() {
   const { api } = useAuth();
-  const [data, setData] = useState(null);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
-
-  useEffect(() => {
-    (async () => { setLoading(true); const r = await api('/api/publishing/analyze', { method: 'POST', body: JSON.stringify({}) }); if (r?.ok) setData(await r.json()); setLoading(false); })();
-  }, [api]);
-
-  return React.createElement('div', null,
-    PageHeader({ title: 'Publishing Assistant', subtitle: 'Optimal posting times and CTR predictions' }),
-    React.createElement(ErrorBox, { message: err }),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    data ? React.createElement('div', null,
-      React.createElement('div', { className: 'stats' },
-        React.createElement(StatCard, { label: 'Predicted CTR', value: `${data.predicted_ctr || '?'}%` }),
-        React.createElement(StatCard, { label: 'Niche', value: data.niche || 'N/A' }),
-        React.createElement(StatCard, { label: 'Subscribers', value: data.subscriber_count }),
-        React.createElement(StatCard, { label: 'Best Day', value: data.best_day || 'N/A' }),
-      ),
-      data.best_time_slots?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)' } }, '\u23F0'),
-          React.createElement('h3', null, 'Best Posting Times'),
-        ),
-        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 } },
-          data.best_time_slots.map((slot, i) => React.createElement('div', { key: i, className: 'stat', style: { borderLeft: `4px solid ${scoreColor(slot.score || 0)}`, padding: 12 } },
-            React.createElement('div', { className: 'label' }, `${slot.day} ${slot.time}`),
-            React.createElement('div', { className: 'value', style: { fontSize: '1.1rem' } }, `${slot.score || 0}/100`),
-          )),
-        ),
-      ) : null,
-      data.recommendation ? React.createElement('div', { className: 'card', style: { background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.2)' } },
-        React.createElement('h3', { style: { fontSize: '.85rem', color: 'var(--accent)', marginBottom: 8 } }, '\uD83D\uDCCC Recommendation'),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.6 } }, data.recommendation),
-      ) : null,
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDCE4', title: 'Loading insights', text: 'Publishing insights will appear here once data is available.' }) : null,
-  );
-}
-
-function AlgoShiftPage() {
-  const { api } = useAuth();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-
-  useEffect(() => {
-    (async () => { setLoading(true); try { const r = await api('/api/algo-shift/analyze', { method: 'POST', body: JSON.stringify({}) }); if (r?.ok) setData(await r.json()); else if (r) setErr((await r.json()).detail); } catch { } setLoading(false); })();
-  }, [api]);
-
-  const shifts = data?.shifts || data?.results || [];
-
-  return React.createElement('div', null,
-    PageHeader({ title: 'Algorithm Shift Tracker', subtitle: 'Detect algorithm changes and get recommendations' }),
-    React.createElement(ErrorBox, { message: err }),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    shifts.length ? shifts.map((ch, i) =>
-      React.createElement('div', { key: i, className: 'card', style: { marginBottom: 16 } },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)' } }, ch.shift_type === 'decline' ? '\u2B07' : '\u2B06'),
-          React.createElement('h3', null, ch.channel_title || 'Channel'),
-          React.createElement('span', { className: `badge ${ch.shift_type === 'decline' ? 'badge-error' : ch.shift_type === 'surge' ? 'badge-success' : 'badge-warning'}`, style: { fontSize: '.6rem' } }, (ch.shift_type || 'stable').toUpperCase()),
-        ),
-        React.createElement('div', { className: 'stats' },
-          React.createElement(StatCard, { label: 'Subscribers', value: ch.current_subscribers, change: `${ch.subscriber_change_pct > 0 ? '+' : ''}${ch.subscriber_change_pct || 0}%`, changeDir: (ch.subscriber_change_pct || 0) >= 0 ? 'up' : 'down' }),
-          React.createElement(StatCard, { label: 'Views Change', value: `${ch.view_change_pct || 0}%` }),
-          React.createElement(StatCard, { label: 'Engagement', value: `${(ch.engagement_change || 0).toFixed(1)}%` }),
-        ),
-        ch.anomalies?.length ? React.createElement('div', { style: { marginBottom: 12 } },
-          React.createElement('h4', { style: { fontSize: '.82rem', marginBottom: 6, color: 'var(--error)' } }, '\u26A0\uFE0F Anomalies'),
-          ch.anomalies.map((a, j) => React.createElement('div', { key: j, style: { padding: '6px 10px', background: 'rgba(239,68,68,.08)', borderRadius: 'var(--radius-sm)', marginBottom: 4, fontSize: '.82rem', color: 'var(--error)' } }, a)),
-        ) : null,
-        ch.recommendations?.length ? React.createElement('div', null,
-          React.createElement('h4', { style: { fontSize: '.82rem', marginBottom: 6, color: 'var(--accent)' } }, '\uD83D\uDCCC Recommendations'),
-          ch.recommendations.map((r, j) => React.createElement('div', { key: j, style: { padding: '6px 10px', background: 'rgba(59,130,246,.08)', borderRadius: 'var(--radius-sm)', marginBottom: 4, fontSize: '.82rem' } }, r)),
-        ) : null,
-      )
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDCC8', title: 'No shifts detected', text: data?.message || 'Analyze more channels to detect algorithm shifts.' }) : null,
-  );
-}
-
-function EditingPage() {
-  const { api } = useAuth();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-
-  useEffect(() => {
-    (async () => { setLoading(true); const r = await api('/api/editing/analyze', { method: 'POST', body: JSON.stringify({}) }); if (r?.ok) setData(await r.json()); setLoading(false); })();
-  }, [api]);
-
-  return React.createElement('div', null,
-    PageHeader({ title: 'Editing Coach', subtitle: 'AI-powered editing recommendations' }),
-    React.createElement(ErrorBox, { message: err }),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    data?.needs_auth ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 40 } },
-      React.createElement('div', { style: { fontSize: '3rem', marginBottom: 12 } }, '\uD83D\uDD17'),
-      React.createElement('h3', null, 'Connect YouTube Account'),
-      React.createElement('p', { style: { color: 'var(--text-3)', marginBottom: 16, fontSize: '.85rem' } }, data.message || 'Connect your YouTube account to access editing insights'),
-      React.createElement('button', { className: 'btn btn-primary', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, 'Connect YouTube'),
-    ) : data ? React.createElement('div', null,
-      React.createElement('div', { className: 'stats' },
-        React.createElement(StatCard, { label: 'Retention', value: `${data.avg_retention_pct?.toFixed(1) || '-'}%` }),
-        React.createElement(StatCard, { label: 'Views (7d)', value: fmtNum(data.total_views_7d) }),
-      ),
-      data.editing_tips?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(59,130,246,.12)' } }, '\u2702\uFE0F'),
-          React.createElement('h3', null, 'Editing Tips'),
-        ),
-        data.editing_tips.map((tip, i) => React.createElement('div', { key: i, style: { padding: '8px 0', fontSize: '.85rem', borderBottom: i < data.editing_tips.length - 1 ? '1px solid var(--border)' : 'none' } }, `${i + 1}. ${tip}`)),
-      ) : null,
-      data.recommendation ? React.createElement('div', { className: 'card', style: { background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.2)' } },
-        React.createElement('h3', { style: { fontSize: '.85rem', color: 'var(--accent)', marginBottom: 8 } }, '\uD83D\uDCCC Recommendation'),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.6 } }, data.recommendation),
-      ) : null,
-    ) : !loading ? EmptyState({ icon: '\uD83D\uDD79\uFE0F', title: 'Connect to get started', text: 'Connect your YouTube account to receive AI editing recommendations.' }) : null,
-  );
-}
-
-function AgentPage() {
-  const { api } = useAuth();
-  const [plan, setPlan] = useState(null);
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
-  const [tab, setTab] = useState('plan');
-
-  const load = async () => {
-    setLoading(true); setErr('');
+  const analyze = async () => {
+    setLoading(true); setErr(''); setResult(null);
     try {
-      const r = await api('/api/agent/plan', { method: 'POST', body: JSON.stringify({}) });
-      if (r?.ok) setPlan(await r.json());
-      else if (r) setErr((await r.json()).detail);
+      const res = await api('/api/publishing/insights', { method: 'POST', body: JSON.stringify({}) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setResult(d); else setErr(d.detail || 'Failed');
     } catch { setErr('Network error'); }
     finally { setLoading(false); }
   };
+  useEffect(() => { analyze(); }, []);
+  return React.createElement('div', null,
+    PageHeader({ title: 'Publishing', subtitle: 'AI-powered publishing insights and scheduling' }),
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 2 }) : result ? React.createElement('div', null,
+      result.best_times?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Best Publishing Times')),
+        result.best_times.map((t, i) => React.createElement('div', { key: i, className: 'flex items-center gap-12 p-16 border mb-8' },
+          Icon({ name: 'clock', size: 18 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'font-semibold text-sm' }, t.day || 'Day', ' at ', t.time || t.hour || '\u2014'),
+            t.reason ? React.createElement('div', { className: 'text-xs text-muted' }, t.reason) : null,
+          ),
+          t.score ? React.createElement('span', { className: `badge badge-${scoreClass(t.score)}` }, t.score) : null,
+        )),
+      ) : null,
+      result.recommendations?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recommendations')),
+        result.recommendations.map((rec, i) => React.createElement('div', { key: i, className: 'info-tip' }, rec)),
+      ) : null,
+      !result.best_times?.length && !result.recommendations?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem' } }, JSON.stringify(result, null, 2))) : null,
+    ) : EmptyState({ icon: 'publishing', title: 'Publishing Assistant', text: 'Get AI-powered recommendations for when and how to publish your videos.' }),
+  );
+}
 
-  const loadStatus = async () => {
-    setLoading(true); setErr('');
+// ═══════════════════════════════════════════════════════════════
+//  ALGORITHM SHIFT TRACKER
+// ═══════════════════════════════════════════════════════════════
+function AlgoShiftPage() {
+  const { api } = useAuth();
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const analyze = async () => {
+    setLoading(true); setErr(''); setResult(null);
     try {
-      const r = await api('/api/agent/status');
-      if (r?.ok) setStatus(await r.json());
+      const res = await api('/api/algorithm/shifts', { method: 'POST', body: JSON.stringify({}) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setResult(d); else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { analyze(); }, []);
+  return React.createElement('div', null,
+    PageHeader({ title: 'Algo Shifts', subtitle: 'Track algorithm changes and their impact on your channel' }),
+    err ? ErrorBox({ message: err }) : null,
+    loading ? Skeleton({ count: 2 }) : result?.shifts?.length ? React.createElement('div', null,
+      result.shifts.map((shift, i) => React.createElement('div', { key: i, className: 'card' },
+        React.createElement('div', { className: 'flex items-center gap-12 mb-16' },
+          Icon({ name: 'algo', size: 20 }),
+          React.createElement('div', { style: { flex: 1 } },
+            React.createElement('div', { className: 'font-semibold' }, shift.type || shift.title || 'Algorithm Shift'),
+            React.createElement('div', { className: 'text-xs text-muted' }, shift.date || shift.detected_at || ''),
+          ),
+          shift.impact ? React.createElement('span', { className: `badge badge-${shift.impact === 'high' ? 'error' : shift.impact === 'medium' ? 'warning' : 'neutral'}` }, shift.impact) : null,
+        ),
+        shift.description ? React.createElement('p', { className: 'text-sm text-2' }, shift.description) : null,
+        shift.recommendation ? React.createElement('div', { className: 'info-tip mt-16' }, 'Recommendation: ', shift.recommendation) : null,
+      ))
+    ) : result && !result.shifts?.length ? EmptyState({ icon: 'algo', title: 'No shifts detected', text: 'No algorithm shifts detected yet. We monitor for changes that could affect your channel.' }) : EmptyState({ icon: 'algo', title: 'Algorithm Shift Tracker', text: 'Track YouTube algorithm changes and get recommendations for adapting your strategy.' }),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EDITING COACH
+// ═══════════════════════════════════════════════════════════════
+function EditingPage() {
+  const { api } = useAuth();
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const analyze = async () => {
+    setLoading(true); setErr(''); setResult(null); setNeedsAuth(false);
+    try {
+      const res = await api('/api/editing/analyze', { method: 'POST', body: JSON.stringify({}) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) {
+        if (d.needs_auth) { setNeedsAuth(true); setResult(null); }
+        else setResult(d);
+      } else setErr(d.detail || 'Failed');
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { analyze(); }, []);
+  return React.createElement('div', null,
+    PageHeader({ title: 'Editing Coach', subtitle: 'Retention-based editing feedback powered by YouTube Analytics' }),
+    err ? ErrorBox({ message: err }) : null,
+    needsAuth ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
+      Icon({ name: 'key', size: 32 }),
+      React.createElement('h2', { className: 'mt-16' }, 'Connect your YouTube account'),
+      React.createElement('p', { className: 'text-sm text-2 mt-8 mb-24' }, 'Editing Coach uses YouTube Analytics to analyze your retention data. Connect your account to get started.'),
+      React.createElement('button', { className: 'btn btn-primary', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
+    ) : loading ? Skeleton({ count: 2 }) : result ? React.createElement('div', null,
+      result.retention_rate != null ? React.createElement('div', { className: 'stats' },
+        StatCard({ label: 'Avg Retention', value: result.retention_rate ? result.retention_rate.toFixed(1) + '%' : null }),
+        StatCard({ label: 'Avg View Duration', value: result.avg_view_duration }),
+        StatCard({ label: 'Watch Time (hrs)', value: result.watch_time_hours }),
+      ) : null,
+      result.tips?.length ? React.createElement('div', { className: 'card' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Editing Tips')),
+        result.tips.map((tip, i) => React.createElement('div', { key: i, className: 'info-tip' }, tip.tip || tip.title || tip)),
+      ) : null,
+      !result.tips?.length && result.retention_rate == null ? React.createElement('div', { className: 'card' },
+        React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem' } }, JSON.stringify(result, null, 2))) : null,
+    ) : EmptyState({ icon: 'editing', title: 'Editing Coach', text: 'Connect your YouTube account to get retention-based editing feedback.' }),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GROWTH AGENT
+// ═══════════════════════════════════════════════════════════════
+function AgentPage() {
+  const { api } = useAuth();
+  const [status, setStatus] = useState(null);
+  const [plan, setPlan] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  useEffect(() => {
+    api('/api/agent/status').then(async r => { if (r?.ok) setStatus(await r.json()); });
+  }, []);
+  const generatePlan = async () => {
+    setGenerating(true);
+    try {
+      const res = await api('/api/agent/weekly-plan', { method: 'POST', body: JSON.stringify({}) });
+      if (res?.ok) { setPlan(await res.json()); }
+    } catch { }
+    finally { setGenerating(false); }
+  };
+  return React.createElement('div', null,
+    PageHeader({ title: 'Growth Agent', subtitle: 'Your personal AI growth strategist',
+      action: React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: generatePlan, disabled: generating },
+        generating ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'sparkles', size: 14 }), generating ? 'Generating' : ' New Plan') }),
+    status ? React.createElement('div', { className: 'stats mb-24' },
+      StatCard({ label: 'Plan Status', value: status.active ? 'Active' : 'Idle' }),
+      StatCard({ label: 'Last Plan', value: status.last_plan_date || '\u2014' }),
+      StatCard({ label: 'Tasks Done', value: status.tasks_completed || 0 }),
+    ) : null,
+    generating ? Skeleton({ count: 2 }) : plan ? React.createElement('div', { className: 'card' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Weekly Growth Plan')),
+      plan.plan ? React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem', lineHeight: 1.6 } }, plan.plan) : React.createElement('pre', { style: { whiteSpace: 'pre-wrap', fontSize: '.88rem' } }, JSON.stringify(plan, null, 2)),
+    ) : EmptyState({ icon: 'agent', title: 'Growth Agent', text: 'Generate a personalized weekly growth plan based on your channel data and trends.', action: React.createElement('button', { className: 'btn btn-primary', onClick: generatePlan }, Icon({ name: 'sparkles', size: 16 }), ' Generate First Plan') }),
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PRICING & BILLING
+// ═══════════════════════════════════════════════════════════════
+function PricingPage() {
+  const { user } = useAuth();
+  const plans = [
+    { id: 'free', name: 'Free', price: '$0', features: ['5 analyses/month', 'Basic dashboard', '1 monitored channel'], featured: false },
+    { id: 'pro', name: 'Pro', price: '$19', features: ['Unlimited analyses', 'All features', '10 monitored channels', 'Weekly reports', 'Priority support'], featured: true },
+    { id: 'business', name: 'Business', price: '$49', features: ['Everything in Pro', 'Unlimited channels', 'Team access (5 seats)', 'API access', 'Custom reports'], featured: false },
+  ];
+  return React.createElement('div', null,
+    PageHeader({ title: 'Pricing', subtitle: 'Choose the plan that fits your channel' }),
+    React.createElement('div', { className: 'grid-3' },
+      plans.map(p => React.createElement('div', { key: p.id, className: 'card', style: p.featured ? { borderColor: 'var(--primary)', position: 'relative' } : {} },
+        p.featured ? React.createElement('span', { className: 'badge badge-primary', style: { position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)' } }, 'Popular') : null,
+        React.createElement('h3', { style: { fontSize: '1rem', fontWeight: 700, marginBottom: 4 } }, p.name),
+        React.createElement('div', { style: { fontSize: '2rem', fontWeight: 800, marginBottom: 16 } }, p.price, React.createElement('span', { style: { fontSize: '.85rem', fontWeight: 400, color: 'var(--text-3)' } }, '/mo')),
+        React.createElement('ul', { style: { listStyle: 'none', padding: 0, margin: '0 0 20px' } },
+          p.features.map((f, i) => React.createElement('li', { key: i, style: { padding: '8px 0', fontSize: '.85rem', color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 8, borderBottom: i < p.features.length - 1 ? '1px solid var(--border)' : 'none' } },
+            Icon({ name: 'check', size: 14 }), f))
+        ),
+        React.createElement('button', { className: `btn ${p.featured ? 'btn-primary' : 'btn-secondary'} w-full`, disabled: user?.plan === p.id },
+          user?.plan === p.id ? 'Current Plan' : 'Upgrade'),
+      ))
+    ),
+  );
+}
+function BillingPage() {
+  const { api } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const openPortal = async () => {
+    setLoading(true);
+    try {
+      const res = await api('/api/billing/portal', { method: 'POST', body: JSON.stringify({}) });
+      if (res?.ok) { const d = await res.json(); if (d.url) window.location.href = d.url; }
     } catch { }
     finally { setLoading(false); }
   };
-
-  useEffect(() => { if (tab === 'plan') load(); else loadStatus(); }, [tab]);
-
   return React.createElement('div', null,
-    PageHeader({ title: 'Growth Agent', subtitle: 'Autonomous AI for weekly growth plans',
-      action: React.createElement('div', { style: { display: 'flex', gap: 8 } },
-        React.createElement('button', { className: `btn ${tab === 'plan' ? 'btn-primary' : 'btn-ghost'} btn-sm`, onClick: () => setTab('plan') }, 'Plan'),
-        React.createElement('button', { className: `btn ${tab === 'status' ? 'btn-primary' : 'btn-ghost'} btn-sm`, onClick: () => setTab('status') }, 'Status'),
-      ),
-    }),
-    React.createElement(ErrorBox, { message: err }),
-    loading ? React.createElement(Skeleton, { count: 2 }) : null,
-    tab === 'plan' && plan ? React.createElement('div', null,
-      plan.weekly_focus ? React.createElement('div', { className: 'card', style: { background: 'rgba(59,130,246,.06)', border: '1px solid rgba(59,130,246,.2)', marginBottom: 16 } },
-        React.createElement('h3', { style: { fontSize: '.85rem', color: 'var(--accent)', marginBottom: 8 } }, '\uD83C\uDF1F Weekly Focus'),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.6 } }, plan.weekly_focus),
-      ) : null,
-      plan.days?.length ? React.createElement('div', null,
-        React.createElement('h3', { style: { fontSize: '1rem', fontWeight: 700, marginBottom: 12 } }, '\uD83D\uDCC5 7-Day Content Plan'),
-        plan.days.map((d, i) => React.createElement('div', { key: i, className: 'card', style: { marginBottom: 8, borderLeft: `4px solid ${d.publish_ready ? 'var(--success)' : 'var(--warning)'}` } },
-          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 } },
-            React.createElement('h4', { style: { fontSize: '.9rem' } }, d.day),
-            React.createElement('span', { className: `badge ${d.publish_ready ? 'badge-success' : 'badge-warning'}`, style: { fontSize: '.6rem' } }, d.publish_ready ? 'PUBLISH' : 'IMPROVE'),
-          ),
-          React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.85rem' } }, d.task || d.title),
-          d.suggested_title ? React.createElement('p', { style: { fontWeight: 600, fontSize: '.88rem', marginTop: 4 } }, d.suggested_title) : null,
-          d.thumbnail_idea ? React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.8rem', marginTop: 4 } }, `\uD83D\uDDBC ${d.thumbnail_idea}`) : null,
-        )),
-      ) : null,
-      plan.competitor_insights?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' },
-          React.createElement('div', { className: 'card-icon', style: { background: 'rgba(245,158,11,.12)' } }, '\uD83D\uDC65'),
-          React.createElement('h3', null, 'Competitor Insights'),
-        ),
-        plan.competitor_insights.map((ci, i) => React.createElement('div', { key: i, style: { padding: '6px 0', fontSize: '.85rem', borderBottom: i < plan.competitor_insights.length - 1 ? '1px solid var(--border)' : 'none' } }, ci)),
-      ) : null,
-    ) : null,
-    tab === 'status' && status ? React.createElement('div', null,
-      React.createElement('div', { className: 'stats' },
-        React.createElement(StatCard, { label: 'Channels', value: status.channel_count || status.channels }),
-        React.createElement(StatCard, { label: 'Ideas', value: status.saved_ideas || status.ideas }),
-        React.createElement(StatCard, { label: 'Events', value: status.calendar_events || status.events }),
-        React.createElement(StatCard, { label: 'Competitors', value: status.watched_competitors || status.competitors }),
-      ),
-      status.agent_summary ? React.createElement('div', { className: 'card', style: { marginTop: 16 } },
-        React.createElement('h3', { style: { marginBottom: 8 } }, '\uD83E\uDD16 Agent Summary'),
-        React.createElement('p', { style: { color: 'var(--text-2)', fontSize: '.88rem', lineHeight: 1.6 } }, status.agent_summary),
-      ) : null,
-    ) : null,
-    !loading && !plan && !status ? EmptyState({ icon: '\uD83E\uDD16', title: 'Growth Agent', text: 'Let the Growth Agent analyze your channel to generate a personalized plan.' }) : null,
-  );
-}
-
-function PricingPage() {
-  const { api, user } = useAuth();
-  const [usage, setUsage] = useState(null);
-  useEffect(() => { if (!user) return; (async () => { const r = await api('/api/billing/usage'); if (r?.ok) setUsage(await r.json()); })(); }, [api, user]);
-
-  const plans = [
-    { id: 'free', name: 'Free', price: '$0', desc: 'Perfect for getting started', features: ['Basic channel analysis', 'Competitor discovery', 'Cross-platform search', '3 analyses/mo'] },
-    { id: 'pro', name: 'Pro', price: '$9', desc: 'For serious creators', features: ['Everything in Free', '50 analyses/mo', 'Export CSV/PDF', 'Idea generator', 'Content calendar'] },
-    { id: 'business', name: 'Business', price: '$29', desc: 'For teams & agencies', features: ['Everything in Pro', 'Unlimited analyses', 'API access', 'Team seats (5)', 'Priority support'] },
-  ];
-
-  return React.createElement('div', null,
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 36 } },
-      React.createElement('h1', { style: { fontSize: '2rem', fontWeight: 800, marginBottom: 8, letterSpacing: '-.03em' } }, 'Choose Your Plan'),
-      React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.95rem', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 } }, 'Unlock the full power of PopSearch.'),
-    ),
-    React.createElement('div', { className: 'stats', style: { gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 } },
-      plans.map((plan) => {
-        const isCurrent = usage?.plan === plan.id;
-        return React.createElement('div', { key: plan.id, className: 'card', style: { display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: isCurrent ? '2px solid var(--primary)' : '1px solid var(--border)' } },
-          plan.id === 'pro' ? React.createElement('div', { style: { position: 'absolute', top: 14, right: 14, background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: '#fff', padding: '4px 14px', borderRadius: 999, fontSize: '.68rem', fontWeight: 700 } }, 'Most Popular') : null,
-          React.createElement('h2', { style: { fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 } }, plan.name),
-          React.createElement('div', { style: { fontSize: '2.2rem', fontWeight: 800, marginBottom: 4 } }, plan.price, React.createElement('span', { style: { fontSize: '.9rem', fontWeight: 400, color: 'var(--text-3)' } }, '/mo')),
-          React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.82rem', marginBottom: 16 } }, plan.desc),
-          React.createElement('div', { style: { flex: 1 } },
-            plan.features.map((f, i) => React.createElement('div', { key: i, style: { padding: '6px 0', fontSize: '.83rem', color: 'var(--text-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 } },
-              React.createElement('span', { style: { color: 'var(--success)' } }, '\u2713'), f,
-            )),
-          ),
-          React.createElement('div', { style: { marginTop: 16 } },
-            isCurrent ? React.createElement('button', { className: 'btn btn-ghost', style: { width: '100%', justifyContent: 'center' }, disabled: true }, 'Current Plan') :
-            plan.id === 'free' ? React.createElement('button', { className: 'btn btn-ghost', style: { width: '100%', justifyContent: 'center' }, onClick: () => window.location.hash = 'login' }, 'Get Started') :
-            React.createElement('button', { className: plan.id === 'pro' ? 'btn btn-primary' : 'btn btn-accent', style: { width: '100%', justifyContent: 'center' }, onClick: async () => { const r = await api('/api/billing/checkout', { method: 'POST', body: JSON.stringify({ plan: plan.id }) }); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, 'Subscribe'),
-          ),
-        );
-      }),
+    PageHeader({ title: 'Billing', subtitle: 'Manage your subscription' }),
+    React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
+      Icon({ name: 'billing', size: 32 }),
+      React.createElement('h2', { className: 'mt-16' }, 'Manage your billing'),
+      React.createElement('p', { className: 'text-sm text-2 mt-8 mb-24' }, 'View invoices, update payment methods, or cancel your subscription via the billing portal.'),
+      React.createElement('button', { className: 'btn btn-primary', onClick: openPortal, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'mail', size: 16 }), ' Open Billing Portal'),
     ),
   );
 }
 
-function BillingPage() {
-  const { api } = useAuth();
-  const [usage, setUsage] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { (async () => { const r = await api('/api/billing/usage'); if (r?.ok) setUsage(await r.json()); setLoading(false); })(); }, [api]);
-  if (loading) return React.createElement(Skeleton, { count: 2 });
-
-  return React.createElement('div', null,
-    PageHeader({ title: 'Billing & Usage', subtitle: 'Manage your subscription' }),
-    usage ? React.createElement('div', { className: 'stats' },
-      React.createElement(StatCard, { label: 'Plan', value: usage.plan }),
-      React.createElement(StatCard, { label: 'Used', value: usage.analyses_this_month || 0 }),
-      React.createElement(StatCard, { label: 'Limit', value: usage.limit === -1 ? '\u221E' : usage.limit || 3 }),
-      React.createElement(StatCard, { label: 'Remaining', value: usage.remaining === -1 ? '\u221E' : usage.remaining || 0 }),
-    ) : null,
-    React.createElement('div', { className: 'card' },
-      React.createElement('h3', { style: { marginBottom: 12 } }, 'Manage Subscription'),
-      usage?.plan !== 'free' ? React.createElement('button', { className: 'btn btn-ghost', onClick: async () => { const r = await api('/api/billing/portal', { method: 'POST' }); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, 'Open Stripe Portal') : null,
-      React.createElement('button', { className: 'btn btn-primary', style: { marginLeft: 8 }, onClick: () => window.location.hash = 'pricing' }, 'View Plans'),
-    ),
-  );
-}
-
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════════════
 function SettingsPage() {
-  const { api, user, logout } = useAuth();
-  const toast = useToast();
-  const [usage, setUsage] = useState(null);
-  const [activeTab, setActiveTab] = useState('profile');
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  useEffect(() => { (async () => { const r = await api('/api/billing/usage'); if (r?.ok) setUsage(await r.json()); })(); }, [api]);
-
-  const tabs = ['profile', 'api-keys', 'channels'];
-  const tabLabels = { profile: 'Profile & Usage', 'api-keys': 'API Keys', channels: 'Channels' };
-
+  const { user, logout, api } = useAuth();
+  const [keys, setKeys] = useState([]);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [showDelete, setShowDelete] = useState(false);
+  useEffect(() => { api('/api/api-keys').then(async r => { if (r?.ok) setKeys(await r.json()); }); }, []);
+  const createKey = async () => {
+    if (!newKeyName.trim()) return;
+    const res = await api('/api/api-keys', { method: 'POST', body: JSON.stringify({ name: newKeyName }) });
+    if (res?.ok) { const k = await res.json(); setKeys(prev => [...prev, k]); setNewKeyName(''); }
+  };
+  const delKey = async (id) => { await api(`/api/api-keys/${id}`, { method: 'DELETE' }); setKeys(prev => prev.filter(k => k.id !== id)); };
+  const delAccount = async () => { await api('/api/account', { method: 'DELETE' }); logout(); window.location.reload(); };
   return React.createElement('div', null,
-    PageHeader({ title: 'Settings', subtitle: 'Manage your account and preferences' }),
-    React.createElement('div', { className: 'tabs' },
-      tabs.map(t => React.createElement('button', { key: t, className: `tab${activeTab === t ? ' active' : ''}`, onClick: () => setActiveTab(t) }, tabLabels[t])),
-    ),
-    React.createElement('div', { style: { display: activeTab === 'profile' ? 'block' : 'none' } },
-      React.createElement('div', { className: 'card' },
-        React.createElement('h3', { style: { marginBottom: 12 } }, 'Account Information'),
-        React.createElement('div', { style: { display: 'grid', gap: 10, gridTemplateColumns: '140px 1fr', fontSize: '.88rem' } },
-          React.createElement('span', { style: { color: 'var(--text-3)' } }, 'Email:'), React.createElement('span', null, user?.email),
-          React.createElement('span', { style: { color: 'var(--text-3)' } }, 'Plan:'), React.createElement('span', { style: { color: 'var(--primary)', fontWeight: 600 } }, usage?.plan || 'free'),
-          React.createElement('span', { style: { color: 'var(--text-3)' } }, 'Analyses:'), React.createElement('span', null, `${usage?.analyses_this_month || 0} / ${usage?.limit === -1 ? '\u221E' : usage?.limit || 3}`),
+    PageHeader({ title: 'Settings', subtitle: 'Manage your account and API keys' }),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Account')),
+      React.createElement('div', { className: 'flex items-center gap-16' },
+        React.createElement('div', { style: { width: 48, height: 48, borderRadius: 24, background: 'var(--primary-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 20 })),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'font-semibold' }, user?.email || 'User'),
+          React.createElement('div', { className: 'text-xs text-muted' }, 'Plan: ', (user?.plan || 'free').toUpperCase()),
         ),
-        React.createElement('button', { className: 'btn btn-ghost', style: { marginTop: 12 }, onClick: () => window.location.hash = 'pricing' }, 'Upgrade Plan'),
-      ),
-      React.createElement('div', { className: 'card', style: { borderColor: 'rgba(239,68,68,.3)' } },
-        React.createElement('h3', { style: { color: 'var(--error)', marginBottom: 8 } }, 'Danger Zone'),
-        React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem', marginBottom: 12 } }, 'Permanently delete your account and all data.'),
-        confirmDelete ? React.createElement('div', { style: { display: 'flex', gap: 8 } },
-          React.createElement('button', { className: 'btn', style: { background: 'var(--error)', color: '#fff' }, onClick: async () => { await api('/api/account', { method: 'DELETE' }); logout(); } }, 'Confirm Delete'),
-          React.createElement('button', { className: 'btn btn-ghost', onClick: () => setConfirmDelete(false) }, 'Cancel'),
-        ) : React.createElement('button', { className: 'btn btn-ghost', style: { borderColor: 'var(--error)', color: 'var(--error)' }, onClick: () => setConfirmDelete(true) }, 'Delete Account'),
+        React.createElement('button', { className: 'btn btn-ghost btn-sm', onClick: logout }, Icon({ name: 'logout', size: 14 }), ' Sign Out'),
       ),
     ),
-    React.createElement('div', { style: { display: activeTab === 'api-keys' ? 'block' : 'none' } },
-      React.createElement('div', { className: 'card' },
-        React.createElement('h3', { style: { marginBottom: 4 } }, 'API Keys'),
-        React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem', marginBottom: 12 } }, 'API keys are available on Business plan.'),
+    React.createElement('div', { className: 'card mb-16' },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'API Keys')),
+      keys.length ? keys.map(k => React.createElement('div', { key: k.id, className: 'flex items-center gap-12 p-16 border mb-8' },
+        Icon({ name: 'key', size: 16 }),
+        React.createElement('div', { style: { flex: 1 } },
+          React.createElement('div', { className: 'font-semibold text-sm' }, k.name),
+          React.createElement('div', { className: 'text-xs text-muted truncate' }, k.key || k.api_key),
+        ),
+        React.createElement('button', { className: 'icon-btn', onClick: () => delKey(k.id) }, Icon({ name: 'trash', size: 16 })),
+      )) : React.createElement('p', { className: 'text-sm text-muted' }, 'No API keys yet.'),
+      React.createElement('div', { className: 'flex gap-8 mt-16' },
+        React.createElement('input', { className: 'input', value: newKeyName, onChange: e => setNewKeyName(e.target.value), placeholder: 'Key name...', onKeyDown: e => e.key === 'Enter' && createKey() }),
+        React.createElement('button', { className: 'btn btn-primary', onClick: createKey }, Icon({ name: 'plus', size: 16 }), ' Create'),
       ),
     ),
-    React.createElement('div', { style: { display: activeTab === 'channels' ? 'block' : 'none' } },
-      React.createElement('div', { className: 'card' },
-        React.createElement('h3', { style: { marginBottom: 12 } }, 'Your Channels'),
-        React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.85rem' } }, 'Manage your YouTube channels from one account.'),
-      ),
+    React.createElement('div', { className: 'card', style: { borderColor: 'rgba(239,68,68,.2)' } },
+      React.createElement('div', { className: 'card-header' }, React.createElement('h3', { style: { color: 'var(--error)' } }, 'Danger Zone')),
+      showDelete ? React.createElement('div', null,
+        React.createElement('p', { className: 'text-sm text-2 mb-16' }, 'This will permanently delete your account and all data. This cannot be undone.'),
+        React.createElement('div', { className: 'flex gap-8' },
+          React.createElement('button', { className: 'btn btn-accent', onClick: delAccount }, 'Confirm Delete'),
+          React.createElement('button', { className: 'btn btn-ghost', onClick: () => setShowDelete(false) }, 'Cancel'),
+        ),
+      ) : React.createElement('button', { className: 'btn btn-ghost', style: { color: 'var(--error)' }, onClick: () => setShowDelete(true) }, Icon({ name: 'trash', size: 16 }), ' Delete Account'),
     ),
   );
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  ONBOARDING
+// ═══════════════════════════════════════════════════════════════
 function OnboardingPage() {
   const { api } = useAuth();
   const [step, setStep] = useState(0);
-  const [url, setUrl] = useState('');
-  const steps = [
-    { title: 'Welcome!', icon: '\uD83D\uDC4B', desc: 'PopSearch helps you analyze YouTube channels, discover competitors, and find content ideas across 9+ platforms.' },
-    { title: 'Analyze Your Channel', icon: '\uD83D\uDCFA', desc: 'Paste your YouTube channel URL or @handle to get started.' },
-    { title: 'Discover & Grow', icon: '\uD83D\uDCC8', desc: 'Get competitor analysis, cross-platform content ideas, SEO recommendations, and more.' },
-  ];
-
+  const [channelUrl, setChannelUrl] = useState('');
+  const [niche, setNiche] = useState('');
+  const [loading, setLoading] = useState(false);
+  const steps = ['Welcome', 'Your Channel', 'Your Niche', 'Done'];
+  const finish = async () => {
+    setLoading(true);
+    try {
+      await api('/api/onboarding/status', { method: 'POST', body: JSON.stringify({ channel_url: channelUrl, niche, completed: true }) });
+      localStorage.setItem('ccr_onboarding_done', '1');
+      window.location.hash = 'dashboard';
+      window.location.reload();
+    } catch { }
+    finally { setLoading(false); }
+  };
   return React.createElement('div', { className: 'auth-page' },
-    React.createElement('div', { className: 'auth-card', style: { maxWidth: 500, textAlign: 'center' } },
-      React.createElement('div', { style: { fontSize: '3rem', marginBottom: 12 } }, steps[step].icon),
-      React.createElement('h1', null, steps[step].title),
-      React.createElement('p', { style: { color: 'var(--text-3)', fontSize: '.88rem', marginBottom: 24, lineHeight: 1.6 } }, steps[step].desc),
-      step === 0 ? React.createElement('button', { className: 'btn btn-primary', style: { padding: '12px 32px' }, onClick: () => setStep(1) }, 'Get Started') : null,
-      step === 1 ? React.createElement('div', null,
-        React.createElement('input', { className: 'input', style: { marginBottom: 12 }, placeholder: 'YouTube URL or @handle...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && (() => { if (url.trim()) localStorage.setItem('ccr_last_url', url); setStep(2); })() }),
-        React.createElement('div', { style: { display: 'flex', gap: 8, justifyContent: 'center' } },
-          React.createElement('button', { className: 'btn btn-primary', onClick: () => { if (url.trim()) localStorage.setItem('ccr_last_url', url); setStep(2); } }, 'Continue'),
-          React.createElement('button', { className: 'btn btn-ghost', onClick: () => setStep(2) }, 'Skip'),
-        ),
-      ) : null,
-      step === 2 ? React.createElement('div', null,
-        React.createElement('button', { className: 'btn btn-primary', style: { marginBottom: 8, padding: '12px 32px' }, onClick: () => window.location.hash = 'dashboard' }, 'Go to Dashboard'),
-        React.createElement('div', null,
-          React.createElement('a', { href: '#ideas', style: { color: 'var(--accent)', textDecoration: 'none', fontSize: '.85rem' } }, 'Ideas'),
-          ' \u00B7 ',
-          React.createElement('a', { href: '#pricing', style: { color: 'var(--primary)', textDecoration: 'none', fontSize: '.85rem' } }, 'Pricing'),
-        ),
-      ) : null,
-      React.createElement('div', { style: { marginTop: 24, display: 'flex', gap: 8, justifyContent: 'center' } },
-        steps.map((_, i) => React.createElement('div', { key: i, style: { width: 10, height: 10, borderRadius: '50%', background: i === step ? 'var(--primary)' : 'var(--bg-elevated)', transition: 'all .2s' } })),
+    React.createElement('div', { className: 'auth-card', style: { maxWidth: 500 } },
+      React.createElement('div', { className: 'flex items-center gap-8 mb-24' },
+        steps.map((s, i) => React.createElement('div', { key: i, style: { flex: 1, height: 4, borderRadius: 2, background: i <= step ? 'var(--primary)' : 'var(--bg-elevated)' } }))
       ),
+      step === 0 ? React.createElement('div', { style: { textAlign: 'center' } },
+        React.createElement('div', { className: 'auth-logo' }, Icon({ name: 'youtube', size: 24 })),
+        React.createElement('h1', null, 'Welcome to PopSearch'),
+        React.createElement('p', { className: 'subtitle', style: { marginBottom: 24 } }, "Your AI-powered YouTube growth toolkit. Let's set things up."),
+        React.createElement('button', { className: 'btn btn-primary w-full', onClick: () => setStep(1) }, Icon({ name: 'arrowRight', size: 16 }), ' Get Started'),
+      ) : step === 1 ? React.createElement('div', null,
+        React.createElement('h1', { style: { fontSize: '1.2rem' } }, 'Your Channel'),
+        React.createElement('p', { className: 'subtitle', style: { marginBottom: 24 } }, 'Paste your YouTube channel URL to get started.'),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Channel URL'),
+          React.createElement('input', { className: 'input', value: channelUrl, onChange: e => setChannelUrl(e.target.value), placeholder: 'https://youtube.com/@yourchannel', autoFocus: true }),
+        ),
+        React.createElement('button', { className: 'btn btn-primary w-full', onClick: () => setStep(2), disabled: !channelUrl.trim() }, 'Continue'),
+      ) : step === 2 ? React.createElement('div', null,
+        React.createElement('h1', { style: { fontSize: '1.2rem' } }, 'Your Niche'),
+        React.createElement('p', { className: 'subtitle', style: { marginBottom: 24 } }, 'What topics does your channel cover?'),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', null, 'Niche / Topic'),
+          React.createElement('input', { className: 'input', value: niche, onChange: e => setNiche(e.target.value), placeholder: 'e.g. tech, gaming, cooking', autoFocus: true, onKeyDown: e => e.key === 'Enter' && finish() }),
+        ),
+        React.createElement('button', { className: 'btn btn-primary w-full', onClick: finish, disabled: loading || !niche.trim() }, loading ? React.createElement('span', { className: 'spinner' }) : 'Finish'),
+      ) : null,
     ),
   );
 }
 
-// ── App Shell ──
+// ═══════════════════════════════════════════════════════════════
+//  APP SHELL
+// ═══════════════════════════════════════════════════════════════
 function AppShell({ page, setPage }) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(isDark());
-
   const toggleTheme = () => {
     const next = !isDarkTheme;
     setIsDarkTheme(next);
@@ -1511,70 +1332,42 @@ function AppShell({ page, setPage }) {
     localStorage.setItem('ccr_theme', next ? 'dark' : 'light');
     Object.keys(chartInstances).forEach(k => { if (chartInstances[k]) chartInstances[k].destroy(); });
   };
-
   useEffect(() => {
     const saved = localStorage.getItem('ccr_theme');
     if (saved) { document.documentElement.setAttribute('data-theme', saved === 'dark' ? '' : 'light'); setIsDarkTheme(saved === 'dark'); }
   }, []);
-
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '\uD83D\uDCCA', section: 'Main' },
-    { id: 'analyze', label: 'Channel Analysis', icon: '\uD83D\uDCFA', section: 'Main' },
-    { id: 'competitors', label: 'Competitors', icon: '\uD83D\uDC65', section: 'Main' },
-    { id: 'discover', label: 'Content Discovery', icon: '\uD83D\uDD0D', section: 'Main' },
-    { id: 'ideas', label: 'Idea Generator', icon: '\uD83D\uDCA1', section: 'Content' },
-    { id: 'watch', label: 'Monitored', icon: '\uD83D\uDC40', section: 'Content' },
-    { id: 'calendar', label: 'Calendar', icon: '\uD83D\uDCC5', section: 'Content' },
-    { id: 'repurpose', label: 'Repurpose', icon: '\uD83D\uDD04', section: 'Content' },
-    { id: 'seo', label: 'SEO Score', icon: '\uD83D\uDD0D', section: 'Content' },
-    { id: 'thumbnail-test', label: 'A/B Thumbnails', icon: '\uD83D\uDDBC', section: 'Content' },
-    { id: 'trends', label: 'Trend Alerts', icon: '\uD83D\uDD25', section: 'Content' },
-    { id: 'comments', label: 'Comments', icon: '\uD83D\uDCAC', section: 'Content' },
-    { id: 'publishing', label: 'Publishing', icon: '\uD83D\uDCE4', section: 'Content' },
-    { id: 'algo-shift', label: 'Algo Shifts', icon: '\uD83D\uDCC8', section: 'Content' },
-    { id: 'editing', label: 'Editing Coach', icon: '\uD83D\uDD79', section: 'Content' },
-    { id: 'agent', label: 'Growth Agent', icon: '\uD83E\uDD16', section: 'Content' },
-    { id: 'reports', label: 'Reports', icon: '\uD83D\uDCC4', section: 'Content' },
-    { id: 'saved-ideas', label: 'Saved Ideas', icon: '\uD83D\uDCBE', section: 'Content' },
-    { id: 'pricing', label: 'Pricing', icon: '\uD83D\uDCB0', section: 'Settings' },
-    { id: 'billing', label: 'Billing', icon: '\uD83D\uDCB0', section: 'Settings' },
-    { id: 'settings', label: 'Settings', icon: '\u2699\uFE0F', section: 'Settings' },
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Main' },
+    { id: 'analyze', label: 'Channel Analysis', icon: 'analyze', section: 'Main' },
+    { id: 'competitors', label: 'Competitors', icon: 'competitors', section: 'Main' },
+    { id: 'discover', label: 'Content Discovery', icon: 'discover', section: 'Main' },
+    { id: 'ideas', label: 'Idea Generator', icon: 'ideas', section: 'Content' },
+    { id: 'watch', label: 'Monitored', icon: 'watch', section: 'Content' },
+    { id: 'calendar', label: 'Calendar', icon: 'calendar', section: 'Content' },
+    { id: 'repurpose', label: 'Repurpose', icon: 'repurpose', section: 'Content' },
+    { id: 'seo', label: 'SEO Score', icon: 'seo', section: 'Content' },
+    { id: 'thumbnail-test', label: 'A/B Thumbnails', icon: 'thumbnail', section: 'Content' },
+    { id: 'trends', label: 'Trend Alerts', icon: 'trends', section: 'Content' },
+    { id: 'comments', label: 'Comments', icon: 'comments', section: 'Content' },
+    { id: 'publishing', label: 'Publishing', icon: 'publishing', section: 'Content' },
+    { id: 'algo-shift', label: 'Algo Shifts', icon: 'algo', section: 'Content' },
+    { id: 'editing', label: 'Editing Coach', icon: 'editing', section: 'Content' },
+    { id: 'agent', label: 'Growth Agent', icon: 'agent', section: 'Content' },
+    { id: 'reports', label: 'Reports', icon: 'reports', section: 'Content' },
+    { id: 'saved-ideas', label: 'Saved Ideas', icon: 'saved', section: 'Content' },
+    { id: 'pricing', label: 'Pricing', icon: 'pricing', section: 'Settings' },
+    { id: 'billing', label: 'Billing', icon: 'billing', section: 'Settings' },
+    { id: 'settings', label: 'Settings', icon: 'settings', section: 'Settings' },
   ];
-
   const renderPage = () => {
-    switch (page) {
-      case 'dashboard': return React.createElement(DashboardPage);
-      case 'analyze': return React.createElement(AnalyzePage);
-      case 'competitors': return React.createElement(CompetitorsPage);
-      case 'discover': return React.createElement(DiscoverPage);
-      case 'ideas': return React.createElement(IdeasPage);
-      case 'watch': return React.createElement(WatchPage);
-      case 'calendar': return React.createElement(CalendarPage);
-      case 'reports': return React.createElement(ReportsPage);
-      case 'saved-ideas': return React.createElement(SavedIdeasPage);
-      case 'repurpose': return React.createElement(RepurposePage);
-      case 'seo': return React.createElement(SeoPage);
-      case 'thumbnail-test': return React.createElement(ThumbnailTestPage);
-      case 'trends': return React.createElement(TrendAlertsPage);
-      case 'comments': return React.createElement(CommentsPage);
-      case 'publishing': return React.createElement(PublishingPage);
-      case 'algo-shift': return React.createElement(AlgoShiftPage);
-      case 'editing': return React.createElement(EditingPage);
-      case 'agent': return React.createElement(AgentPage);
-      case 'pricing': return React.createElement(PricingPage);
-      case 'billing': return React.createElement(BillingPage);
-      case 'settings': return React.createElement(SettingsPage);
-      case 'onboarding': return React.createElement(OnboardingPage);
-      default: return React.createElement(DashboardPage);
-    }
+    const pages = { dashboard: DashboardPage, analyze: AnalyzePage, competitors: CompetitorsPage, discover: DiscoverPage, ideas: IdeasPage, watch: WatchPage, calendar: CalendarPage, reports: ReportsPage, 'saved-ideas': SavedIdeasPage, repurpose: RepurposePage, seo: SeoPage, 'thumbnail-test': ThumbnailTestPage, trends: TrendAlertsPage, comments: CommentsPage, publishing: PublishingPage, 'algo-shift': AlgoShiftPage, editing: EditingPage, agent: AgentPage, pricing: PricingPage, billing: BillingPage, settings: SettingsPage, onboarding: OnboardingPage };
+    const C = pages[page] || DashboardPage;
+    return React.createElement(C);
   };
-
   return React.createElement('div', { className: 'app-layout' },
     React.createElement('aside', { className: `sidebar${sidebarOpen ? ' open' : ''}` },
       React.createElement('div', { className: 'sidebar-logo' },
-        React.createElement('svg', { viewBox: '0 0 24 24', fill: 'currentColor' },
-          React.createElement('path', { d: 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' }),
-        ),
+        React.createElement(Icon, { name: 'youtube', size: 24 }),
         React.createElement('span', null, 'PopSearch'),
       ),
       React.createElement('nav', { className: 'sidebar-nav' },
@@ -1582,12 +1375,8 @@ function AppShell({ page, setPage }) {
           React.createElement(React.Fragment, { key: section },
             React.createElement('div', { className: 'nav-section' }, section),
             ...navItems.filter(n => n.section === section).map(item =>
-              React.createElement('button', {
-                key: item.id,
-                className: `nav-item${page === item.id ? ' active' : ''}`,
-                onClick: () => { setPage(item.id); setSidebarOpen(false); window.location.hash = item.id; },
-              },
-                item.icon, ' ', item.label,
+              React.createElement('button', { key: item.id, className: `nav-item${page === item.id ? ' active' : ''}`, onClick: () => { setPage(item.id); setSidebarOpen(false); window.location.hash = item.id; } },
+                Icon({ name: item.icon, size: 18 }), ' ', item.label,
               ),
             ),
           ),
@@ -1595,7 +1384,7 @@ function AppShell({ page, setPage }) {
       ),
       React.createElement('div', { className: 'sidebar-footer' },
         React.createElement('div', { className: 'plan-badge' },
-          React.createElement('span', { className: 'plan-name' }, (user?.plan || 'free').toUpperCase()),
+          React.createElement('span', { className: 'plan-name' }, Icon({ name: 'pricing', size: 14 }), (user?.plan || 'free').toUpperCase()),
           React.createElement('span', { className: 'upgrade', onClick: () => { setPage('pricing'); window.location.hash = 'pricing'; } }, 'Upgrade'),
         ),
       ),
@@ -1604,13 +1393,11 @@ function AppShell({ page, setPage }) {
       React.createElement('header', { className: 'topbar' },
         React.createElement('button', { className: 'icon-btn menu-toggle', onClick: () => setSidebarOpen(!sidebarOpen) },
           React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, width: 22, height: 22 },
-            React.createElement('line', { x1: 3, y1: 6, x2: 21, y2: 6 }),
-            React.createElement('line', { x1: 3, y1: 12, x2: 21, y2: 12 }),
-            React.createElement('line', { x1: 3, y1: 18, x2: 21, y2: 18 }),
+            React.createElement('line', { x1: 3, y1: 6, x2: 21, y2: 6 }), React.createElement('line', { x1: 3, y1: 12, x2: 21, y2: 12 }), React.createElement('line', { x1: 3, y1: 18, x2: 21, y2: 18 }),
           ),
         ),
         React.createElement('div', { className: 'topbar-search' },
-          React.createElement('span', { style: { color: 'var(--text-3)', fontSize: '.9rem' } }, '\uD83D\uDD0D'),
+          Icon({ name: 'search', size: 16 }),
           React.createElement('input', { placeholder: 'Search pages...', onKeyDown: e => {
             if (e.key === 'Enter') {
               const q = e.target.value.toLowerCase().trim();
@@ -1620,21 +1407,22 @@ function AppShell({ page, setPage }) {
           } }),
         ),
         React.createElement('div', { className: 'topbar-actions' },
-          React.createElement('button', { className: 'icon-btn', onClick: toggleTheme, title: 'Toggle theme' }, isDarkTheme ? '\uD83C\uDF19' : '\u2600\uFE0F'),
-          React.createElement('button', { className: 'icon-btn', onClick: logout, title: 'Sign out' }, '\uD83D\uDEAA'),
+          React.createElement('button', { className: 'icon-btn', onClick: toggleTheme, title: 'Toggle theme' }, Icon({ name: isDarkTheme ? 'moon' : 'sun', size: 18 })),
+          React.createElement('button', { className: 'icon-btn', onClick: logout, title: 'Sign out' }, Icon({ name: 'logout', size: 18 })),
         ),
       ),
       React.createElement('main', { className: 'page-content' }, renderPage()),
     ),
-    sidebarOpen ? React.createElement('div', { className: 'sidebar-overlay', style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 99 }, onClick: () => setSidebarOpen(false) }) : null,
+    sidebarOpen ? React.createElement('div', { className: 'sidebar-overlay', onClick: () => setSidebarOpen(false) }) : null,
   );
 }
 
-// ── Router ──
+// ═══════════════════════════════════════════════════════════════
+//  ROUTER
+// ═══════════════════════════════════════════════════════════════
 function App() {
   const { user } = useAuth();
   const [page, setPage] = useState('dashboard');
-
   useEffect(() => {
     const onHash = () => {
       const hash = window.location.hash.replace('#', '') || 'dashboard';
@@ -1645,7 +1433,6 @@ function App() {
     onHash();
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-
   useEffect(() => {
     if (user && !localStorage.getItem('ccr_onboarding_done') && page !== 'onboarding') {
       localStorage.setItem('ccr_onboarding_done', '1');
@@ -1653,12 +1440,10 @@ function App() {
       setPage('onboarding');
     }
   }, [user, page]);
-
   if (!user) {
     if (page === 'register') return React.createElement(RegisterPage);
     return React.createElement(LoginPage);
   }
-
   return React.createElement(AppShell, { page, setPage });
 }
 
