@@ -768,8 +768,11 @@ async def export_analysis(
 static_dir = Path(__file__).parent.parent / "static"
 
 
-@app.get("/")
-async def serve_landing():
+@app.api_route("/", methods=["GET", "HEAD"])
+async def serve_landing(request: Request):
+    if request.method == "HEAD":
+        from fastapi.responses import Response
+        return Response(status_code=200)
     return FileResponse(str(static_dir / "landing.html"))
 
 

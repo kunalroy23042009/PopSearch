@@ -32,9 +32,13 @@ async def _rate_limit(request: Request):
     """Per-IP rate limit for all feature router endpoints."""
     try:
         from app.main import limiter
-        from starlette.responses import Response
-        ok, _ = await limiter.check(request, None, "30/minute", limiter.key_func)
-        if not ok:
+        from limits import RateLimitItem, parse_many
+        # Create a 30/minute rate limit item
+        limit_item = parse_many("30/minute")[0]
+        client_ip = request.client.host if request.client else "unknown"
+        # hit() returns True if the request is allowed, False if limit exceeded
+        allowed = limiter._limiter.hit(limit_item, client_ip)
+        if not allowed:
             raise HTTPException(status_code=429, detail="Rate limit exceeded (30/min)")
     except HTTPException:
         raise
