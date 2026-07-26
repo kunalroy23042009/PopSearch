@@ -48,7 +48,7 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already registered",
+                detail="Account already exists. Please sign in instead.",
             )
 
         new_user = User(

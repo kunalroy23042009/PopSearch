@@ -227,7 +227,66 @@ function PageHeader({ title, subtitle, action }) {
 //  GOOGLE SIGN-IN
 // ═══════════════════════════════════════════════════════════════
 function GoogleSignInButton() {
-  return React.createElement('div', { id: 'google-signin-btn', style: { display: 'flex', justifyContent: 'center', width: '100%' } });
+  const { login } = useAuth();
+  const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const [hasGoogle, setHasGoogle] = useState(false);
+
+  useEffect(() => {
+    setHasGoogle(!!window.__GOOGLE_CLIENT_ID__);
+  }, []);
+
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      const client = window.google?.accounts?.oauth2;
+      if (!client || !window.__GOOGLE_CLIENT_ID__) {
+        toast('Google Sign-In not configured', 'error');
+        setLoading(false);
+        return;
+      }
+      const tokenClient = client.initTokenClient({
+        client_id: window.__GOOGLE_CLIENT_ID__,
+        scope: 'openid email profile',
+        callback: async (resp) => {
+          if (resp.access_token) {
+            try {
+              const res = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: resp.access_token }),
+              });
+              const d = await res.json();
+              if (res.ok) { login(d.access_token, d.user); toast('Signed in with Google', 'success'); }
+              else { toast(d.detail || 'Google sign-in failed', 'error'); }
+            } catch { toast('Network error', 'error'); }
+          }
+          setLoading(false);
+        },
+      });
+      tokenClient.requestAccessToken();
+    } catch (e) {
+      toast('Google sign-in failed', 'error');
+      setLoading(false);
+    }
+  };
+
+  if (!hasGoogle) return null;
+  return React.createElement('button', {
+    className: 'google-btn',
+    onClick: handleGoogle,
+    disabled: loading,
+  },
+    loading ? React.createElement('span', { className: 'spinner' }) : React.createElement('svg', {
+      viewBox: '0 0 24 24', width: 18, height: 18,
+    },
+      React.createElement('path', { fill: '#4285F4', d: 'M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' }),
+      React.createElement('path', { fill: '#34A853', d: 'M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z' }),
+      React.createElement('path', { fill: '#FBBC05', d: 'M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z' }),
+      React.createElement('path', { fill: '#EA4335', d: 'M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z' }),
+    ),
+    ' Continue with Google',
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -274,7 +333,7 @@ function LoginPage() {
       ),
       React.createElement(GoogleSignInButton, null),
       React.createElement('p', { className: 'auth-link' },
-        "Don't have an account? ", React.createElement('a', { href: '#register' }, 'Create one')),
+        "Don't have an account? ", React.createElement('a', { href: '#register', onClick: e => { e.preventDefault(); window.location.hash = 'register'; window.location.reload(); } }, 'Create one')),
     ),
   );
 }
@@ -319,7 +378,7 @@ function RegisterPage() {
       ),
       React.createElement(GoogleSignInButton, null),
       React.createElement('p', { className: 'auth-link' },
-        'Already have an account? ', React.createElement('a', { href: '#login' }, 'Sign in')),
+        'Already have an account? ', React.createElement('a', { href: '#login', onClick: e => { e.preventDefault(); window.location.hash = 'login'; window.location.reload(); } }, 'Sign in')),
     ),
   );
 }
@@ -417,9 +476,18 @@ function AnalyzePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [ideas, setIdeas] = useState(null);
+  const [ideasLoading, setIdeasLoading] = useState(false);
+  const [competitors, setCompetitors] = useState(null);
+  const [compLoading, setCompLoading] = useState(false);
+  const [seoData, setSeoData] = useState(null);
+  const [seoLoading, setSeoLoading] = useState(false);
+
   const load = async () => {
     if (!url.trim()) return;
-    setLoading(true); setErr(''); setData(null);
+    setLoading(true); setErr(''); setData(null); setActiveTab('overview');
+    setIdeas(null); setCompetitors(null); setSeoData(null);
     try {
       const res = await api('/analyze-channel', { method: 'POST', body: JSON.stringify({ channel_url: url }) });
       if (!res) return;
@@ -437,40 +505,181 @@ function AnalyzePage() {
       } else { setErr(d.detail || 'Analysis failed'); setLoading(false); }
     } catch { setErr('Network error'); setLoading(false); }
   };
+
   const p = data?.profile || data;
+  const channelId = p?.channel_id || '';
+  const niche = p?.niche || '';
+
+  // Lazy-load ideas when tab clicked
+  const loadIdeas = async () => {
+    if (ideas || ideasLoading) return;
+    setIdeasLoading(true);
+    try {
+      const res = await api('/api/ideas/generate', { method: 'POST', body: JSON.stringify({ topic: niche || 'general' }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setIdeas(d);
+    } catch {}
+    finally { setIdeasLoading(false); }
+  };
+
+  // Lazy-load competitors
+  const loadCompetitors = async () => {
+    if (competitors || compLoading || !channelId) return;
+    setCompLoading(true);
+    try {
+      const res = await api('/find-competitors', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setCompetitors(d);
+    } catch {}
+    finally { setCompLoading(false); }
+  };
+
+  // Lazy-load SEO
+  const loadSEO = async () => {
+    if (seoData || seoLoading || !channelId) return;
+    setSeoLoading(true);
+    try {
+      const res = await api('/api/seo/score', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
+      if (!res) return;
+      const d = await res.json();
+      if (res.ok) setSeoData(d);
+    } catch {}
+    finally { setSeoLoading(false); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'ideas') loadIdeas();
+    else if (activeTab === 'competitors') loadCompetitors();
+    else if (activeTab === 'seo') loadSEO();
+  }, [activeTab]);
+
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'videos', label: 'Recent Videos' },
+    { id: 'ideas', label: 'Content Ideas' },
+    { id: 'competitors', label: 'Competitors' },
+    { id: 'seo', label: 'SEO Score' },
+  ];
+
   return React.createElement('div', null,
-    PageHeader({ title: 'Channel Analysis', subtitle: 'Deep-dive into any YouTube channel' }),
+    PageHeader({ title: 'Channel Analysis', subtitle: 'Deep-dive into any YouTube channel — all tools in one place' }),
+    // URL input — always visible at top
     React.createElement('div', { className: 'flex gap-8 mb-16' },
-      React.createElement('input', { className: 'input', value: url, onChange: e => setUrl(e.target.value), placeholder: 'https://www.youtube.com/@channel', style: { flex: 1 }, onKeyDown: e => e.key === 'Enter' && load() }),
+      React.createElement('input', { className: 'input', value: url, onChange: e => setUrl(e.target.value), placeholder: 'https://www.youtube.com/@channel', style: { flex: 1, fontSize: '1rem' }, onKeyDown: e => e.key === 'Enter' && load() }),
       React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? React.createElement('span', { className: 'spinner' }) : Icon({ name: 'analyze', size: 16 }), loading ? 'Analyzing' : 'Analyze'),
     ),
     loading ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
       React.createElement('span', { className: 'spinner', style: { display: 'inline-block', width: 32, height: 32, borderWidth: 3 } }),
       React.createElement('p', { style: { marginTop: 16, color: 'var(--text-3)' }, className: 'text-sm' }, 'Fetching channel data... This may take a few seconds.'),
     ) : err ? ErrorBox({ message: err }) : data ? React.createElement('div', null,
+      // Stat cards
       React.createElement('div', { className: 'stats' },
         StatCard({ icon: 'users', label: 'Subscribers', value: p?.subscriber_count }),
         StatCard({ icon: 'video', label: 'Total Videos', value: p?.video_count }),
         StatCard({ icon: 'eye', label: 'Total Views', value: p?.total_view_count }),
         StatCard({ icon: 'like', label: 'Avg Engagement', value: p?.engagement_rate ? p.engagement_rate.toFixed(2) + '%' : null }),
       ),
-      p?.recent_videos?.length ? React.createElement('div', { className: 'card' },
-        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recent Uploads')),
-        React.createElement('table', { className: 'table' },
-          React.createElement('thead', null, React.createElement('tr', null,
-            React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'), React.createElement('th', { className: 'num' }, 'Comments'))),
-          React.createElement('tbody', null, p.recent_videos.slice(0, 15).map(v =>
-            React.createElement('tr', { key: v.video_id },
-              React.createElement('td', { style: { maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
-                React.createElement('a', { href: `https://youtube.com/watch?v=${v.video_id}`, target: '_blank', style: { color: 'var(--text)', textDecoration: 'none' } }, v.title)),
-              React.createElement('td', { className: 'num' }, fmtNum(v.view_count)),
-              React.createElement('td', { className: 'num' }, fmtNum(v.like_count)),
-              React.createElement('td', { className: 'num' }, fmtNum(v.comment_count)),
-            )
-          )),
-        ),
+      p?.niche ? React.createElement('div', { className: 'card mb-16', style: { padding: '12px 16px' } },
+        React.createElement('span', { style: { fontSize: '.88rem', color: 'var(--text-3)' } }, 'Detected niche: '),
+        React.createElement('span', { style: { fontWeight: 700, color: 'var(--primary)' } }, p.niche),
       ) : null,
-    ) : EmptyState({ icon: 'analyze', title: 'Analyze a channel', text: 'Enter a YouTube channel URL to get detailed statistics, recent videos, and engagement metrics.' }),
+      // Tab bar
+      React.createElement('div', { className: 'flex gap-8 mb-16', style: { flexWrap: 'wrap' },
+        borderBottom: '1px solid var(--border)', paddingBottom: 0 },
+        ...tabs.map(t => React.createElement('button', {
+          key: t.id,
+          onClick: () => setActiveTab(t.id),
+          style: {
+            padding: '10px 18px', border: 'none', background: 'none',
+            cursor: 'pointer', fontFamily: 'inherit',
+            fontSize: '1rem', fontWeight: activeTab === t.id ? 700 : 500,
+            color: activeTab === t.id ? 'var(--primary)' : 'var(--text-3)',
+            borderBottom: activeTab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
+            marginBottom: '-1px', transition: 'all 0.15s',
+          },
+        }, t.label)),
+      ),
+      // Tab content
+      activeTab === 'overview' ? React.createElement('div', null,
+        p?.performance_summary ? React.createElement('div', { className: 'stats' },
+          StatCard({ label: 'Avg Views (30d)', value: p.performance_summary.average_views_last_30d }),
+          StatCard({ label: 'Growth Rate', value: p.performance_summary.growth_rate ? p.performance_summary.growth_rate.toFixed(1) + '%' : null }),
+          StatCard({ label: 'Upload Frequency', value: p.performance_summary.upload_frequency }),
+          StatCard({ label: 'Best Upload Day', value: p.performance_summary.best_upload_day }),
+        ) : null,
+        p?.content_themes?.length ? React.createElement('div', { className: 'card' },
+          React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Content Themes')),
+          ...p.content_themes.map((t, i) => React.createElement('div', { key: i, className: 'info-tip' }, t)),
+        ) : null,
+      ) : null,
+
+      activeTab === 'videos' ? React.createElement('div', null,
+        p?.recent_videos?.length ? React.createElement('div', { className: 'card' },
+          React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Recent Uploads')),
+          React.createElement('table', { className: 'table' },
+            React.createElement('thead', null, React.createElement('tr', null,
+              React.createElement('th', null, 'Title'), React.createElement('th', { className: 'num' }, 'Views'), React.createElement('th', { className: 'num' }, 'Likes'), React.createElement('th', { className: 'num' }, 'Comments'))),
+            React.createElement('tbody', null, p.recent_videos.slice(0, 15).map(v =>
+              React.createElement('tr', { key: v.video_id },
+                React.createElement('td', { style: { maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+                  React.createElement('a', { href: 'https://youtube.com/watch?v=' + v.video_id, target: '_blank', style: { color: 'var(--text)', textDecoration: 'none' } }, v.title)),
+                React.createElement('td', { className: 'num' }, fmtNum(v.view_count)),
+                React.createElement('td', { className: 'num' }, fmtNum(v.like_count)),
+                React.createElement('td', { className: 'num' }, fmtNum(v.comment_count)),
+              )
+            )),
+          ),
+        ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'No recent videos found.'),
+      ) : null,
+
+      activeTab === 'ideas' ? React.createElement('div', null,
+        ideasLoading ? Skeleton({ count: 3 }) : ideas ? React.createElement('div', null,
+          ideas.ideas?.length ? React.createElement('div', { className: 'card' },
+            React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'AI Content Ideas for this niche')),
+            ...ideas.ideas.map((idea, i) => React.createElement('div', { key: i, className: 'info-tip', style: { marginBottom: 12 } },
+              React.createElement('div', { style: { fontWeight: 700, marginBottom: 4 } },
+                (i + 1) + '. ' + (idea.title || idea.topic || 'Idea')),
+              idea.description ? React.createElement('div', { style: { color: 'var(--text-3)', fontSize: '.92rem' } }, idea.description) : null,
+            )),
+          ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'No ideas generated. Try analyzing a different channel.'),
+          React.createElement('button', { className: 'btn btn-ghost btn-sm mt-16', onClick: () => { setIdeas(null); loadIdeas(); } }, Icon({ name: 'sparkles', size: 14 }), ' Generate new ideas'),
+        ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'Click to generate AI content ideas for this channel.'),
+      ) : null,
+
+      activeTab === 'competitors' ? React.createElement('div', null,
+        compLoading ? Skeleton({ count: 2 }) : competitors ? React.createElement('div', null,
+          competitors.competitors?.length ? React.createElement('div', { className: 'card' },
+            React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Similar Channels' )),
+            React.createElement('div', { className: 'grid-2' },
+              ...competitors.competitors.slice(0, 12).map((c, i) => React.createElement('div', { key: i, className: 'flex items-center gap-12 p-16 border' },
+                c.thumbnail_url ? React.createElement('img', { src: c.thumbnail_url, alt: '', style: { width: 40, height: 40, borderRadius: 20 } }) : React.createElement('div', { style: { width: 40, height: 40, borderRadius: 20, background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, Icon({ name: 'users', size: 16 })),
+                React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+                  React.createElement('div', { className: 'truncate font-semibold' }, c.title),
+                  React.createElement('div', { className: 'text-sm', style: { color: 'var(--text-3)' } }, fmtNum(c.subscriber_count) + ' subs'),
+                ),
+              )),
+            ),
+          ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'No competitors found. Try a different channel.'),
+        ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'Loading competitors...'),
+      ) : null,
+
+      activeTab === 'seo' ? React.createElement('div', null,
+        seoLoading ? Skeleton({ count: 2 }) : seoData ? React.createElement('div', null,
+          React.createElement('div', { className: 'stats' },
+            StatCard({ label: 'Overall SEO Score', value: seoData.score ? seoData.score + '/100' : '—' }),
+            StatCard({ label: 'Title Optimization', value: seoData.title_score ? seoData.title_score + '/100' : '—' }),
+            StatCard({ label: 'Description', value: seoData.description_score ? seoData.description_score + '/100' : '—' }),
+            StatCard({ label: 'Tags', value: seoData.tags_score ? seoData.tags_score + '/100' : '—' }),
+          ),
+          seoData.suggestions?.length ? React.createElement('div', { className: 'card' },
+            React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'SEO Suggestions')),
+            ...seoData.suggestions.map((s, i) => React.createElement('div', { key: i, className: 'info-tip' }, s)),
+          ) : null,
+        ) : React.createElement('div', { className: 'card', style: { padding: 24, textAlign: 'center', color: 'var(--text-3)' } }, 'Loading SEO score...'),
+      ) : null,
+    ) : EmptyState({ icon: 'analyze', title: 'Analyze a channel', text: 'Enter a YouTube channel URL to get detailed statistics, recent videos, content ideas, competitors, and SEO scores — all in one place.' }),
   );
 }
 
