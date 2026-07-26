@@ -96,9 +96,7 @@ function Skeleton({ count = 3 }) {
   );
 }
 
-function LoadingBar({ active }) {
-  return React.createElement('div', { className: `loading-bar${active ? ' active' : ''}` });
-}
+function LoadingBar() { return null; }
 
 function ErrorBox({ message }) {
   if (!message) return null;

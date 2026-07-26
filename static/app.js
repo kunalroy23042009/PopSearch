@@ -104,8 +104,8 @@ var CCR = (() => {
       )
     );
   }
-  function LoadingBar({ active }) {
-    return React.createElement("div", { className: `loading-bar${active ? " active" : ""}` });
+  function LoadingBar() {
+    return null;
   }
   function ErrorBox({ message }) {
     if (!message) return null;
