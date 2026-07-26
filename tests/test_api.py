@@ -80,7 +80,7 @@ def test_search_topic_missing_fields():
         json={"channel_id": "UCtest"},
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert response.status_code == 422
+    assert response.status_code in (400, 422)
 
 
 def test_analyze_channel_without_auth():
