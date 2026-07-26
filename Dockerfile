@@ -20,7 +20,6 @@ RUN mkdir -p data && chown -R app:app /app
 ENV PATH=/app/.local/bin:$PATH
 ENV PYTHONPATH=/app/.local/lib/python3.11/site-packages:$PYTHONPATH
 
-EXPOSE 8000
 
 USER app
 
