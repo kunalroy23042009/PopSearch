@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from sqlmodel import Field, Session, SQLModel, create_engine, select, text
+from sqlalchemy import JSON
 
 from app.config import settings
 from app.models import ChannelProfile, ContentResult, DashboardData, JobProgress, SavedReport, TopicInsight
@@ -137,7 +138,7 @@ _engine_lock = threading.Lock()
 class Channel(SQLModel, table=True):
     channel_id: str = Field(primary_key=True)
     url: str
-    profile_json: str
+    profile_json: dict = Field(default=dict, sa_type=JSON)
     analyzed_at: datetime
 
 
@@ -166,7 +167,7 @@ class User(SQLModel, table=True):
     stripe_customer_id: str | None = Field(default=None)
     created_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     google_id: str | None = Field(default=None)
-    youtube_token_json: str | None = Field(default=None)
+    youtube_token_json: dict | None = Field(default=None, sa_type=JSON)
 
 
 class ApiKey(SQLModel, table=True):
@@ -418,12 +419,14 @@ def _is_fresh(timestamp: datetime, max_age_hours: int) -> bool:
     return age < timedelta(hours=max_age_hours)
 
 
-def _serialize_profile(profile: ChannelProfile) -> str:
-    return profile.model_dump_json()
+def _serialize_profile(profile: ChannelProfile) -> dict:
+    return json.loads(profile.model_dump_json())
 
 
-def _deserialize_profile(data: str) -> ChannelProfile:
-    return ChannelProfile.model_validate_json(data)
+def _deserialize_profile(data: dict | str) -> ChannelProfile:
+    if isinstance(data, str):
+        return ChannelProfile.model_validate_json(data)
+    return ChannelProfile.model_validate(data)
 
 
 def _serialize_results(results: list[ContentResult]) -> str:
@@ -449,7 +452,7 @@ def _ensure_channel_row(session: Session, channel_id: str) -> None:
             Channel(
                 channel_id=channel_id,
                 url="",
-                profile_json="{}",
+                profile_json={},
                 analyzed_at=_utc_now(),
             )
         )
@@ -832,17 +835,15 @@ def get_youtube_token(user_id: int) -> dict | None:
     with Session(_get_engine()) as session:
         user = session.get(User, user_id)
         if user and user.youtube_token_json:
-            import json
-            return json.loads(user.youtube_token_json)
+            return user.youtube_token_json
         return None
 
 
 def set_youtube_token(user_id: int, token_data: dict) -> None:
-    import json
     with Session(_get_engine()) as session:
         user = session.get(User, user_id)
         if user:
-            user.youtube_token_json = json.dumps(token_data)
+            user.youtube_token_json = token_data
             session.add(user)
             session.commit()
 

@@ -51,7 +51,6 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
                 detail="User with this email already registered",
             )
 
-        # Create new user
         new_user = User(
             email=data.email,
             hashed_password=hash_password(data.password),
@@ -63,14 +62,13 @@ def register(data: RegisterRequest, session: Session = Depends(get_session)):
         session.commit()
         session.refresh(new_user)
 
-        # Generate token
-        token = create_access_token(data={"sub": new_user.email})
+        token = create_access_token(data={"sub": str(new_user.id)})
         return {"access_token": token, "token_type": "bearer", "user": new_user}
     except HTTPException:
         raise
     except Exception as exc:
         logger.error("Registration failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Registration failed")
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -85,8 +83,7 @@ def login(data: LoginRequest, session: Session = Depends(get_session)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Generate token
-    token = create_access_token(data={"sub": user.email})
+    token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
@@ -128,7 +125,7 @@ def google_auth(data: GoogleAuthRequest, session: Session = Depends(get_session)
         else:
             user = User(
                 email=email,
-                hashed_password="",  # No password for OAuth users
+                hashed_password="",
                 google_id=google_id,
                 plan="free",
                 analyses_this_month=0,
@@ -138,7 +135,7 @@ def google_auth(data: GoogleAuthRequest, session: Session = Depends(get_session)
             session.commit()
             session.refresh(user)
 
-        token = create_access_token(data={"sub": user.email})
+        token = create_access_token(data={"sub": str(user.id)})
         return {"access_token": token, "token_type": "bearer", "user": user}
 
     except ValueError as exc:
@@ -160,8 +157,6 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-# ── YouTube OAuth (for Editing Assistant) ─────────────────────────────
-
 @router.get("/youtube/url")
 def get_youtube_oauth_url(user: User = Depends(get_current_user)):
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
@@ -176,7 +171,7 @@ def get_youtube_oauth_url(user: User = Depends(get_current_user)):
         "state": str(user.id),
         "prompt": "consent",
     })
-    return {"url": f"https://accounts.google.com/o/oauth2/v2/auth?{params}"}
+    return {"url": f"https://accounts.google.com/oauth2/v2/auth?{params}"}
 
 
 class YoutubeCallbackRequest(BaseModel):
@@ -202,7 +197,7 @@ def youtube_oauth_callback(data: YoutubeCallbackRequest, user: User = Depends(ge
             timeout=15,
         )
         if resp.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"Token exchange failed: {resp.text}")
+            raise HTTPException(status_code=400, detail="Token exchange failed")
 
         token_data = resp.json()
         from app.db import set_youtube_token
@@ -210,5 +205,5 @@ def youtube_oauth_callback(data: YoutubeCallbackRequest, user: User = Depends(ge
         return {"status": "connected"}
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"OAuth failed: {exc}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="OAuth failed")

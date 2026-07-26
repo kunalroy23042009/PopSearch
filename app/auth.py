@@ -46,13 +46,13 @@ def verify_token(token: str) -> User | None:
     """Decode a JWT token and return the user, or None on failure."""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str | None = payload.get("sub")
-        if email is None:
+        uid: str | None = payload.get("sub")
+        if uid is None:
             return None
         from app.db import get_session, User
         from sqlmodel import select
         with next(get_session()) as session:
-            user = session.exec(select(User).where(User.email == email)).first()
+            user = session.get(User, int(uid))
             return user
     except Exception:
         return None
@@ -72,14 +72,16 @@ def get_current_user(
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str | None = payload.get("sub")
-        if email is None:
+        uid: str | None = payload.get("sub")
+        if uid is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    statement = select(User).where(User.email == email)
-    user = session.exec(statement).first()
+    try:
+        user = session.get(User, int(uid))
+    except (ValueError, TypeError):
+        raise credentials_exception
     if user is None:
         raise credentials_exception
 
