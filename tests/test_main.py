@@ -47,22 +47,21 @@ async def test_analyze_channel_returns_job_id():
 
 @pytest.mark.asyncio
 async def test_search_topic_missing_fields():
-    """POST /search-topic with missing required fields should return 422."""
+    """POST /search-topic with missing required fields should return 400 or 422."""
     from app.auth import create_access_token
+    from app.db import get_session, User
 
     import uuid
     email = f"search_fields_{uuid.uuid4().hex[:8]}@test.com"
-    token = create_access_token({"sub": email})
-
-    from app.db import get_session, User
-    from sqlmodel import select
-    with next(get_session()) as session:
-        existing = session.exec(select(User).where(User.email == email)).first()
-        if not existing:
-            session.add(User(email=email, hashed_password="fake", plan="free"))
-            session.commit()
 
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        with next(get_session()) as session:
+            user = User(email=email, hashed_password="fake", plan="free")
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+        token = create_access_token({"sub": str(user.id)})
+
         headers = {"Authorization": f"Bearer {token}"}
 
         # Missing channel_id
