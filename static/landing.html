@@ -7,293 +7,369 @@
 <meta name="description" content="Analyze any YouTube channel, discover trending content, and outsmart the algorithm with AI-powered insights.">
 <meta property="og:title" content="PopSearch — AI YouTube Analytics">
 <meta property="og:description" content="Grow your channel with AI-powered insights. Analyze, discover, and outsmart the algorithm.">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0f;--bg2:#13131a;--bg3:#1c1c26;--text:#f5f5f7;--text2:#a0a0b0;--text3:#6b6b80;--primary:#ff2d55;--primary-hover:#ff476b;--accent:#3b82f6;--accent-hover:#60a5fa;--success:#22c55e;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);--shadow:0 8px 32px rgba(0,0,0,.4);--glow:0 0 24px rgba(255,45,85,.15);--radius:14px}
-body{font-family:'Inter',-apple-system,sans-serif;background:#0a0a0f;color:#f5f5f7;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.5}
-.nav{display:flex;justify-content:space-between;align-items:center;padding:0 32px;height:60px;max-width:1200px;margin:0 auto;border-bottom:1px solid rgba(255,255,255,.06)}
+:root{
+--bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#222;--text:#f1f1f1;--text2:#aaa;--text3:#717171;
+--primary:#3ea6ff;--primary-hover:#5bb8ff;--accent:#ff2d55;--accent-hover:#ff476b;
+--success:#2dba4e;--warning:#f59e0b;
+--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
+--shadow:0 8px 32px rgba(0,0,0,.4);--radius:12px;
+--font-ui:'Inter',-apple-system,sans-serif;--font-head:'Roboto',-apple-system,sans-serif;
+}
+html{font-size:15px}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--font-head);letter-spacing:-.01em}
+a{text-decoration:none;color:inherit}
+ul{list-style:none}
+
+/* ── Nav ── */
+.nav{display:flex;justify-content:space-between;align-items:center;padding:0 32px;height:60px;max-width:1200px;margin:0 auto}
+.nav-logo{font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:10px;font-family:var(--font-head)}
+.nav-logo svg{width:24px;height:24px;color:var(--primary)}
+.nav-logo span{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-links{display:flex;align-items:center;gap:2px}
-.nav-links a{color:var(--text2);text-decoration:none;font-size:.85rem;padding:8px 16px;border-radius:10px;transition:all .15s;font-weight:500}
-.nav-links a:hover{color:#fff;background:var(--bg3)}
-.nav-links .cta{background:linear-gradient(135deg,#ff2d55,#ff476b);color:#fff;font-weight:600;padding:8px 20px;border-radius:10px}
-.nav-links .cta:hover{box-shadow:0 0 24px rgba(255,45,85,.15);transform:translateY(-1px)}
+.nav-links a{color:var(--text2);font-size:.85rem;padding:8px 16px;border-radius:8px;transition:all .18s;font-weight:500}
+.nav-links a:hover{color:var(--text);background:var(--bg3)}
+.nav-links .cta{background:var(--primary);color:#0f0f0f;font-weight:600;padding:8px 20px;border-radius:8px}
+.nav-links .cta:hover{background:var(--primary-hover);transform:translateY(-1px);box-shadow:0 4px 12px rgba(62,166,255,.25)}
 .nav-toggle{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px}
 .nav-toggle span{width:20px;height:2px;background:var(--text2);border-radius:2px;transition:all .3s}
 .nav-toggle.open span:nth-child(1){transform:translateY(6px) rotate(45deg)}
 .nav-toggle.open span:nth-child(2){opacity:0}
 .nav-toggle.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
-.hero{text-align:center;padding:100px 24px 60px;max-width:800px;margin:0 auto;background:linear-gradient(180deg,#0a0a0f 0%,#13131a 50%,#0a0a0f 100%)}
-.hero .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:999px;padding:6px 16px;font-size:.75rem;font-weight:600;color:var(--accent);margin-bottom:24px}
-.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.1;margin-bottom:20px;letter-spacing:-.03em}
-.hero h1 .gradient{background:linear-gradient(135deg,#ff2d55,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:1.05rem;color:var(--text2);margin-bottom:36px;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.6}
-.hero-input{display:flex;gap:0;max-width:540px;margin:0 auto 16px;border:1px solid rgba(255,255,255,.06);border-radius:14px;overflow:hidden;background:rgba(19,19,26,.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .2s}
-.hero-input:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,45,85,.1)}
-.hero-input input{flex:1;padding:16px 20px;background:transparent;border:none;color:#f5f5f7;font-size:.92rem;font-family:inherit;outline:none}
+
+/* ── Hero ── */
+.hero{text-align:center;padding:80px 24px 40px;max-width:800px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(62,166,255,.08);border:1px solid rgba(62,166,255,.2);border-radius:999px;padding:6px 16px;font-size:.78rem;font-weight:600;color:var(--primary);margin-bottom:24px}
+.hero-badge svg{width:14px;height:14px}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.1;margin-bottom:20px;letter-spacing:-.02em}
+.hero h1 .gradient{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.05rem;color:var(--text2);margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.6}
+.hero-input{display:flex;gap:0;max-width:540px;margin:0 auto 16px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);transition:all .18s}
+.hero-input:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(62,166,255,.1)}
+.hero-input input{flex:1;padding:14px 18px;background:transparent;border:none;color:var(--text);font-size:.92rem;font-family:inherit;outline:none}
 .hero-input input::placeholder{color:var(--text3)}
-.hero-input button{padding:16px 32px;background:linear-gradient(135deg,#ff2d55,#ff476b);color:#fff;border:none;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s}
-.hero-input button:hover{box-shadow:0 0 24px rgba(255,45,85,.15)}
-.hero .small{font-size:.82rem;color:var(--text3)}
-.stats-row{display:flex;justify-content:center;gap:64px;padding:48px 0;flex-wrap:wrap;max-width:800px;margin:0 auto}
+.hero-input button{padding:14px 28px;background:var(--primary);color:#0f0f0f;border:none;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .18s}
+.hero-input button:hover{background:var(--primary-hover)}
+.hero-small{font-size:.82rem;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:8px}
+.hero-small svg{width:14px;height:14px;color:var(--success)}
+
+/* ── Stats ── */
+.stats-row{display:flex;justify-content:center;gap:56px;padding:40px 0;flex-wrap:wrap;max-width:800px;margin:0 auto}
 .stat-item{text-align:center}
-.stat-item .num{font-size:2.2rem;font-weight:800;background:linear-gradient(135deg,#ff2d55,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02em;line-height:1.1}
-.stat-item .label{color:var(--text3);font-size:.85rem;margin-top:4px;font-weight:500}
-.section{max-width:1100px;margin:0 auto;padding:80px 24px}
-.section-header{text-align:center;margin-bottom:56px;max-width:600px;margin-left:auto;margin-right:auto}
-.section-header .label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:12px}
-.section-header h2{font-size:clamp(1.4rem,3vw,2rem);font-weight:800;margin-bottom:12px;letter-spacing:-.02em}
+.stat-item .num{font-size:2rem;font-weight:800;font-family:var(--font-head);background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02em;line-height:1.1}
+.stat-item .label{color:var(--text3);font-size:.82rem;margin-top:4px;font-weight:500}
+
+/* ── Sections ── */
+.section{max-width:1100px;margin:0 auto;padding:64px 24px}
+.section-header{text-align:center;margin-bottom:48px;max-width:560px;margin-left:auto;margin-right:auto}
+.section-header .label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--primary);margin-bottom:12px}
+.section-header h2{font-size:clamp(1.4rem,3vw,2rem);font-weight:800;margin-bottom:12px}
 .section-header p{color:var(--text2);font-size:.92rem;line-height:1.6}
+
+/* ── Feature Cards ── */
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:all .3s}
-.card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.card .icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:all .25s}
+.card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:var(--shadow)}
+.card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.card-icon svg{width:20px;height:20px}
 .card h3{font-size:.95rem;font-weight:700;margin-bottom:8px}
 .card p{color:var(--text2);font-size:.85rem;line-height:1.6}
-.step-card{text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:36px 24px;transition:all .3s}
-.step-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.step-card .num{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ff2d55,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;margin:0 auto 16px;color:#fff}
+
+/* ── Step Cards ── */
+.step-card{text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;transition:all .25s}
+.step-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:var(--shadow)}
+.step-card .num{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:800;margin:0 auto 16px;color:#0f0f0f}
 .step-card h3{font-weight:700;font-size:.95rem;margin-bottom:8px}
 .step-card p{color:var(--text2);font-size:.85rem;line-height:1.5}
+
+/* ── Demo Cards ── */
 .demo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-.demo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;text-decoration:none;color:inherit;display:block;transition:all .3s}
-.demo-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--accent)}
-.demo-card .avatar{width:48px;height:48px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;color:#fff}
+.demo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 16px;text-align:center;color:inherit;display:block;transition:all .25s}
+.demo-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:var(--shadow)}
+.demo-card .avatar{width:44px;height:44px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;font-family:var(--font-head)}
 .demo-card .name{font-weight:600;font-size:.88rem}
 .demo-card .subs{color:var(--text3);font-size:.73rem;margin-top:2px}
-.demo-card .tag{display:inline-block;padding:2px 10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:999px;font-size:.68rem;color:var(--accent);margin-top:8px;font-weight:600}
+.demo-card .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(62,166,255,.08);border:1px solid rgba(62,166,255,.2);border-radius:6px;font-size:.68rem;color:var(--primary);margin-top:8px;font-weight:600}
+.demo-card .tag svg{width:12px;height:12px}
+
+/* ── Pricing ── */
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:800px;margin:0 auto}
-.plan{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;text-align:center;position:relative;transition:all .3s}
-.plan:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.plan.featured{border-color:var(--primary);background:linear-gradient(180deg,#13131a,#1c1c26)}
-.plan .plan-badge-top{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff2d55,#ff476b);color:#fff;font-size:.68rem;font-weight:700;padding:4px 14px;border-radius:999px}
+.plan{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;text-align:center;position:relative;transition:all .25s}
+.plan:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.plan.featured{border-color:var(--primary);background:linear-gradient(180deg,var(--bg2),var(--bg3))}
+.plan-badge-top{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--primary);color:#0f0f0f;font-size:.68rem;font-weight:700;padding:4px 14px;border-radius:999px}
 .plan h3{font-size:.95rem;font-weight:700;margin-bottom:4px}
-.plan .price{font-size:2.2rem;font-weight:900;margin:14px 0;letter-spacing:-.02em}
+.plan .price{font-size:2.2rem;font-weight:900;margin:14px 0;font-family:var(--font-head)}
 .plan .price span{font-size:.85rem;font-weight:400;color:var(--text3)}
-.plan ul{list-style:none;text-align:left;margin:20px 0}
-.plan li{padding:10px 0;color:var(--text2);font-size:.83rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.plan ul{text-align:left;margin:20px 0}
+.plan li{padding:10px 0;color:var(--text2);font-size:.83rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .plan li:last-child{border-bottom:none}
-.plan li::before{content:"\2713";color:var(--success);font-weight:700;font-size:.85rem}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:10px;font-weight:600;font-size:.88rem;text-decoration:none;border:none;cursor:pointer;font-family:inherit;transition:all .2s}
-.btn-primary{background:linear-gradient(135deg,#ff2d55,#ff476b);color:#fff}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 24px rgba(255,45,85,.15)}
+.plan li svg{width:14px;height:14px;color:var(--success);flex-shrink:0}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:8px;font-weight:600;font-size:.88rem;border:none;cursor:pointer;font-family:inherit;transition:all .18s}
+.btn svg{width:16px;height:16px}
+.btn-primary{background:var(--primary);color:#0f0f0f}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 4px 16px rgba(62,166,255,.2)}
 .btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
-.btn-ghost:hover{transform:translateY(-2px)}
-.btn-accent{background:#3b82f6;color:#fff}
-.btn-accent:hover{background:#60a5fa;transform:translateY(-2px)}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--border2)}
 .btn-full{width:100%;justify-content:center;margin-top:12px}
+
+/* ── FAQ ── */
 .faq{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
 .faq-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;cursor:pointer;transition:all .15s}
 .faq-item:hover{border-color:var(--border2)}
 .faq-item h3{font-size:.88rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;user-select:none}
-.faq-item h3::after{content:'+';font-size:1.3rem;color:var(--text3);transition:transform .3s;font-weight:300}
-.faq-item.open h3::after{transform:rotate(45deg);color:var(--accent)}
+.faq-item h3 .arrow{width:16px;height:16px;color:var(--text3);transition:transform .3s}
+.faq-item.open h3 .arrow{transform:rotate(180deg)}
 .faq-item p{color:var(--text2);font-size:.85rem;margin-top:12px;display:none;line-height:1.6}
 .faq-item.open p{display:block;animation:fadeUp .35s ease}
-.footer{max-width:1100px;margin:40px auto 0;padding:48px 24px 32px;border-top:1px solid var(--border)}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
-.footer h4{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:16px}
-.footer a{display:block;color:var(--text2);text-decoration:none;font-size:.83rem;padding:4px 0;transition:color .15s}
-.footer a:hover{color:#fff}
-.footer .brand{font-size:1rem;font-weight:800;margin-bottom:8px}
-.footer .brand span{background:linear-gradient(135deg,#ff2d55,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ── Footer ── */
+.footer{max-width:1100px;margin:40px auto 0;padding:40px 24px 32px;border-top:1px solid var(--border)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:32px}
+.footer h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:16px}
+.footer a{display:flex;align-items:center;gap:6px;color:var(--text2);font-size:.83rem;padding:4px 0;transition:color .15s}
+.footer a:hover{color:var(--text)}
+.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.footer-brand svg{width:22px;height:22px;color:var(--primary)}
+.footer-brand span{font-size:1rem;font-weight:800;font-family:var(--font-head);background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .footer .desc{color:var(--text3);font-size:.83rem;line-height:1.6;margin-bottom:16px;max-width:280px}
 .footer-bottom{text-align:center;padding-top:24px;border-top:1px solid var(--border);color:var(--text3);font-size:.78rem}
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+
+/* ── Animations ── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
-.reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}.reveal-d4{transition-delay:.4s}
+.reveal-d1{transition-delay:.08s}.reveal-d2{transition-delay:.16s}.reveal-d3{transition-delay:.24s}.reveal-d4{transition-delay:.32s}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Responsive ── */
 @media(max-width:768px){
 .nav{padding:0 16px}
 .nav-links a:not(.cta){display:none}
-.nav-links.open{position:fixed;top:60px;left:0;right:0;background:#0a0a0f;border-bottom:1px solid var(--border);padding:12px;flex-direction:column;z-index:50}
-.nav-links.open a{display:block;padding:12px 16px;width:100%}
+.nav-links.open{position:fixed;top:60px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--border);padding:12px;flex-direction:column;z-index:50}
+.nav-links.open a{display:flex;padding:12px 16px;width:100%}
 .nav-toggle{display:flex}
-.hero{padding:60px 20px 40px}
-.hero h1{font-size:clamp(1.5rem,6vw,2.2rem)}
-.hero p{font-size:.92rem}
-.section{padding:48px 16px}
+.hero{padding:48px 20px 32px}
+.section{padding:40px 16px}
 .grid-3,.grid-2{grid-template-columns:1fr;max-width:420px;margin:0 auto}
 .pricing-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto}
-.stats-row{gap:32px}
+.stats-row{gap:28px}
 .stat-item .num{font-size:1.6rem}
 .footer-grid{grid-template-columns:1fr 1fr;gap:24px}
 .demo-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:480px){
-.hero{padding:40px 14px 30px}
-.hero-input input{padding:14px 16px;font-size:.85rem}
-.hero-input button{padding:14px 20px;font-size:.85rem}
-.stats-row{flex-direction:column;gap:20px}
+.hero{padding:36px 14px 24px}
+.hero-input input{padding:12px 14px;font-size:.85rem}
+.hero-input button{padding:12px 18px;font-size:.85rem}
+.stats-row{flex-direction:column;gap:16px}
 .footer-grid{grid-template-columns:1fr}
 }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 </style>
 </head>
 <body>
+
+<!-- ── Nav ── -->
 <nav class="nav">
-<div style="font-size:1rem;font-weight:800;display:flex;align-items:center;gap:10px">
-<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-<span style="background:linear-gradient(135deg,#ff2d55,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PopSearch</span>
-</div>
-<div class="nav-links">
-<a href="#features">Features</a>
-<a href="#demos">Examples</a>
-<a href="#pricing">Pricing</a>
-<a href="/app#login">Sign In</a>
-<a href="/app#dashboard">Dashboard</a>
-<a href="/app#login" class="cta">Get Started</a>
-</div>
-<button class="nav-toggle" onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button>
+  <div class="nav-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    <span>PopSearch</span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#features">Features</a>
+    <a href="#demos">Examples</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/app#login">Sign In</a>
+    <a href="/app#login" class="cta">Get Started</a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
 </nav>
 
+<!-- ── Hero ── -->
 <section class="hero">
-<div class="badge">✨ AI-Powered YouTube Analytics</div>
-<h1>Grow Your Channel with <span class="gradient">AI-Powered Insights</span></h1>
-<p>Analyze any YouTube channel, discover trending content, and outsmart the algorithm — all in one dashboard.</p>
-<form class="hero-input" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app#dashboard';return false}alert('Enter a YouTube URL or @handle')">
-<input type="text" placeholder="Enter YouTube URL or @handle..." required>
-<button type="submit">Analyze</button>
-</form>
-<div class="small">No credit card required · Free forever</div>
+  <div class="hero-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z"/></svg>
+    AI-Powered YouTube Analytics
+  </div>
+  <h1>Grow Your Channel with <span class="gradient">AI-Powered Insights</span></h1>
+  <p>Analyze any YouTube channel, discover trending content, and outsmart the algorithm — all in one dashboard.</p>
+  <form class="hero-input" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app#dashboard';return false}return false">
+    <input type="text" placeholder="Enter YouTube URL or @handle..." required>
+    <button type="submit">Analyze</button>
+  </form>
+  <div class="hero-small">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    No credit card required · Free forever
+  </div>
 </section>
 
+<!-- ── Stats ── -->
 <div class="stats-row">
-<div class="stat-item reveal reveal-d1"><div class="num">245K</div><div class="label">Active Users</div></div>
-<div class="stat-item reveal reveal-d2"><div class="num">92%</div><div class="label">Analysis Accuracy</div></div>
-<div class="stat-item reveal reveal-d3"><div class="num">15+</div><div class="label">Content Sources</div></div>
-<div class="stat-item reveal reveal-d4"><div class="num">4.9★</div><div class="label">User Rating</div></div>
+  <div class="stat-item reveal reveal-d1"><div class="num">245K</div><div class="label">Active Users</div></div>
+  <div class="stat-item reveal reveal-d2"><div class="num">92%</div><div class="label">Analysis Accuracy</div></div>
+  <div class="stat-item reveal reveal-d3"><div class="num">15+</div><div class="label">Content Sources</div></div>
+  <div class="stat-item reveal reveal-d4"><div class="num">4.9</div><div class="label">User Rating</div></div>
 </div>
 
+<!-- ── Features ── -->
 <section class="section" id="features">
-<div class="section-header reveal"><div class="label">Features</div><h2>Everything you need to dominate YouTube</h2><p>AI-powered tools built for creators who want data-driven growth.</p></div>
-<div class="grid-3">
-<div class="card reveal reveal-d1"><div class="icon" style="background:rgba(255,45,85,.1);color:var(--primary)">📊</div><h3>Channel Analysis</h3><p>Get AI-powered niche profiling, engagement metrics, and growth predictions for any YouTube channel.</p></div>
-<div class="card reveal reveal-d2"><div class="icon" style="background:rgba(59,130,246,.1);color:var(--accent)">🎯</div><h3>Content Discovery</h3><p>Find trending topics across YouTube, Reddit, Twitter, TikTok, and 11 more platforms in one search.</p></div>
-<div class="card reveal reveal-d3"><div class="icon" style="background:rgba(34,197,94,.1);color:var(--success)">🤖</div><h3>Growth Agent</h3><p>Autonomous AI that studies your competitors, analyzes trends, and generates weekly content plans.</p></div>
-<div class="card reveal reveal-d1"><div class="icon" style="background:rgba(245,158,11,.1);color:var(--warning)">💡</div><h3>Idea Generator</h3><p>AI creates complete video concepts with SEO keywords, thumbnail ideas, and optimal posting times.</p></div>
-<div class="card reveal reveal-d2"><div class="icon" style="background:rgba(59,130,246,.1);color:var(--accent)">📈</div><h3>Competitor Intel</h3><p>Track competitors, detect algorithm shifts, and get recommendations before your niche changes.</p></div>
-<div class="card reveal reveal-d3"><div class="icon" style="background:rgba(255,45,85,.1);color:var(--primary)">🔄</div><h3>Cross-Platform Repurpose</h3><p>Turn YouTube videos into TikTok, Instagram Reels, and Shorts scripts with one click.</p></div>
-</div>
+  <div class="section-header reveal"><div class="label">Features</div><h2>Everything you need to dominate YouTube</h2><p>AI-powered tools built for creators who want data-driven growth.</p></div>
+  <div class="grid-3">
+    <div class="card reveal reveal-d1"><div class="card-icon" style="background:rgba(62,166,255,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/></svg></div><h3>Channel Analysis</h3><p>Get AI-powered niche profiling, engagement metrics, and growth predictions for any YouTube channel.</p></div>
+    <div class="card reveal reveal-d2"><div class="card-icon" style="background:rgba(255,45,85,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><h3>Content Discovery</h3><p>Find trending topics across YouTube, Reddit, X, TikTok, and 11 more platforms in one search.</p></div>
+    <div class="card reveal reveal-d3"><div class="card-icon" style="background:rgba(43,186,78,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4v1a4 4 0 11-8 0V6a4 4 0 014-3zm10 14a6 6 0 00-6-6M2 16a6 6 0 016-6"/></svg></div><h3>Growth Agent</h3><p>Autonomous AI that studies your competitors, analyzes trends, and generates weekly content plans.</p></div>
+    <div class="card reveal reveal-d1"><div class="card-icon" style="background:rgba(245,158,11,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6m-5 4h4M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/></svg></div><h3>Idea Generator</h3><p>AI creates complete video concepts with SEO keywords, thumbnail ideas, and optimal posting times.</p></div>
+    <div class="card reveal reveal-d2"><div class="card-icon" style="background:rgba(62,166,255,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg></div><h3>Competitor Intel</h3><p>Track competitors, detect algorithm shifts, and get recommendations before your niche changes.</p></div>
+    <div class="card reveal reveal-d3"><div class="card-icon" style="background:rgba(255,45,85,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-3M20 14a8 8 0 01-14 3"/></svg></div><h3>Cross-Platform Repurpose</h3><p>Turn YouTube videos into TikTok, Instagram Reels, and Shorts scripts with one click.</p></div>
+  </div>
 </section>
 
+<!-- ── How It Works ── -->
 <section class="section" style="padding-top:0">
-<div class="section-header reveal"><div class="label">How It Works</div><h2>Three steps to data-driven growth</h2><p>From URL to actionable strategy in seconds.</p></div>
-<div class="grid-3">
-<div class="step-card reveal reveal-d1"><div class="num">1</div><h3>Paste your channel URL</h3><p>Drop in any YouTube link — @handle, /channel/, or /c/ format works instantly.</p></div>
-<div class="step-card reveal reveal-d2"><div class="num">2</div><h3>Get AI-powered insights</h3><p>Our AI analyzes your stats, videos, titles, and engagement to build a detailed profile.</p></div>
-<div class="step-card reveal reveal-d3"><div class="num">3</div><h3>Grow with data</h3><p>Find competitors, trending topics, and AI content plans tailored to your channel.</p></div>
-</div>
+  <div class="section-header reveal"><div class="label">How It Works</div><h2>Three steps to data-driven growth</h2><p>From URL to actionable strategy in seconds.</p></div>
+  <div class="grid-3">
+    <div class="step-card reveal reveal-d1"><div class="num">1</div><h3>Paste your channel URL</h3><p>Drop in any YouTube link — @handle, /channel/, or /c/ format works instantly.</p></div>
+    <div class="step-card reveal reveal-d2"><div class="num">2</div><h3>Get AI-powered insights</h3><p>Our AI analyzes your stats, videos, titles, and engagement to build a detailed profile.</p></div>
+    <div class="step-card reveal reveal-d3"><div class="num">3</div><h3>Grow with data</h3><p>Find competitors, trending topics, and AI content plans tailored to your channel.</p></div>
+  </div>
 </section>
 
+<!-- ── Demos ── -->
 <section class="section" style="padding-top:0" id="demos">
-<div class="section-header reveal"><div class="label">Live Demos</div><h2>Try it with popular channels</h2><p>Click any channel to analyze it — all links go to real YouTube channels.</p></div>
-<div class="demo-grid">
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MrBeast')" class="demo-card reveal reveal-d1">
-<div class="avatar" style="background:linear-gradient(135deg,#ff2d55,#cc0033)">M</div>
-<div class="name">MrBeast</div>
-<div class="subs">368M subs · Entertainment</div>
-<span class="tag">Try Now</span>
-</a>
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MKBHD')" class="demo-card reveal reveal-d2">
-<div class="avatar" style="background:linear-gradient(135deg,#22c55e,#166534)">M</div>
-<div class="name">MKBHD</div>
-<div class="subs">20M subs · Tech</div>
-<span class="tag">Try Now</span>
-</a>
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Markiplier')" class="demo-card reveal reveal-d3">
-<div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#1e40af)">M</div>
-<div class="name">Markiplier</div>
-<div class="subs">38M subs · Gaming</div>
-<span class="tag">Try Now</span>
-</a>
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@LinusTechTips')" class="demo-card reveal reveal-d1">
-<div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#b45309)">L</div>
-<div class="name">Linus Tech Tips</div>
-<div class="subs">16M subs · Tech</div>
-<span class="tag">Try Now</span>
-</a>
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Kurzgesagt')" class="demo-card reveal reveal-d2">
-<div class="avatar" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">K</div>
-<div class="name">Kurzgesagt</div>
-<div class="subs">24M subs · Science</div>
-<span class="tag">Try Now</span>
-</a>
-<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MarquesBrownlee')" class="demo-card reveal reveal-d3">
-<div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">M</div>
-<div class="name">Marques Brownlee</div>
-<div class="subs">20M subs · Tech</div>
-<span class="tag">Try Now</span>
-</a>
-</div>
+  <div class="section-header reveal"><div class="label">Live Demos</div><h2>Try it with popular channels</h2><p>Click any channel to analyze it — all links go to real YouTube channels.</p></div>
+  <div class="demo-grid">
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MrBeast')" class="demo-card reveal reveal-d1">
+      <div class="avatar" style="background:linear-gradient(135deg,#ff2d55,#cc0033)">M</div>
+      <div class="name">MrBeast</div><div class="subs">368M subs · Entertainment</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MKBHD')" class="demo-card reveal reveal-d2">
+      <div class="avatar" style="background:linear-gradient(135deg,#2dba4e,#166534)">M</div>
+      <div class="name">MKBHD</div><div class="subs">20M subs · Tech</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Markiplier')" class="demo-card reveal reveal-d3">
+      <div class="avatar" style="background:linear-gradient(135deg,#3ea6ff,#1e40af)">M</div>
+      <div class="name">Markiplier</div><div class="subs">38M subs · Gaming</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@LinusTechTips')" class="demo-card reveal reveal-d1">
+      <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#b45309)">L</div>
+      <div class="name">Linus Tech Tips</div><div class="subs">16M subs · Tech</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Kurzgesagt')" class="demo-card reveal reveal-d2">
+      <div class="avatar" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">K</div>
+      <div class="name">Kurzgesagt</div><div class="subs">24M subs · Science</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+    <a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MarquesBrownlee')" class="demo-card reveal reveal-d3">
+      <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">M</div>
+      <div class="name">Marques Brownlee</div><div class="subs">20M subs · Tech</div>
+      <span class="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Try Now</span>
+    </a>
+  </div>
 </section>
 
+<!-- ── Pricing ── -->
 <section class="section" style="padding-top:0" id="pricing">
-<div class="section-header reveal"><div class="label">Pricing</div><h2>Simple, transparent pricing</h2><p>Start free. Upgrade when you're ready.</p></div>
-<div class="pricing-grid">
-<div class="plan reveal reveal-d1">
-<h3>Free</h3><div class="price">$0<span>/mo</span></div>
-<ul><li>3 analyses per month</li><li>YouTube + Reddit search</li><li>Basic niche profile</li><li>Competitor discovery</li></ul>
-<a href="/app#login" class="btn btn-ghost btn-full">Get Started</a>
-</div>
-<div class="plan featured reveal reveal-d2">
-<div class="plan-badge-top">Most Popular</div>
-<h3>Pro</h3><div class="price">$9<span>/mo</span></div>
-<ul><li>50 analyses per month</li><li>Full competitor analysis</li><li>AI content suggestions</li><li>PDF & CSV export</li><li>Content gap identification</li></ul>
-<a href="/app#login" class="btn btn-primary btn-full">Upgrade to Pro</a>
-</div>
-<div class="plan reveal reveal-d3">
-<h3>Business</h3><div class="price">$29<span>/mo</span></div>
-<ul><li>Unlimited analyses</li><li>Team seats (5)</li><li>API access</li><li>Priority support</li><li>Everything in Pro</li></ul>
-<a href="/app#login" class="btn btn-accent btn-full">Contact Sales</a>
-</div>
-</div>
+  <div class="section-header reveal"><div class="label">Pricing</div><h2>Simple, transparent pricing</h2><p>Start free. Upgrade when you're ready.</p></div>
+  <div class="pricing-grid">
+    <div class="plan reveal reveal-d1">
+      <h3>Free</h3><div class="price">$0<span>/mo</span></div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>3 analyses per month</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>YouTube + Reddit search</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Basic niche profile</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Competitor discovery</li>
+      </ul>
+      <a href="/app#login" class="btn btn-ghost btn-full">Get Started</a>
+    </div>
+    <div class="plan featured reveal reveal-d2">
+      <div class="plan-badge-top">Most Popular</div>
+      <h3>Pro</h3><div class="price">$9<span>/mo</span></div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>50 analyses per month</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Full competitor analysis</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>AI content suggestions</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>PDF & CSV export</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Content gap identification</li>
+      </ul>
+      <a href="/app#login" class="btn btn-primary btn-full">Upgrade to Pro</a>
+    </div>
+    <div class="plan reveal reveal-d3">
+      <h3>Business</h3><div class="price">$29<span>/mo</span></div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Unlimited analyses</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Team seats (5)</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>API access</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Priority support</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Everything in Pro</li>
+      </ul>
+      <a href="/app#login" class="btn btn-ghost btn-full">Get Started</a>
+    </div>
+  </div>
 </section>
 
+<!-- ── FAQ ── -->
 <section class="section" style="padding-top:0">
-<div class="section-header reveal"><div class="label">FAQ</div><h2>Got questions?</h2></div>
-<div class="faq">
-<div class="faq-item reveal"><h3>What data sources does PopSearch use?</h3><p>YouTube Data API v3, Reddit (PRAW + RSS), Google Trends, Twitter/X API v2, Twitch Helix API, Hacker News Firebase API, and RSS feeds (TechCrunch, The Verge, Product Hunt, YouTube Blog). Google Gemini for AI analysis.</p></div>
-<div class="faq-item reveal"><h3>How accurate is the AI analysis?</h3><p>The AI analyzes channel title, description, subscriber count, recent video titles, engagement metrics, and upload frequency. The more content you have, the more accurate the profile.</p></div>
-<div class="faq-item reveal"><h3>Do I need API keys to use it?</h3><p>No — PopSearch handles all API integrations server-side. Just paste a URL and get insights instantly.</p></div>
-<div class="faq-item reveal"><h3>Is my data stored securely?</h3><p>Analysis results are cached for 24 hours to optimize performance. On the SaaS version, your account data is stored securely with encryption at rest.</p></div>
-</div>
+  <div class="section-header reveal"><div class="label">FAQ</div><h2>Frequently asked questions</h2><p>Everything you need to know about PopSearch.</p></div>
+  <div class="faq">
+    <div class="faq-item reveal"><h3>How does PopSearch analyze channels?<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></h3><p>We use the YouTube Data API to fetch channel statistics, recent videos, and engagement metrics. Our AI then analyzes this data to generate niche profiles, growth predictions, and content recommendations.</p></div>
+    <div class="faq-item reveal"><h3>Is there a free plan?<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></h3><p>Yes! Our free plan includes 3 channel analyses per month, basic search across YouTube and Reddit, and competitor discovery. No credit card required.</p></div>
+    <div class="faq-item reveal"><h3>Which platforms are supported for content discovery?<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></h3><p>We search across YouTube, Reddit, X (Twitter), TikTok, Twitch, Instagram, Hacker News, RSS feeds, and Google Trends — 15+ sources in a single query.</p></div>
+    <div class="faq-item reveal"><h3>Can I cancel anytime?<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></h3><p>Yes, you can cancel your subscription at any time through the billing portal. You'll keep access until the end of your billing period.</p></div>
+  </div>
 </section>
 
+<!-- ── Footer ── -->
 <footer class="footer">
-<div class="footer-grid">
-<div>
-<div class="brand"><span>PopSearch</span></div>
-<div class="desc">AI-powered YouTube channel analysis and content discovery for creators who want to grow with data.</div>
-</div>
-<div>
-<h4>Product</h4>
-<a href="#features">Features</a>
-<a href="#demos">Examples</a>
-<a href="#pricing">Pricing</a>
-<a href="/app#login">Launch App</a>
-</div>
-<div>
-<h4>Resources</h4>
-<a href="#">API Docs</a>
-<a href="#">Privacy Policy</a>
-<a href="#">Terms of Service</a>
-</div>
-<div>
-<h4>Company</h4>
-<a href="#">About</a>
-<a href="#">Contact</a>
-<a href="#">Status</a>
-</div>
-</div>
-<div class="footer-bottom"><p>&copy; 2026 PopSearch. All rights reserved.</p></div>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>PopSearch</span>
+      </div>
+      <p class="desc">AI-powered YouTube analytics and growth tools for creators who want data-driven results.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <a href="#features"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Features</a>
+      <a href="#pricing"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Pricing</a>
+      <a href="/app#login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Dashboard</a>
+    </div>
+    <div>
+      <h4>Resources</h4>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Blog</a>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Help Center</a>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>API Docs</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>About</a>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Contact</a>
+      <a href="#"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>Privacy</a>
+    </div>
+  </div>
+  <div class="footer-bottom"><p>&copy; 2026 PopSearch. All rights reserved.</p></div>
 </footer>
 
 <script>
 (function(){
-var obs=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.08});
-document.querySelectorAll('.reveal').forEach(function(e){obs.observe(e)});
-document.querySelectorAll('.faq-item').forEach(function(e){e.addEventListener('click',function(){this.classList.toggle('open')})});
+  var obs=new IntersectionObserver(function(e){e.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(function(e){obs.observe(e)});
+  document.querySelectorAll('.faq-item').forEach(function(e){e.addEventListener('click',function(){this.classList.toggle('open')})});
+  document.getElementById('navToggle').addEventListener('click',function(){this.classList.toggle('open');document.getElementById('navLinks').classList.toggle('open')});
 })();
 </script>
 </body>
