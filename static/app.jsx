@@ -217,13 +217,13 @@ function LoginPage() {
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('div', { className: 'auth-card' },
       React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
-        React.createElement('div', { style: { width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,68,68,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '1.5rem' } },
+        React.createElement('div', { style: { width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,68,68,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '1.5rem' } },
           React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--primary)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
             React.createElement('circle', { cx: 12, cy: 12, r: 10 }),
             React.createElement('path', { d: 'M12 6v6l4 2' }),
           ),
         ),
-        React.createElement('h1', { style: { fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 } }, 'Welcome back'),
+        React.createElement('h1', { style: { fontSize: '1.4rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Welcome back'),
         React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem' } }, 'Sign in to Creator Content Radar'),
       ),
       err ? React.createElement('div', { className: 'error', style: { marginBottom: 16 } }, err) : null,
@@ -315,7 +315,7 @@ function RegisterPage() {
   return React.createElement('div', { className: 'auth-page' },
     React.createElement('div', { className: 'auth-card' },
       React.createElement('div', { style: { textAlign: 'center', marginBottom: 28 } },
-        React.createElement('div', { style: { width: 48, height: 48, borderRadius: '50%', background: 'rgba(62,166,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '1.5rem' } },
+        React.createElement('div', { style: { width: 52, height: 52, borderRadius: '50%', background: 'rgba(62,166,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: '1.5rem' } },
           React.createElement('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--accent)', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
             React.createElement('path', { d: 'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
             React.createElement('circle', { cx: 8.5, cy: 7, r: 4 }),
@@ -323,7 +323,7 @@ function RegisterPage() {
             React.createElement('line', { x1: 23, y1: 11, x2: 17, y2: 11 }),
           ),
         ),
-        React.createElement('h1', { style: { fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 } }, 'Create your account'),
+        React.createElement('h1', { style: { fontSize: '1.4rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Create your account'),
         React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem' } }, 'Join Creator Content Radar for free'),
       ),
       err ? React.createElement('div', { className: 'error', style: { marginBottom: 16 } }, err) : null,
@@ -384,19 +384,19 @@ function PricingPage() {
   ];
 
   return React.createElement('div', null,
-    React.createElement('div', { style: { textAlign: 'center', marginBottom: 32 } },
-      React.createElement('h1', { style: { fontSize: '2rem', fontWeight: 800, marginBottom: 8 } }, 'Choose Your Plan'),
-      React.createElement('p', { style: { color: 'var(--text3)', fontSize: '1rem', maxWidth: 500, margin: '0 auto' } }, 'Unlock the full power of Creator Content Radar. Scale your content strategy with AI-powered insights.'),
+    React.createElement('div', { style: { textAlign: 'center', marginBottom: 36 } },
+      React.createElement('h1', { style: { fontSize: '2rem', fontWeight: 800, marginBottom: 8, letterSpacing: '-.03em' } }, 'Choose Your Plan'),
+      React.createElement('p', { style: { color: 'var(--text3)', fontSize: '1rem', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 } }, 'Unlock the full power of Creator Content Radar. Scale your content strategy with AI-powered insights.'),
     ),
     React.createElement('div', { className: 'stats', style: { gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 } },
       plans.map((plan) => {
         const isCurrent = usage?.plan === plan.id;
-        return React.createElement('div', {
+        return           React.createElement('div', {
           key: plan.id,
           className: 'card',
           style: { display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: isCurrent ? '2px solid var(--primary)' : '1px solid var(--border)' }
         },
-          plan.id === 'pro' ? React.createElement('div', { style: { position: 'absolute', top: 12, right: 12, background: 'var(--primary)', color: '#fff', padding: '4px 12px', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase' } }, 'Popular') : null,
+          plan.id === 'pro' ? React.createElement('div', { style: { position: 'absolute', top: 14, right: 14, background: 'var(--primary)', color: '#fff', padding: '4px 14px', borderRadius: 999, fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' } }, 'Popular') : null,
           React.createElement('h2', { style: { fontSize: '1.2rem', fontWeight: 700, marginBottom: 4 } }, plan.name),
           React.createElement('div', { style: { fontSize: '2.5rem', fontWeight: 800, marginBottom: 4 } }, plan.price, React.createElement('span', { style: { fontSize: '1rem', fontWeight: 400, color: 'var(--text3)' } }, '/mo')),
           React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.85rem', marginBottom: 16 } }, plan.desc),
@@ -474,7 +474,7 @@ function DashboardPage() {
 
   return React.createElement('div', null,
     // Search bar — always at top
-    React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16, maxWidth: 500 } },
+    React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 20, maxWidth: 500 } },
       React.createElement('input', { className: 'input', placeholder: 'YouTube URL or @handle...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && load() }),
       React.createElement('button', { className: 'btn btn-primary', onClick: load, disabled: loading }, loading ? '...' : '\uD83D\uDD0D'),
     ),
@@ -482,11 +482,11 @@ function DashboardPage() {
     React.createElement(ErrorBox, { message: err }),
 
     // Empty state
-    !data && !loading ? React.createElement('div', { className: 'empty-state', style: { marginTop: 60 } },
+    !data && !loading ? React.createElement('div', { className: 'empty-state', style: { marginTop: 48 } },
       React.createElement('div', { className: 'emoji', style: { fontSize: '3.5rem' } }, '\uD83D\uDCFA'),
-      React.createElement('h2', { style: { marginBottom: 8 } }, 'Welcome to Creator Radar'),
-      React.createElement('p', { style: { color: 'var(--text2)' } }, 'Enter a YouTube channel URL above to analyze performance, find competitors, and discover content ideas across 7+ platforms.'),
-      React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 16 }, onClick: () => window.location.hash = 'pricing' }, 'View Plans'),
+      React.createElement('h2', null, 'Welcome to Creator Radar'),
+      React.createElement('p', null, 'Enter a YouTube channel URL above to analyze performance, find competitors, and discover content ideas across 7+ platforms.'),
+      React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 20 }, onClick: () => window.location.hash = 'pricing' }, 'View Plans'),
     ) : null,
 
     // YouTube Studio-style dashboard
@@ -496,20 +496,20 @@ function DashboardPage() {
       React.createElement('div', { style: {
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
         borderRadius: 'var(--radius)',
-        padding: '32px 28px',
+        padding: '36px 32px',
         marginBottom: 20,
         position: 'relative',
         overflow: 'hidden',
       } },
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 20, position: 'relative', zIndex: 1 } },
           React.createElement('div', { style: {
-            width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,.2)',
+            width: 76, height: 76, borderRadius: '50%', background: 'rgba(255,255,255,.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem', fontWeight: 700, color: '#fff', border: '3px solid rgba(255,255,255,.4)',
+            fontSize: '2.2rem', fontWeight: 700, color: '#fff', border: '3px solid rgba(255,255,255,.4)',
           } }, (p.title || '?')[0].toUpperCase()),
           React.createElement('div', null,
-            React.createElement('h1', { style: { color: '#fff', fontSize: '1.5rem', fontWeight: 700, marginBottom: 2 } }, p.title || 'Channel'),
-            React.createElement('p', { style: { color: 'rgba(255,255,255,.8)', fontSize: '.88rem' } },
+            React.createElement('h1', { style: { color: '#fff', fontSize: '1.5rem', fontWeight: 700, marginBottom: 2, letterSpacing: '-.02em' } }, p.title || 'Channel'),
+            React.createElement('p', { style: { color: 'rgba(255,255,255,.8)', fontSize: '.88rem', lineHeight: 1.5 } },
               fmt(p.subscriber_count), ' subscribers \u00B7 ', p.niche || 'N/A', ' \u00B7 ', p.channel_tier || '',
             ),
           ),
@@ -744,8 +744,8 @@ function AnalyzePage() {
   const currentLabel = job ? job.step || steps[Math.max(0, currentStep)]?.label || 'Processing...' : '';
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Channel Analysis'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Deep dive into your channel\u2019s performance'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Channel Analysis'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Deep dive into your channel\u2019s performance'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 600 } },
         React.createElement('input', { className: 'input', placeholder: 'YouTube URL, @handle, or channel ID...', value: url, onChange: e => setUrl(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
@@ -810,8 +810,8 @@ function CompetitorsPage() {
   };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Competitor Analysis'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Discover and analyze competing channels'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Competitor Analysis'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Discover and analyze competing channels'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
         React.createElement('input', { className: 'input', placeholder: 'YouTube channel ID...', value: channelId, onChange: e => setChannelId(e.target.value), onKeyDown: e => e.key === 'Enter' && find() }),
@@ -884,8 +884,8 @@ function DiscoverPage() {
   results.forEach(r => { if (!groups[r.platform]) groups[r.platform] = []; groups[r.platform].push(r); });
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Content Discovery'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Cross-platform search across all sources'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Content Discovery'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Cross-platform search across all sources'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
         React.createElement('input', { className: 'input', style: { flex: 1, minWidth: 200 }, placeholder: 'Channel ID...', value: channelId, onChange: e => setChannelId(e.target.value) }),
@@ -974,8 +974,8 @@ function BillingPage() {
   if (loading) return React.createElement(Skeleton, { count: 2 });
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Billing & Usage'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Manage your subscription and view usage'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Billing & Usage'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Manage your subscription and view usage'),
     usage ? React.createElement('div', { className: 'stats' },
       React.createElement(StatCard, { label: 'Plan', value: usage.plan }),
       React.createElement(StatCard, { label: 'Analyses Used', value: usage.analyses_this_month }),
@@ -983,22 +983,22 @@ function BillingPage() {
       React.createElement(StatCard, { label: 'Remaining', value: usage.remaining === -1 ? '\u221E' : usage.remaining }),
     ) : null,
     React.createElement('div', { className: 'card' },
-      React.createElement('h3', { style: { marginBottom: 12 } }, 'Subscription Plans'),
+      React.createElement('h3', { style: { marginBottom: 16 } }, 'Subscription Plans'),
       React.createElement('div', { className: 'stats', style: { marginBottom: 0 } },
         React.createElement('div', { className: 'stat' },
           React.createElement('div', { className: 'label' }, 'Free'),
-          React.createElement('div', { className: 'value', style: { fontSize: '1rem' } }, '3 analyses/mo'),
-          usage?.plan === 'free' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-ghost', style: { marginTop: 8, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, disabled: true }, 'Current'),
+          React.createElement('div', { className: 'value', style: { fontSize: '1.1rem' } }, '3 analyses/mo'),
+          usage?.plan === 'free' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-ghost', style: { marginTop: 10, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, disabled: true }, 'Current'),
         ),
         React.createElement('div', { className: 'stat' },
-          React.createElement('div', { className: 'label' }, 'Pro - $19/mo'),
-          React.createElement('div', { className: 'value', style: { fontSize: '1rem' } }, '50 analyses/mo'),
-          usage?.plan === 'pro' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 8, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, onClick: () => openCheckout('pro') }, 'Upgrade'),
+          React.createElement('div', { className: 'label' }, 'Pro'),
+          React.createElement('div', { className: 'value', style: { fontSize: '1.1rem' } }, '50 analyses/mo'),
+          usage?.plan === 'pro' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 10, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, onClick: () => openCheckout('pro') }, 'Upgrade'),
         ),
         React.createElement('div', { className: 'stat' },
-          React.createElement('div', { className: 'label' }, 'Business - $49/mo'),
-          React.createElement('div', { className: 'value', style: { fontSize: '1rem' } }, 'Unlimited'),
-          usage?.plan === 'business' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-accent', style: { marginTop: 8, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, onClick: () => openCheckout('business') }, 'Upgrade'),
+          React.createElement('div', { className: 'label' }, 'Business'),
+          React.createElement('div', { className: 'value', style: { fontSize: '1.1rem' } }, 'Unlimited'),
+          usage?.plan === 'business' ? React.createElement('div', { className: 'change up' }, 'Current') : React.createElement('button', { className: 'btn btn-accent', style: { marginTop: 10, width: '100%', justifyContent: 'center', padding: '6px 12px', fontSize: '.8rem' }, onClick: () => openCheckout('business') }, 'Upgrade'),
         ),
       ),
       usage?.plan !== 'free' ? React.createElement('button', { className: 'btn btn-ghost', style: { marginTop: 12 }, onClick: openPortal, disabled: portalLoading },
@@ -1040,8 +1040,8 @@ function IdeasPage() {
   };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Content Idea Generator'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Get AI-powered video ideas with SEO keywords and thumbnail concepts'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Content Idea Generator'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Get AI-powered video ideas with SEO keywords and thumbnail concepts'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
         React.createElement('input', { className: 'input', placeholder: 'e.g. "AI tools for content creators"', value: topic, onChange: e => setTopic(e.target.value), onKeyDown: e => e.key === 'Enter' && generate() }),
@@ -1161,15 +1161,15 @@ function SettingsPage() {
   const tabLabels = { profile: 'Profile & Usage', notifications: 'Notifications', 'api-keys': 'API Keys', channels: 'Channels', digest: 'Email Digest' };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Settings'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Manage your account and preferences'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Settings'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Manage your account and preferences'),
     React.createElement('div', { className: 'tabs' },
       tabs.map(t => React.createElement('button', { key: t, className: `tab${activeTab === t ? ' active' : ''}`, onClick: () => setActiveTab(t) }, tabLabels[t])),
     ),
     React.createElement('div', { className: 'tab-panel', style: { display: activeTab === 'profile' ? 'block' : 'none' } },
       React.createElement('div', { className: 'card' },
-        React.createElement('h3', { style: { marginBottom: 12 } }, 'Account Information'),
-        React.createElement('div', { style: { display: 'grid', gap: 8, gridTemplateColumns: '140px 1fr', fontSize: '.9rem' } },
+        React.createElement('h3', { style: { marginBottom: 16 } }, 'Account Information'),
+        React.createElement('div', { style: { display: 'grid', gap: 10, gridTemplateColumns: '140px 1fr', fontSize: '.9rem' } },
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Email:'), React.createElement('span', null, user?.email),
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Plan:'), React.createElement('span', { style: { color: 'var(--primary)', fontWeight: 600 } }, usage?.plan || 'free'),
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Analyses Used:'), React.createElement('span', null, `${usage?.analyses_this_month || 0} / ${usage?.limit === -1 ? '\u221E' : usage?.limit || 3}`),
@@ -1286,8 +1286,8 @@ function SavedIdeasPage() {
   if (loading) return React.createElement(Skeleton);
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Saved Ideas'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Your saved content ideas'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Saved Ideas'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Your saved content ideas'),
     ideas.length ? React.createElement('div', { className: 'content-list' },
       ideas.map(idea => React.createElement('div', { key: idea.id, className: 'card' },
         React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
@@ -1295,7 +1295,7 @@ function SavedIdeasPage() {
             React.createElement('h3', { style: { fontSize: '1rem', fontWeight: 600, marginBottom: 4 } }, idea.title),
             React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.82rem' } }, 'Topic: ', idea.topic),
           ),
-          React.createElement('button', { className: 'btn btn-ghost', style: { padding: '4px 12px', fontSize: '.78rem', borderColor: 'var(--error)', color: 'var(--error)' }, onClick: async () => {
+            React.createElement('button', { className: 'btn btn-ghost', style: { padding: '4px 14px', fontSize: '.78rem', borderColor: 'var(--error)', color: 'var(--error)' }, onClick: async () => {
             await api(`/api/ideas/${idea.id}`, { method: 'DELETE' });
             setIdeas(ideas.filter(i => i.id !== idea.id));
           } }, 'Delete'),
@@ -1336,8 +1336,8 @@ function WatchPage() {
   if (loading) return React.createElement(Skeleton);
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Competitor Monitoring'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Watch competitors and get alerted to changes'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Competitor Monitoring'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Watch competitors and get alerted to changes'),
     React.createElement('div', { className: 'tabs' },
       React.createElement('button', { className: `tab${tab === 'watched' ? ' active' : ''}`, onClick: () => setTab('watched') }, 'Watched Channels'),
       React.createElement('button', { className: `tab${tab === 'alerts' ? ' active' : ''}`, onClick: () => setTab('alerts') }, 'Alerts', alerts.filter(a => !a.read).length ? React.createElement('span', { className: 'tab-count', style: { background: 'var(--primary)', color: '#fff' } }, alerts.filter(a => !a.read).length) : null),
@@ -1415,7 +1415,7 @@ function CalendarPage() {
   return React.createElement('div', null,
     React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 } },
       React.createElement('div', null,
-        React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Content Calendar'),
+        React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Content Calendar'),
         React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem' } }, 'Plan and schedule your content'),
       ),
       React.createElement('button', { className: 'btn btn-primary', onClick: () => setShowForm(!showForm) }, showForm ? 'Cancel' : '+ Add Event'),
@@ -1519,8 +1519,8 @@ function ReportsPage() {
   if (loading) return React.createElement(Skeleton);
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Reports & Exports'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'View saved analyses and export reports'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Reports & Exports'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'View saved analyses and export reports'),
     React.createElement('div', { style: { display: 'grid', gridTemplateColumns: selectedReport ? '1fr 1fr' : '1fr', gap: 16 } },
       React.createElement('div', null,
         React.createElement('div', { className: 'card' },
@@ -1582,8 +1582,8 @@ function RepurposePage() {
   };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Cross-Platform Repurposing'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Turn YouTube videos into short-form content for other platforms'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Cross-Platform Repurposing'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Turn YouTube videos into short-form content for other platforms'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
         React.createElement('input', { className: 'input', style: { flex: 2, minWidth: 250 }, placeholder: 'YouTube video URL...', value: url, onChange: e => setUrl(e.target.value) }),
@@ -1652,8 +1652,8 @@ function SeoPage() {
   const scoreColor = (s) => s >= 80 ? 'var(--success)' : s >= 50 ? 'var(--warning)' : 'var(--error)';
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'SEO Scorecard'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Analyze how well your channel is optimized for search'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'SEO Scorecard'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Analyze how well your channel is optimized for search'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
         React.createElement('input', { className: 'input', placeholder: 'Channel ID...', value: channelId, onChange: e => setChannelId(e.target.value), onKeyDown: e => e.key === 'Enter' && analyze() }),
@@ -1713,8 +1713,8 @@ function ThumbnailTestPage() {
   };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'A/B Thumbnail Tester'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'AI predicts which thumbnail will perform better'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'A/B Thumbnail Tester'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'AI predicts which thumbnail will perform better'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr', maxWidth: 600 } },
         React.createElement('input', { className: 'input', placeholder: 'Thumbnail A URL...', value: urlA, onChange: e => setUrlA(e.target.value) }),
@@ -1770,8 +1770,8 @@ function TrendAlertsPage() {
   };
 
   return React.createElement('div', null,
-    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 700, marginBottom: 4 } }, 'Trend Alerts'),
-    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 20 } }, 'Discover trending topics in your niche'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, 'Trend Alerts'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } }, 'Discover trending topics in your niche'),
     React.createElement('button', { className: 'btn btn-accent', onClick: check, disabled: loading, style: { marginBottom: 16 } }, loading ? 'Checking...' : '\uD83D\uDD14 Check for Trends'),
     alerts.length ? React.createElement('div', { className: 'content-list' },
       alerts.map((a, i) => React.createElement('div', { key: i, className: 'card', style: { padding: 12, borderLeft: `4px solid ${a.strength === 'high' ? 'var(--primary)' : 'var(--warning)'}` } },
@@ -1817,8 +1817,8 @@ function CommentsPage() {
   const pct = (v) => Math.round((v / total) * 100);
 
   return React.createElement('div', null,
-    React.createElement('h1', null, '\uD83D\uDCAC Comment Analyzer'),
-    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, '\uD83D\uDCAC Comment Analyzer'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } },
       'Paste a YouTube video URL to analyze audience comments with AI sentiment and topic extraction'),
     React.createElement('div', { className: 'card' },
       React.createElement('div', { style: { display: 'flex', gap: 8, maxWidth: 500 } },
@@ -1916,8 +1916,8 @@ function PublishingPage() {
   const slotColor = (s) => s >= 80 ? 'var(--success)' : s >= 60 ? 'var(--warning)' : 'var(--error)';
 
   return React.createElement('div', null,
-    React.createElement('h1', null, '\uD83D\uDCE4 Publishing Assistant'),
-    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, '\uD83D\uDCE4 Publishing Assistant'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } },
       'Optimal posting times, CTR predictions, and A/B slot analysis for your channel'),
     React.createElement(LoadingBar, { active: loading }),
     React.createElement(ErrorBox, { message: err }),
@@ -2031,8 +2031,8 @@ function AlgoShiftPage() {
   const shiftIcon = (t) => t === 'decline' ? '\u2B07' : t === 'surge' ? '\u2B06' : '\u27A1';
 
   return React.createElement('div', null,
-    React.createElement('h1', null, '\uD83D\uDCC8 Algorithm Shift Tracker'),
-    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, '\uD83D\uDCC8 Algorithm Shift Tracker'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } },
       'Detect algorithm shifts, view velocity changes, and get adaptation recommendations'),
     React.createElement(LoadingBar, { active: loading }),
     React.createElement(ErrorBox, { message: err }),
@@ -2124,7 +2124,7 @@ function AgentPage() {
   const dayColor = (day) => ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].indexOf(day);
 
   return React.createElement('div', null,
-    React.createElement('h1', null, '\uD83E\uDD16 Growth Agent'),
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, '\uD83E\uDD16 Growth Agent'),
     React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       React.createElement('button', { className: `btn ${tab === 'plan' ? 'btn-primary' : 'btn-ghost'}`, onClick: () => setTab('plan') }, 'Weekly Plan'),
       React.createElement('button', { className: `btn ${tab === 'status' ? 'btn-primary' : 'btn-ghost'}`, onClick: () => setTab('status') }, 'Status & Insights'),
@@ -2231,8 +2231,8 @@ function EditingPage() {
   const gradeColor = (g) => g === 'A' ? 'var(--success)' : g === 'B' ? 'var(--accent)' : g === 'C' ? 'var(--warning)' : 'var(--error)';
 
   return React.createElement('div', null,
-    React.createElement('h1', null, '\uD83D\uDD79\uFE0F Editing Assistant'),
-    React.createElement('p', { style: { color: 'var(--text3)', marginBottom: 16 } },
+    React.createElement('h1', { style: { fontSize: '1.5rem', fontWeight: 800, marginBottom: 4, letterSpacing: '-.02em' } }, '\uD83D\uDD79\uFE0F Editing Assistant'),
+    React.createElement('p', { style: { color: 'var(--text3)', fontSize: '.9rem', marginBottom: 24, lineHeight: 1.5 } },
       'Analyze your video performance and get AI-powered editing recommendations'),
     React.createElement(LoadingBar, { active: loading }),
     React.createElement(ErrorBox, { message: err }),
