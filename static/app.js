@@ -109,7 +109,7 @@ var CCR = (() => {
   }
   function ErrorBox({ message }) {
     if (!message) return null;
-    return React.createElement("div", { className: "error-box", style: { display: "block" } }, message);
+    return React.createElement("div", { className: "error-box shake", style: { display: "block" } }, message);
   }
   function StatCard({ label, value, change, changeDir = "up" }) {
     return React.createElement(
@@ -619,7 +619,7 @@ var CCR = (() => {
         React.createElement(
           "div",
           { style: {
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
+            background: "linear-gradient(135deg, #ff2d55 0%, #3b82f6 50%, #8b5cf6 100%)",
             borderRadius: "var(--radius)",
             padding: "36px 32px",
             marginBottom: 20,
@@ -1552,7 +1552,7 @@ var CCR = (() => {
           React.createElement("h3", { style: { marginBottom: 16 } }, "Account Information"),
           React.createElement(
             "div",
-            { style: { display: "grid", gap: 10, gridTemplateColumns: "140px 1fr", fontSize: ".9rem" } },
+            { className: "card-body", style: { display: "grid", gap: 10, gridTemplateColumns: "140px 1fr" } },
             React.createElement("span", { style: { color: "var(--text3)" } }, "Email:"),
             React.createElement("span", null, user?.email),
             React.createElement("span", { style: { color: "var(--text3)" } }, "Plan:"),
@@ -1572,9 +1572,9 @@ var CCR = (() => {
         ),
         React.createElement(
           "div",
-          { className: "card", style: { borderColor: "rgba(255,68,68,.3)" } },
+          { className: "card", style: { borderColor: "rgba(239,68,68,.3)" } },
           React.createElement("h3", { style: { color: "var(--error)", marginBottom: 8 } }, "Danger Zone"),
-          React.createElement("p", { style: { fontSize: ".85rem", color: "var(--text3)", marginBottom: 12 } }, "Permanently delete your account and all data. This action cannot be undone."),
+          React.createElement("p", { className: "card-body", style: { marginBottom: 12 } }, "Permanently delete your account and all data. This action cannot be undone."),
           confirmDelete ? React.createElement(
             "div",
             { style: { display: "flex", gap: 8 } },

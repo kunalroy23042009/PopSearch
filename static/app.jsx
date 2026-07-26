@@ -100,7 +100,7 @@ function LoadingBar() { return null; }
 
 function ErrorBox({ message }) {
   if (!message) return null;
-  return React.createElement('div', { className: 'error-box', style: { display: 'block' } }, message);
+  return React.createElement('div', { className: 'error-box shake', style: { display: 'block' } }, message);
 }
 
 function StatCard({ label, value, change, changeDir = 'up' }) {
@@ -492,7 +492,7 @@ function DashboardPage() {
 
       // Channel header — banner + avatar + name
       React.createElement('div', { style: {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        background: 'linear-gradient(135deg, #ff2d55 0%, #3b82f6 50%, #8b5cf6 100%)',
         borderRadius: 'var(--radius)',
         padding: '36px 32px',
         marginBottom: 20,
@@ -1167,7 +1167,7 @@ function SettingsPage() {
     React.createElement('div', { className: 'tab-panel', style: { display: activeTab === 'profile' ? 'block' : 'none' } },
       React.createElement('div', { className: 'card' },
         React.createElement('h3', { style: { marginBottom: 16 } }, 'Account Information'),
-        React.createElement('div', { style: { display: 'grid', gap: 10, gridTemplateColumns: '140px 1fr', fontSize: '.9rem' } },
+        React.createElement('div', { className: 'card-body', style: { display: 'grid', gap: 10, gridTemplateColumns: '140px 1fr' } },
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Email:'), React.createElement('span', null, user?.email),
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Plan:'), React.createElement('span', { style: { color: 'var(--primary)', fontWeight: 600 } }, usage?.plan || 'free'),
           React.createElement('span', { style: { color: 'var(--text3)' } }, 'Analyses Used:'), React.createElement('span', null, `${usage?.analyses_this_month || 0} / ${usage?.limit === -1 ? '\u221E' : usage?.limit || 3}`),
@@ -1179,9 +1179,9 @@ function SettingsPage() {
         } }, 'Manage Subscription') :
         React.createElement('button', { className: 'btn btn-primary', style: { marginTop: 16 }, onClick: () => window.location.hash = 'pricing' }, 'Upgrade Plan'),
       ),
-      React.createElement('div', { className: 'card', style: { borderColor: 'rgba(255,68,68,.3)' } },
+      React.createElement('div', { className: 'card', style: { borderColor: 'rgba(239,68,68,.3)' } },
         React.createElement('h3', { style: { color: 'var(--error)', marginBottom: 8 } }, 'Danger Zone'),
-        React.createElement('p', { style: { fontSize: '.85rem', color: 'var(--text3)', marginBottom: 12 } }, 'Permanently delete your account and all data. This action cannot be undone.'),
+        React.createElement('p', { className: 'card-body', style: { marginBottom: 12 } }, 'Permanently delete your account and all data. This action cannot be undone.'),
         confirmDelete ? React.createElement('div', { style: { display: 'flex', gap: 8 } },
           React.createElement('button', { className: 'btn', style: { background: 'var(--error)', color: '#fff' }, onClick: deleteAccount }, 'Confirm Delete'),
           React.createElement('button', { className: 'btn btn-ghost', onClick: () => setConfirmDelete(false) }, 'Cancel'),
