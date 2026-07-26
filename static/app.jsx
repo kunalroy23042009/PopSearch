@@ -1079,6 +1079,152 @@ function AlgoShiftPage() {
   );
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+//  YOUTUBE ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+function AnalyticsPage() {
+  const { api } = useAuth();
+  const [data, setData] = useState(null);
+  const [realtime, setRealtime] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [range, setRange] = useState(28);
+
+  const load = async (days) => {
+    setLoading(true); setErr(''); setData(null); setNeedsAuth(false);
+    try {
+      const res = await api(`/api/analytics/overview?days=${days || range}`);
+      if (!res) return;
+      const d = await res.json();
+      if (d.needs_auth) { setNeedsAuth(true); }
+      else setData(d);
+    } catch { setErr('Network error'); }
+    finally { setLoading(false); }
+  };
+
+  const loadRealtime = async () => {
+    try {
+      const res = await api('/api/analytics/realtime');
+      if (!res) return;
+      const d = await res.json();
+      if (!d.needs_auth) setRealtime(d);
+    } catch {}
+  };
+
+  useEffect(() => { load(); loadRealtime(); }, []);
+
+  const formatNum = (n) => {
+    if (!n) return '0';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return String(n);
+  };
+
+  const formatTime = (secs) => {
+    if (!secs) return '—';
+    const m = Math.floor(secs / 60);
+    const s = Math.round(secs % 60);
+    return m + 'm ' + s + 's';
+  };
+
+  return React.createElement('div', null,
+    PageHeader({ title: 'YouTube Analytics', subtitle: 'Real channel metrics from YouTube Analytics API v2' }),
+    err ? ErrorBox({ message: err }) : null,
+    needsAuth ? React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: 48 } },
+      Icon({ name: 'youtube', size: 32 }),
+      React.createElement('h2', { className: 'mt-16' }, 'Connect your YouTube account'),
+      React.createElement('p', { className: 'text-sm text-2 mt-8 mb-24' }, 'Analytics pulls real metrics from YouTube Analytics API. Connect your account to view views, watch time, retention, traffic sources, demographics, and more.'),
+      React.createElement('button', { className: 'btn btn-primary', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
+    ) : loading ? Skeleton({ count: 4 }) : data ? React.createElement('div', null,
+      // Range selector
+      React.createElement('div', { className: 'flex gap-8 mb-16' },
+        [7, 28, 90].map(d => React.createElement('button', {
+          key: d,
+          className: 'btn ' + (range === d ? 'btn-primary' : 'btn-ghost'),
+          style: { padding: '8px 16px', fontSize: '.82rem' },
+          onClick: () => { setRange(d); load(d); },
+        }, `Last ${d} days`)),
+      ),
+
+      // Real-time stats
+      realtime ? React.createElement('div', { className: 'stats' },
+        StatCard({ label: 'Subscribers', value: formatNum(realtime.subscriber_count) }),
+        StatCard({ label: 'Total Views', value: formatNum(realtime.view_count) }),
+        StatCard({ label: 'Video Count', value: formatNum(realtime.video_count) }),
+      ) : null,
+
+      // Period totals
+      data.timeseries?.totals ? React.createElement('div', { className: 'stats' },
+        StatCard({ label: 'Views (period)', value: formatNum(data.timeseries.totals.views) }),
+        StatCard({ label: 'Watch Time (min)', value: formatNum(data.timeseries.totals.estimatedMinutesWatched) }),
+        StatCard({ label: 'Subs Gained', value: '+' + formatNum(data.timeseries.totals.subscribersGained) }),
+        StatCard({ label: 'Subs Lost', value: '-' + formatNum(data.timeseries.totals.subscribersLost) }),
+        StatCard({ label: 'Likes', value: formatNum(data.timeseries.totals.likes) }),
+        StatCard({ label: 'Comments', value: formatNum(data.timeseries.totals.comments) }),
+        StatCard({ label: 'Shares', value: formatNum(data.timeseries.totals.shares) }),
+      ) : null,
+
+      // Top videos
+      data.top_videos?.length ? React.createElement('div', { className: 'card mt-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Top Videos')),
+        React.createElement('table', { className: 'table' },
+          React.createElement('thead', null, React.createElement('tr', null,
+            React.createElement('th', null, 'Title'), React.createElement('th', null, 'Views'),
+            React.createElement('th', null, 'Watch (min)'), React.createElement('th', null, 'Avg Duration'),
+            React.createElement('th', null, 'Retention %'),
+          )),
+          React.createElement('tbody', null,
+            data.top_videos.map((v, i) => React.createElement('tr', { key: i },
+              React.createElement('td', { style: { maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, v.title),
+              React.createElement('td', null, formatNum(v.views)),
+              React.createElement('td', null, formatNum(v.watch_minutes)),
+              React.createElement('td', null, formatTime(v.avg_view_duration)),
+              React.createElement('td', null, v.avg_view_percentage + '%'),
+            )),
+          ),
+        ),
+      ) : null,
+
+      // Traffic sources
+      data.traffic_sources?.length ? React.createElement('div', { className: 'card mt-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Traffic Sources')),
+        ...data.traffic_sources.map((t, i) => React.createElement('div', { key: i, className: 'info-tip' },
+          React.createElement('span', { style: { fontWeight: 600 } }, t.source),
+          ' — ', formatNum(t.views), ' views, ', formatNum(t.watch_minutes), ' min watched',
+        )),
+      ) : null,
+
+      // Demographics
+      data.demographics?.length ? React.createElement('div', { className: 'card mt-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Audience Demographics')),
+        React.createElement('table', { className: 'table' },
+          React.createElement('thead', null, React.createElement('tr', null,
+            React.createElement('th', null, 'Age Group'), React.createElement('th', null, 'Gender'), React.createElement('th', null, 'Viewer %'),
+          )),
+          React.createElement('tbody', null,
+            ...data.demographics.map((d, i) => React.createElement('tr', { key: i },
+              React.createElement('td', null, d.age_group), React.createElement('td', null, d.gender),
+              React.createElement('td', null, d.viewer_percentage + '%'),
+            )),
+          ),
+        ),
+      ) : null,
+
+      // Geography
+      data.geography?.length ? React.createElement('div', { className: 'card mt-16' },
+        React.createElement('div', { className: 'card-header' }, React.createElement('h3', null, 'Top Countries')),
+        ...data.geography.map((g, i) => React.createElement('div', { key: i, className: 'info-tip' },
+          React.createElement('span', { style: { fontWeight: 600 } }, g.country),
+          ' — ', formatNum(g.views), ' views',
+        )),
+      ) : null,
+
+    ) : EmptyState({ icon: 'dashboard', title: 'Analytics', text: 'Connect your YouTube account to view metrics.' }),
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  EDITING COACH
 // ═══════════════════════════════════════════════════════════════
@@ -1339,6 +1485,7 @@ function AppShell({ page, setPage }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Main' },
     { id: 'analyze', label: 'Channel Analysis', icon: 'analyze', section: 'Main' },
+    { id: 'analytics', label: 'YT Analytics', icon: 'dashboard', section: 'Main' },
     { id: 'competitors', label: 'Competitors', icon: 'competitors', section: 'Main' },
     { id: 'discover', label: 'Content Discovery', icon: 'discover', section: 'Main' },
     { id: 'ideas', label: 'Idea Generator', icon: 'ideas', section: 'Content' },
@@ -1360,7 +1507,7 @@ function AppShell({ page, setPage }) {
     { id: 'settings', label: 'Settings', icon: 'settings', section: 'Settings' },
   ];
   const renderPage = () => {
-    const pages = { dashboard: DashboardPage, analyze: AnalyzePage, competitors: CompetitorsPage, discover: DiscoverPage, ideas: IdeasPage, watch: WatchPage, calendar: CalendarPage, reports: ReportsPage, 'saved-ideas': SavedIdeasPage, repurpose: RepurposePage, seo: SeoPage, 'thumbnail-test': ThumbnailTestPage, trends: TrendAlertsPage, comments: CommentsPage, publishing: PublishingPage, 'algo-shift': AlgoShiftPage, editing: EditingPage, agent: AgentPage, pricing: PricingPage, billing: BillingPage, settings: SettingsPage, onboarding: OnboardingPage };
+    const pages = { dashboard: DashboardPage, analyze: AnalyzePage, competitors: CompetitorsPage, discover: DiscoverPage, ideas: IdeasPage, watch: WatchPage, calendar: CalendarPage, reports: ReportsPage, 'saved-ideas': SavedIdeasPage, repurpose: RepurposePage, seo: SeoPage, 'thumbnail-test': ThumbnailTestPage, trends: TrendAlertsPage, comments: CommentsPage, publishing: PublishingPage, 'algo-shift': AlgoShiftPage, editing: EditingPage, analytics: AnalyticsPage, agent: AgentPage, pricing: PricingPage, billing: BillingPage, settings: SettingsPage, onboarding: OnboardingPage };
     const C = pages[page] || DashboardPage;
     return React.createElement(C);
   };

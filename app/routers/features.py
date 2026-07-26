@@ -1158,3 +1158,280 @@ Return STRICT JSON:
 
     except Exception as exc:
         return {"needs_auth": True, "message": f"YouTube Analytics API error: {exc}. Reconnect your account."}
+
+
+# ──────────────────────────────────────────────────────────────
+# YouTube Analytics API — full channel metrics
+# ──────────────────────────────────────────────────────────────
+
+class AnalyticsRangeRequest(BaseModel):
+    days: int = 28
+    channel_id: str = ""
+
+
+@router.get("/analytics/overview")
+async def get_analytics_overview(
+    days: int = 28,
+    user: User = Depends(get_current_user),
+):
+    """Pull real channel metrics from YouTube Analytics API v2.
+    Requires the user to have connected their YouTube account via OAuth.
+    Returns: views, watch time, subscriber changes, top videos, traffic sources, demographics.
+    """
+    from app.db import get_youtube_token, get_cached_channel_profile
+    from datetime import datetime, timezone, timedelta as _td
+    import httpx, json
+
+    token_data = get_youtube_token(user.id)
+    if not token_data or not token_data.get("access_token"):
+        return {
+            "needs_auth": True,
+            "auth_url": "/api/auth/youtube/url",
+            "message": "Connect your YouTube account to view analytics",
+        }
+
+    access_token = token_data["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+    now = datetime.now(timezone.utc)
+    start_date = (now - _td(days=days)).strftime("%Y-%m-%d")
+    end_date = now.strftime("%Y-%m-%d")
+
+    result: dict = {"needs_auth": False, "range_days": days, "start_date": start_date, "end_date": end_date}
+
+    try:
+        # 1. Time-series metrics (daily breakdown)
+        ts_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained,subscribersLost,likes,comments,shares",
+                "dimensions": "day",
+                "sort": "day",
+                "maxResults": 366,
+            },
+            headers=headers,
+            timeout=20,
+        )
+        if ts_resp.status_code == 200:
+            data = ts_resp.json()
+            cols = [c["name"] for c in data.get("columnHeaders", [])]
+            rows = data.get("rows", [])
+            result["timeseries"] = {
+                "columns": cols,
+                "rows": rows,
+                "totals": {
+                    "views": sum(r[cols.index("views")] for r in rows) if "views" in cols and rows else 0,
+                    "estimatedMinutesWatched": sum(r[cols.index("estimatedMinutesWatched")] for r in rows) if "estimatedMinutesWatched" in cols and rows else 0,
+                    "subscribersGained": sum(r[cols.index("subscribersGained")] for r in rows) if "subscribersGained" in cols and rows else 0,
+                    "subscribersLost": sum(r[cols.index("subscribersLost")] for r in rows) if "subscribersLost" in cols and rows else 0,
+                    "likes": sum(r[cols.index("likes")] for r in rows) if "likes" in cols and rows else 0,
+                    "comments": sum(r[cols.index("comments")] for r in rows) if "comments" in cols and rows else 0,
+                    "shares": sum(r[cols.index("shares")] for r in rows) if "shares" in cols and rows else 0,
+                },
+            }
+        else:
+            result["timeseries"] = {"error": f"YouTube Analytics returned {ts_resp.status_code}"}
+
+        # 2. Traffic source breakdown
+        traffic_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,estimatedMinutesWatched",
+                "dimensions": "insightTrafficSourceType",
+                "sort": "-views",
+                "maxResults": 20,
+            },
+            headers=headers,
+            timeout=20,
+        )
+        if traffic_resp.status_code == 200:
+            tdata = traffic_resp.json()
+            tcols = [c["name"] for c in tdata.get("columnHeaders", [])]
+            result["traffic_sources"] = [
+                {"source": r[0], "views": r[1] if len(r) > 1 else 0, "watch_minutes": r[2] if len(r) > 2 else 0}
+                for r in tdata.get("rows", [])
+            ]
+        else:
+            result["traffic_sources"] = []
+
+        # 3. Demographics (age + gender)
+        demo_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "viewerPercentage",
+                "dimensions": "ageGroup,gender",
+                "sort": "-viewerPercentage",
+            },
+            headers=headers,
+            timeout=20,
+        )
+        if demo_resp.status_code == 200:
+            ddata = demo_resp.json()
+            result["demographics"] = [
+                {"age_group": r[0], "gender": r[1], "viewer_percentage": round(r[2], 1) if len(r) > 2 else 0}
+                for r in ddata.get("rows", [])
+            ]
+        else:
+            result["demographics"] = []
+
+        # 4. Geography (top countries)
+        geo_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,estimatedMinutesWatched",
+                "dimensions": "country",
+                "sort": "-views",
+                "maxResults": 15,
+            },
+            headers=headers,
+            timeout=20,
+        )
+        if geo_resp.status_code == 200:
+            gdata = geo_resp.json()
+            result["geography"] = [
+                {"country": r[0], "views": r[1] if len(r) > 1 else 0, "watch_minutes": r[2] if len(r) > 2 else 0}
+                for r in gdata.get("rows", [])
+            ]
+        else:
+            result["geography"] = []
+
+        # 5. Top videos by views
+        top_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+                "dimensions": "video",
+                "sort": "-views",
+                "maxResults": 10,
+            },
+            headers=headers,
+            timeout=20,
+        )
+        top_videos = []
+        if top_resp.status_code == 200:
+            tvdata = top_resp.json()
+            video_ids = [r[0] for r in tvdata.get("rows", [])]
+            # Fetch video titles via Data API
+            titles = {}
+            if video_ids:
+                try:
+                    vid_resp = httpx.get(
+                        "https://www.googleapis.com/youtube/v3/videos",
+                        params={
+                            "part": "snippet",
+                            "id": ",".join(video_ids[:10]),
+                            "key": settings.YOUTUBE_API_KEY,
+                        },
+                        timeout=15,
+                    )
+                    if vid_resp.status_code == 200:
+                        for item in vid_resp.json().get("items", []):
+                            titles[item["id"]] = item["snippet"]["title"]
+                except Exception:
+                    pass
+
+            for r in tvdata.get("rows", [])[:10]:
+                top_videos.append({
+                    "video_id": r[0],
+                    "title": titles.get(r[0], f"Video {r[0][:11]}"),
+                    "views": r[1] if len(r) > 1 else 0,
+                    "watch_minutes": r[2] if len(r) > 2 else 0,
+                    "avg_view_duration": r[3] if len(r) > 3 else 0,
+                    "avg_view_percentage": round(r[4], 1) if len(r) > 4 else 0,
+                })
+        result["top_videos"] = top_videos
+
+        # 6. Playlist metrics
+        pl_resp = httpx.get(
+            "https://youtubeanalytics.googleapis.com/v2/reports",
+            params={
+                "ids": "channel==MINE",
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": "views,playlistStarts,averageTimeInPlaylist",
+                "dimensions": "playlist",
+                "sort": "-views",
+                "maxResults": 5,
+            },
+            headers=headers,
+            timeout=20,
+        )
+        if pl_resp.status_code == 200:
+            pldata = pl_resp.json()
+            result["playlists"] = [
+                {"playlist_id": r[0], "views": r[1] if len(r) > 1 else 0, "starts": r[2] if len(r) > 2 else 0}
+                for r in pldata.get("rows", [])
+            ]
+        else:
+            result["playlists"] = []
+
+    except Exception as exc:
+        result["error"] = f"YouTube Analytics API error: {exc}"
+        result["needs_auth"] = "token" in str(exc).lower() or "401" in str(exc) or "403" in str(exc)
+
+    return result
+
+
+@router.get("/analytics/realtime")
+async def get_realtime_stats(user: User = Depends(get_current_user)):
+    """Get real-time subscriber count and views from YouTube Data API."""
+    from app.db import get_youtube_token, get_user_channels, get_cached_channel_profile
+    import httpx
+
+    token_data = get_youtube_token(user.id)
+    channels = get_user_channels(user.id)
+
+    if not channels:
+        return {"needs_auth": True, "message": "Add a channel first"}
+
+    cid = channels[0].channel_id
+    headers = {}
+
+    # Use OAuth token if available, otherwise API key
+    if token_data and token_data.get("access_token"):
+        headers["Authorization"] = f"Bearer {token_data['access_token']}"
+        params = {"part": "statistics,snippet", "id": cid}
+    else:
+        if not settings.YOUTUBE_API_KEY:
+            return {"needs_auth": True, "auth_url": "/api/auth/youtube/url", "message": "Connect YouTube or set API key"}
+        params = {"part": "statistics,snippet", "id": cid, "key": settings.YOUTUBE_API_KEY}
+
+    try:
+        resp = httpx.get(
+            "https://www.googleapis.com/youtube/v3/channels",
+            params=params,
+            headers=headers,
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            items = resp.json().get("items", [])
+            if items:
+                stats = items[0].get("statistics", {})
+                snippet = items[0].get("snippet", {})
+                return {
+                    "needs_auth": False,
+                    "channel_id": cid,
+                    "channel_title": snippet.get("title", ""),
+                    "channel_image": snippet.get("thumbnails", {}).get("default", {}).get("url", ""),
+                    "subscriber_count": int(stats.get("subscriberCount", 0)),
+                    "view_count": int(stats.get("viewCount", 0)),
+                    "video_count": int(stats.get("videoCount", 0)),
+                    "hidden_subscriber_count": stats.get("hiddenSubscriberCount", False),
+                }
+        return {"needs_auth": True, "message": "Unable to fetch channel stats. Reconnect your account."}
+    except Exception as exc:
+        return {"needs_auth": True, "message": f"API error: {exc}"}

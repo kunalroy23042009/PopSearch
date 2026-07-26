@@ -40,3 +40,6 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      # YouTube Analytics API v2 — requires Google OAuth (uses GOOGLE_CLIENT_ID/SECRET above)
+      # Scopes are configured in YOUTUBE_ANALYTICS_SCOPES (default: yt-analytics.readonly + youtube.readonly)
+      # No separate API key needed — Analytics API uses the OAuth access token from the YouTube connection flow
