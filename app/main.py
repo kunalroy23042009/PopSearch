@@ -67,9 +67,9 @@ def _get_user_key_func(request: Request) -> str:
         try:
             from jose import JWTError, jwt
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            email = payload.get("sub")
-            if email:
-                return f"user:{email}"
+            uid = payload.get("sub")
+            if uid:
+                return f"user:{uid}"
         except JWTError:
             pass
     return get_remote_address(request)
@@ -292,7 +292,7 @@ async def find_competitors_endpoint(
         logger.error("POST /find-competitors ERROR - %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(exc)}",
+            detail="Competitor search failed. Please try again later.",
         ) from exc
 
 
@@ -667,10 +667,10 @@ async def export_analysis(
         if profile.performance_summary:
             ps = profile.performance_summary
             writer.writerow([f"== Performance Summary =="])
-            writer.writerow(["Avg Views/30d", f"{ps.average_views_last_30d:.0f}"])
-            writer.writerow(["Best Views/30d", f"{ps.best_video_views_last_30d:.0f}"])
-            writer.writerow(["Growth Rate", f"{ps.growth_rate:.1f}%"])
-            writer.writerow(["Subscribers/30d", f"{ps.subscribers_last_30d:.0f}"])
+            writer.writerow(["Avg Views/30d", f"{ps.avg_views_30d:.0f}"])
+            writer.writerow(["Best Views/30d", f"{ps.top_video_views:.0f}"])
+            writer.writerow(["Growth Rate", f"{ps.views_growth:.1f}%"])
+            writer.writerow(["Subscribers/30d", f"{ps.subs_gained_30d:.0f}"])
             writer.writerow([])
 
         # Try to load full dashboard data for cross-platform content + competitors
