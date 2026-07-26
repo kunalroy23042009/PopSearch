@@ -141,6 +141,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#0a0a0f;color:#f5f5
 <a href="#demos">Examples</a>
 <a href="#pricing">Pricing</a>
 <a href="/app#login">Sign In</a>
+<a href="/app#dashboard">Dashboard</a>
 <a href="/app#login" class="cta">Get Started</a>
 </div>
 <button class="nav-toggle" onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -150,7 +151,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#0a0a0f;color:#f5f5
 <div class="badge">✨ AI-Powered YouTube Analytics</div>
 <h1>Grow Your Channel with <span class="gradient">AI-Powered Insights</span></h1>
 <p>Analyze any YouTube channel, discover trending content, and outsmart the algorithm — all in one dashboard.</p>
-<form class="hero-input" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app';return false}alert('Enter a YouTube URL or @handle')">
+<form class="hero-input" onsubmit="var v=this.querySelector('input').value.trim();if(v){localStorage.setItem('ccr_last_url',v);window.location.href='/app#dashboard';return false}alert('Enter a YouTube URL or @handle')">
 <input type="text" placeholder="Enter YouTube URL or @handle..." required>
 <button type="submit">Analyze</button>
 </form>
@@ -188,37 +189,37 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#0a0a0f;color:#f5f5
 <section class="section" style="padding-top:0" id="demos">
 <div class="section-header reveal"><div class="label">Live Demos</div><h2>Try it with popular channels</h2><p>Click any channel to analyze it — all links go to real YouTube channels.</p></div>
 <div class="demo-grid">
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MrBeast')" class="demo-card reveal reveal-d1">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MrBeast')" class="demo-card reveal reveal-d1">
 <div class="avatar" style="background:linear-gradient(135deg,#ff2d55,#cc0033)">M</div>
 <div class="name">MrBeast</div>
 <div class="subs">368M subs · Entertainment</div>
 <span class="tag">Try Now</span>
 </a>
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MKBHD')" class="demo-card reveal reveal-d2">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MKBHD')" class="demo-card reveal reveal-d2">
 <div class="avatar" style="background:linear-gradient(135deg,#22c55e,#166534)">M</div>
 <div class="name">MKBHD</div>
 <div class="subs">20M subs · Tech</div>
 <span class="tag">Try Now</span>
 </a>
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Markiplier')" class="demo-card reveal reveal-d3">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Markiplier')" class="demo-card reveal reveal-d3">
 <div class="avatar" style="background:linear-gradient(135deg,#3b82f6,#1e40af)">M</div>
 <div class="name">Markiplier</div>
 <div class="subs">38M subs · Gaming</div>
 <span class="tag">Try Now</span>
 </a>
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@LinusTechTips')" class="demo-card reveal reveal-d1">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@LinusTechTips')" class="demo-card reveal reveal-d1">
 <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#b45309)">L</div>
 <div class="name">Linus Tech Tips</div>
 <div class="subs">16M subs · Tech</div>
 <span class="tag">Try Now</span>
 </a>
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Kurzgesagt')" class="demo-card reveal reveal-d2">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@Kurzgesagt')" class="demo-card reveal reveal-d2">
 <div class="avatar" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">K</div>
 <div class="name">Kurzgesagt</div>
 <div class="subs">24M subs · Science</div>
 <span class="tag">Try Now</span>
 </a>
-<a href="/app" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MarquesBrownlee')" class="demo-card reveal reveal-d3">
+<a href="/app#dashboard" onclick="localStorage.setItem('ccr_last_url','https://youtube.com/@MarquesBrownlee')" class="demo-card reveal reveal-d3">
 <div class="avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">M</div>
 <div class="name">Marques Brownlee</div>
 <div class="subs">20M subs · Tech</div>
