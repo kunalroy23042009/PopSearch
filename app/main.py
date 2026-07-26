@@ -98,16 +98,16 @@ class AnalyzeChannelResponse(BaseModel):
 
 
 class FindCompetitorsRequest(BaseModel):
-    channel_id: str = Field(..., description="YouTube channel ID")
+    channel_id: str = ""
+    channel_url: str = ""
 
 
 class SearchTopicRequest(BaseModel):
-    channel_id: str = Field(..., description="YouTube channel ID")
-    topic: str = Field(..., description="Topic to search for")
-    competitor_channel_ids: list[str] = Field(
-        default_factory=list,
-        description="List of competitor channel IDs",
-    )
+    channel_id: str = ""
+    channel_url: str = ""
+    topic: str = ""
+    competitor_channel_ids: list[str] = []
+    platforms: list[str] = []
 
 
 class SearchTopicResponse(BaseModel):
@@ -116,7 +116,8 @@ class SearchTopicResponse(BaseModel):
 
 
 class MultiSourceSearchRequest(BaseModel):
-    channel_id: str
+    channel_id: str = ""
+    channel_url: str = ""
     topic: str
     include_trends: bool = True
     include_twitter: bool = True
@@ -187,7 +188,7 @@ async def lifespan(app: FastAPI):
         scheduler.shutdown()
 
 
-_show_docs = settings.DEBUG or os.getenv("RENDER") != "1"
+_show_docs = settings.DEBUG or os.getenv("ENVIRONMENT", "development") != "production"
 app = FastAPI(
     title="Creator Content Radar",
     description="AI-powered YouTube channel analyzer and cross-platform content discovery tool",
@@ -267,20 +268,21 @@ async def find_competitors_endpoint(
     body: FindCompetitorsRequest,
     user: User = Depends(get_current_user),
 ) -> list[CompetitorChannel]:
-    logger.info("POST /find-competitors - channel_id=%s, user=%d", body.channel_id, user.id)
+    cid = body.channel_id or body.channel_url or ""
+    logger.info("POST /find-competitors - cid=%s, user=%d", cid, user.id)
 
     try:
-        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, cid)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Channel profile not found for channel_id={body.channel_id}. "
+                detail=f"Channel profile not found for cid={cid}. "
                 "Please analyze the channel first using /analyze-channel.",
             )
 
-        competitors = await asyncio.to_thread(find_competitors, profile, exclude_channel_id=body.channel_id)
+        competitors = await asyncio.to_thread(find_competitors, profile, exclude_channel_id=cid)
         track_user_event(user.id, "competitors_found", {
-            "channel_id": body.channel_id,
+            "channel_id": cid,
             "count": len(competitors),
         })
         return competitors
@@ -303,17 +305,19 @@ async def search_topic_endpoint(
 ) -> SearchTopicResponse:
     _check_usage_limit(user)
 
+    cid = body.channel_id or body.channel_url or ""
+
     logger.info(
-        "POST /search-topic - channel_id=%s, topic=%s, user=%d",
-        body.channel_id, body.topic, user.id,
+        "POST /search-topic - cid=%s, topic=%s, user=%d",
+        cid, body.topic, user.id,
     )
 
     try:
-        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, cid)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Channel profile not found for channel_id={body.channel_id}. "
+                detail=f"Channel profile not found for cid={cid}. "
                 "Please analyze the channel first using /analyze-channel.",
             )
 
@@ -324,7 +328,7 @@ async def search_topic_endpoint(
 
         update_user_usage(user.id, 1)
         track_user_event(user.id, "topic_search", {
-            "channel_id": body.channel_id,
+            "channel_id": cid,
             "topic": body.topic,
             "results": len(classified_results),
         })
@@ -357,17 +361,19 @@ async def multi_source_search_endpoint(
 ) -> DashboardData:
     _check_usage_limit(user)
 
+    cid = body.channel_id or body.channel_url or ""
+
     logger.info(
-        "POST /multi-source-search - channel_id=%s, topic=%s, user=%d",
-        body.channel_id, body.topic, user.id,
+        "POST /multi-source-search - cid=%s, topic=%s, user=%d",
+        cid, body.topic, user.id,
     )
 
     try:
-        profile = await asyncio.to_thread(get_cached_channel_profile, body.channel_id)
+        profile = await asyncio.to_thread(get_cached_channel_profile, cid)
         if profile is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Channel profile not found for channel_id={body.channel_id}.",
+                detail=f"Channel profile not found for cid={cid}.",
             )
 
         from app.services.content_gatherer import ContentGatherer
@@ -379,7 +385,7 @@ async def multi_source_search_endpoint(
 
         update_user_usage(user.id, 1)
         track_user_event(user.id, "multi_source_search", {
-            "channel_id": body.channel_id,
+            "channel_id": cid,
             "topic": body.topic,
             "sources": dashboard.total_sources_checked,
         })
@@ -777,5 +783,13 @@ async def serve_app():
     from fastapi.responses import HTMLResponse
     return HTMLResponse(html)
 
+
+@app.get("/sitemap.xml")
+async def serve_sitemap():
+    return FileResponse(str(static_dir / "sitemap.xml"))
+
+@app.get("/robots.txt")
+async def serve_robots():
+    return FileResponse(str(static_dir / "robots.txt"))
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")

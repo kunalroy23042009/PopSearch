@@ -337,16 +337,21 @@ def delete_event(event_id: int, user: User = Depends(get_current_user)):
 # ── Cross-Platform Repurposing ─────────────────────────────────────────
 
 class RepurposeRequest(BaseModel):
-    url: str
+    url: str = ""
+    video_url: str = ""
     title: str = ""
     target_platforms: list[str] = ["tiktok", "instagram"]
+    platforms: list[str] = []
 
 
 @router.post("/repurpose")
+@router.post("/repurpose/generate")
 def repurpose_content(data: RepurposeRequest, user: User = Depends(get_current_user)):
-    platforms = ", ".join(data.target_platforms)
+    url = data.video_url or data.url or ""
+    target = data.platforms or data.target_platforms
+    platforms_str = ", ".join(target)
     scripts = []
-    for p in data.target_platforms:
+    for p in target:
         hook = f"Did you know? {data.title[:80]}" if data.title else "Check this out!"
         scripts.append({
             "platform": p,
@@ -356,9 +361,9 @@ def repurpose_content(data: RepurposeRequest, user: User = Depends(get_current_u
             "tips": [f"Use trending audio on {p}", "Add captions for accessibility", "Post during peak hours"],
         })
     task = save_repurpose_task(user.id, {
-        "source_url": data.url,
+        "source_url": url,
         "source_title": data.title,
-        "target_platforms": platforms,
+        "target_platforms": platforms_str,
         "scripts_json": json.dumps(scripts),
         "status": "completed",
     })
@@ -386,13 +391,16 @@ def list_repurpose(limit: int = 50, offset: int = 0, user: User = Depends(get_cu
 # ── SEO Scorecard ──────────────────────────────────────────────────────
 
 class SeoRequest(BaseModel):
-    channel_id: str
+    channel_id: str = ""
+    channel_url: str = ""
 
 
 @router.post("/seo-scorecard")
+@router.post("/seo/score")
 def generate_seo_scorecard(data: SeoRequest, user: User = Depends(get_current_user)):
     from app.db import get_cached_channel_profile
-    profile = get_cached_channel_profile(data.channel_id)
+    cid = data.channel_id or data.channel_url or ""
+    profile = get_cached_channel_profile(cid)
     if not profile:
         raise HTTPException(status_code=404, detail="Channel not found. Analyze it first.")
     title_score = min(100, int(len(profile.title) * 3.5))
@@ -413,7 +421,7 @@ def generate_seo_scorecard(data: SeoRequest, user: User = Depends(get_current_us
     if profile.upload_frequency and "weekly" not in profile.upload_frequency.lower():
         recs.append("Increase upload frequency to at least once per week for algorithm favorability")
     data_dict = {
-        "channel_id": data.channel_id,
+        "channel_id": cid,
         "title_score": title_score,
         "description_score": description_score,
         "tags_score": tags_score,
@@ -422,7 +430,7 @@ def generate_seo_scorecard(data: SeoRequest, user: User = Depends(get_current_us
     }
     sc = save_seo_scorecard(user.id, data_dict)
     return {
-        "channel_id": data.channel_id,
+        "channel_id": cid,
         "title_score": title_score,
         "description_score": description_score,
         "tags_score": tags_score,
@@ -680,6 +688,7 @@ async def publishing_insights(data: PublishingRequest, user: User = Depends(get_
     from app.db import get_cached_channel_profile
     from app.ai_provider import generate_ai_response
 
+    cid = ""
     try:
         cid = data.channel_id or getattr(get_user_channels(user.id), "__getitem__", lambda _: None)(0)
         if cid and hasattr(cid, "channel_id"):

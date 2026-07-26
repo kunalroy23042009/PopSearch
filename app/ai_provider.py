@@ -152,7 +152,7 @@ def _call_provider(
     if provider == AIProvider.GEMINI:
         genai_kwargs = {}
         if response_format == "json_object" and PROVIDER_INFO[provider]["supports_structured_output"]:
-            genai_kwargs["generation_config"] = {"response_mime_type": "application/json"}
+            genai_kwargs["config"] = {"response_mime_type": "application/json"}
         response = client.models.generate_content(
             model=model,
             contents=prompt,
