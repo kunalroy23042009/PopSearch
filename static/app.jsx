@@ -166,6 +166,50 @@ function GoogleBtn({ onClick, label, loading }) {
   );
 }
 
+
+// ── Google Sign-In Button ──
+function GoogleSignInButton() {
+  const handleGoogle = () => {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: window.__GOOGLE_CLIENT_ID__,
+        callback: async (response) => {
+          try {
+            const res = await fetch('/api/auth/google', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id_token: response.credential }),
+            });
+            const d = await res.json();
+            if (res.ok) {
+              localStorage.setItem('ccr_token', d.access_token);
+              localStorage.setItem('ccr_user', JSON.stringify(d.user));
+              window.location.hash = '#dashboard';
+              window.location.reload();
+            } else {
+              alert(d.detail || 'Google sign-in failed');
+            }
+          } catch (e) { alert('Network error during Google sign-in'); }
+        },
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById('google-signin-btn'),
+        { theme: 'outline', size: 'large', width: 320, text: 'continue_with', shape: 'pill' }
+      );
+      // Prompt if not already rendered (fallback)
+      window.google.accounts.id.prompt();
+    } else {
+      alert('Google sign-in is not available. Please use email/password.');
+    }
+  };
+
+  return React.createElement('div', {
+    id: 'google-signin-btn',
+    style: { display: 'flex', justifyContent: 'center', width: '100%' },
+    onClick: handleGoogle,
+  });
+}
+
 // ── Auth Pages ──
 function LoginPage() {
   const { login } = useAuth();
@@ -208,6 +252,13 @@ function LoginPage() {
           loading ? React.createElement('span', { className: 'spinner' }) : null, loading ? 'Signing in...' : 'Sign In',
         ),
       ),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' },
+        },
+        React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+        React.createElement('span', { style: { fontSize: '.8rem', color: 'var(--text-3)', whiteSpace: 'nowrap' } }, 'or continue with'),
+        React.createElement('div', { style: { flex: 1, height: 1, background: 'var(--border)' } }),
+      ),
+      React.createElement(GoogleSignInButton, null),
       React.createElement('p', { style: { textAlign: 'center', marginTop: 20, fontSize: '.85rem', color: 'var(--text-3)' } },
         "Don't have an account? ", React.createElement('a', { href: '#register', style: { color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 } }, 'Create one'),
       ),

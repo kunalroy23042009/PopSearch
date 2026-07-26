@@ -36,3 +36,7 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

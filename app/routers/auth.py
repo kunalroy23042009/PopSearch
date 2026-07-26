@@ -157,6 +157,12 @@ def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+@router.get("/google/client-id")
+def get_google_client_id():
+    """Return the Google OAuth Client ID for frontend Sign-In button. Public endpoint."""
+    return {"client_id": settings.GOOGLE_CLIENT_ID}
+
+
 @router.get("/youtube/url")
 def get_youtube_oauth_url(user: User = Depends(get_current_user)):
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
