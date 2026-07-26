@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session, select
 
@@ -183,6 +184,37 @@ def get_youtube_oauth_url(user: User = Depends(get_current_user)):
 class YoutubeCallbackRequest(BaseModel):
     code: str
     state: str = ""
+
+
+@router.get("/youtube/callback")
+def youtube_oauth_callback_get(code: str, state: str = "", session: Session = Depends(get_session)):
+    """Handle Google OAuth redirect (GET). Exchanges code for token and redirects to frontend."""
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        raise HTTPException(status_code=501, detail="YouTube OAuth not configured")
+    try:
+        import httpx
+        resp = httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": f"{settings.APP_URL}/api/auth/youtube/callback",
+                "grant_type": "authorization_code",
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            return RedirectResponse(url=f"{settings.APP_URL}/app#analytics?error=token_exchange_failed")
+
+        token_data = resp.json()
+        user_id = int(state) if state.isdigit() else 0
+        if user_id:
+            from app.db import set_youtube_token
+            set_youtube_token(user_id, token_data)
+        return RedirectResponse(url=f"{settings.APP_URL}/app#analytics?connected=1")
+    except Exception:
+        return RedirectResponse(url=f"{settings.APP_URL}/app#analytics?error=oauth_failed")
 
 
 @router.post("/youtube/callback")

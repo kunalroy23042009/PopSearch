@@ -503,6 +503,7 @@ var CCR = (() => {
     const [watched, setWatched] = useState([]);
     const [analytics, setAnalytics] = useState(null);
     const [analyticsLoading, setAnalyticsLoading] = useState(false);
+    const [connectErr, setConnectErr] = useState("");
     useEffect(() => {
       api("/api/watched-competitors").then(async (r) => {
         if (r?.ok) setWatched(await r.json());
@@ -823,11 +824,18 @@ var CCR = (() => {
             "div",
             { style: { textAlign: "center", padding: 32 } },
             React.createElement("p", { className: "text-sm text-2 mb-16" }, "Connect your YouTube account to see detailed analytics including watch time, traffic sources, demographics, and more."),
+            connectErr ? React.createElement("p", { className: "text-xs", style: { color: "var(--error)", marginBottom: 12 } }, connectErr) : null,
             React.createElement("button", { className: "btn btn-primary btn-sm", onClick: async () => {
-              const r = await api("/api/auth/youtube/url");
-              if (r?.ok) {
+              setConnectErr("");
+              try {
+                const r = await api("/api/auth/youtube/url");
+                if (!r) return;
                 const d = await r.json();
-                if (d.url) window.location.href = d.url;
+                if (r.ok && d.url) window.location.href = d.url;
+                else if (d.detail) setConnectErr(d.detail);
+                else setConnectErr("Failed to connect");
+              } catch {
+                setConnectErr("Network error");
               }
             } }, Icon({ name: "youtube", size: 16 }), " Connect YouTube")
           )
@@ -1050,10 +1058,16 @@ var CCR = (() => {
         React.createElement("h2", { className: "mt-16" }, "Connect your YouTube account"),
         React.createElement("p", { className: "text-sm text-2 mt-8 mb-24" }, "Editing Coach uses YouTube Analytics to analyze your retention data. Connect your account to get started."),
         React.createElement("button", { className: "btn btn-primary", onClick: async () => {
-          const r = await api("/api/auth/youtube/url");
-          if (r?.ok) {
+          setErr("");
+          try {
+            const r = await api("/api/auth/youtube/url");
+            if (!r) return;
             const d = await r.json();
-            if (d.url) window.location.href = d.url;
+            if (r.ok && d.url) window.location.href = d.url;
+            else if (d.detail) setErr(d.detail);
+            else setErr("Failed to connect");
+          } catch {
+            setErr("Network error");
           }
         } }, Icon({ name: "youtube", size: 16 }), " Connect YouTube")
       ) : loading ? Skeleton({ count: 2 }) : result ? React.createElement(

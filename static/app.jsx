@@ -395,6 +395,7 @@ function DashboardPage() {
   const [watched, setWatched] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [connectErr, setConnectErr] = useState('');
 
   useEffect(() => {
     api('/api/watched-competitors').then(async r => { if (r?.ok) setWatched(await r.json()); });
@@ -589,7 +590,8 @@ function DashboardPage() {
             )
           : React.createElement('div', { style: { textAlign: 'center', padding: 32 } },
               React.createElement('p', { className: 'text-sm text-2 mb-16' }, 'Connect your YouTube account to see detailed analytics including watch time, traffic sources, demographics, and more.'),
-              React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
+              connectErr ? React.createElement('p', { className: 'text-xs', style: { color: 'var(--error)', marginBottom: 12 } }, connectErr) : null,
+              React.createElement('button', { className: 'btn btn-primary btn-sm', onClick: async () => { setConnectErr(''); try { const r = await api('/api/auth/youtube/url'); if (!r) return; const d = await r.json(); if (r.ok && d.url) window.location.href = d.url; else if (d.detail) setConnectErr(d.detail); else setConnectErr('Failed to connect'); } catch { setConnectErr('Network error'); } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
             ),
       ),
     ) : EmptyState({ icon: 'chart', title: 'Enter a channel URL', text: 'Enter a YouTube channel URL above to see analytics, trends, competitors, and cross-platform content — all in one place.', action: React.createElement('button', { className: 'btn btn-ghost', onClick: () => { setUrl('https://www.youtube.com/@MrBeast'); load(); } }, Icon({ name: 'sparkles', size: 16 }), ' Try with MrBeast') }),
@@ -758,7 +760,7 @@ function EditingPage() {
       Icon({ name: 'key', size: 32 }),
       React.createElement('h2', { className: 'mt-16' }, 'Connect your YouTube account'),
       React.createElement('p', { className: 'text-sm text-2 mt-8 mb-24' }, 'Editing Coach uses YouTube Analytics to analyze your retention data. Connect your account to get started.'),
-      React.createElement('button', { className: 'btn btn-primary', onClick: async () => { const r = await api('/api/auth/youtube/url'); if (r?.ok) { const d = await r.json(); if (d.url) window.location.href = d.url; } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
+      React.createElement('button', { className: 'btn btn-primary', onClick: async () => { setErr(''); try { const r = await api('/api/auth/youtube/url'); if (!r) return; const d = await r.json(); if (r.ok && d.url) window.location.href = d.url; else if (d.detail) setErr(d.detail); else setErr('Failed to connect'); } catch { setErr('Network error'); } } }, Icon({ name: 'youtube', size: 16 }), ' Connect YouTube'),
     ) : loading ? Skeleton({ count: 2 }) : result ? React.createElement('div', null,
       result.retention_rate != null ? React.createElement('div', { className: 'stats' },
         StatCard({ label: 'Avg Retention', value: result.retention_rate ? result.retention_rate.toFixed(1) + '%' : null }),
