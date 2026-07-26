@@ -273,6 +273,9 @@ def _fallback_ideas(topic: str) -> dict:
 def save_idea(data: dict, user: User = Depends(get_current_user)):
     f = {"topic", "title", "seo_keywords", "thumbnail_ideas", "best_posting_time", "predicted_performance", "platform_focus", "saved"}
     filtered = {k: v for k, v in data.items() if k in f and v is not None}
+    # Ensure topic is set (required field)
+    if not filtered.get("topic"):
+        filtered["topic"] = filtered.get("title", "general")
     if isinstance(filtered.get("seo_keywords"), list):
         filtered["seo_keywords"] = json.dumps(filtered["seo_keywords"])
     if isinstance(filtered.get("thumbnail_ideas"), list):
@@ -323,6 +326,9 @@ def list_events(month: str = "", limit: int = 50, offset: int = 0, user: User = 
 @router.post("/calendar")
 def create_event(data: dict, user: User = Depends(get_current_user)):
     allowed = {"title", "description", "event_date", "event_time", "event_type", "related_channel_id", "google_event_id"}
+    # Accept 'date' as alias for 'event_date'
+    if "date" in data and "event_date" not in data:
+        data["event_date"] = data["date"]
     filtered = {k: v for k, v in data.items() if k in allowed and v is not None}
     ev = save_calendar_event(user.id, filtered)
     return {"id": ev.id, "status": "created"}
@@ -529,13 +535,16 @@ async def analyze_comments(data: dict, user: User = Depends(get_current_user)):
             "cached": True,
         }
 
+    from app.config import settings
+    if not settings.YOUTUBE_API_KEY:
+        raise HTTPException(status_code=503, detail="YouTube API key not configured. Set YOUTUBE_API_KEY environment variable.")
+
+    comments = []
+    video_title = ""
     try:
         from googleapiclient.discovery import build
-        from app.config import settings
 
         youtube = build("youtube", "v3", developerKey=settings.YOUTUBE_API_KEY)
-        comments = []
-        video_title = ""
 
         video_resp = youtube.videos().list(part="snippet", id=video_id).execute()
         if video_resp.get("items"):
@@ -600,6 +609,8 @@ Return STRICT JSON with exactly this structure:
         )
         result = json.loads(ai_result) if isinstance(ai_result, str) else ai_result
 
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.warning("Comment analysis failed: %s", exc)
         return _fallback_comment_analysis(comments, video_id, video_title)

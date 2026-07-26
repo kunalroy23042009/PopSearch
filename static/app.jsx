@@ -484,7 +484,7 @@ function CompetitorsPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
   const [watched, setWatched] = useState([]);
-  useEffect(() => { api('/api/competitors/watched').then(async r => { if (r?.ok) setWatched(await r.json()); }); }, []);
+  useEffect(() => { api('/api/watched-competitors').then(async r => { if (r?.ok) setWatched(await r.json()); }); }, []);
   const find = async () => {
     if (!channelId.trim()) return;
     setLoading(true); setErr(''); setResults(null);
@@ -497,11 +497,11 @@ function CompetitorsPage() {
     finally { setLoading(false); }
   };
   const watch = async (ch) => {
-    await api('/api/competitors/watched', { method: 'POST', body: JSON.stringify({ channel_id: ch.channel_id, channel_title: ch.title, thumbnail_url: ch.thumbnail_url }) });
+    await api('/api/watched-competitors', { method: 'POST', body: JSON.stringify({ channel_id: ch.channel_id, channel_title: ch.title, thumbnail_url: ch.thumbnail_url }) });
     setWatched(prev => [...prev, ch]);
   };
   const unwatch = async (cid) => {
-    await api(`/api/competitors/watched/${cid}`, { method: 'DELETE' });
+    await api(`/api/watched-competitors/${cid}`, { method: 'DELETE' });
     setWatched(prev => prev.filter(c => c.channel_id !== cid));
   };
   return React.createElement('div', null,
@@ -599,7 +599,7 @@ function IdeasPage() {
     if (!channelId.trim() || !niche.trim()) return;
     setLoading(true); setErr(''); setIdeas(null);
     try {
-      const res = await api('/api/ideas/generate', { method: 'POST', body: JSON.stringify({ channel_id: channelId, niche }) });
+      const res = await api('/api/ideas/generate', { method: 'POST', body: JSON.stringify({ topic: niche || channelId }) });
       if (!res) return;
       const d = await res.json();
       if (res.ok) setIdeas(d); else setErr(d.detail || 'Generation failed');
@@ -607,7 +607,7 @@ function IdeasPage() {
     finally { setLoading(false); }
   };
   const saveIdea = async (idea) => {
-    await api('/api/ideas/save', { method: 'POST', body: JSON.stringify({ title: idea.title, description: idea.description || '', tags: idea.tags || [] }) });
+    await api('/api/ideas/save', { method: 'POST', body: JSON.stringify({ topic: niche || idea.tags?.[0] || 'general', title: idea.title, seo_keywords: (idea.tags || []).join(', '), saved: true }) });
   };
   return React.createElement('div', null,
     PageHeader({ title: 'Idea Generator', subtitle: 'AI-powered content ideas tailored to your channel' }),
@@ -681,7 +681,7 @@ function CalendarPage() {
   }, []);
   const addEvent = async () => {
     if (!newEvent.title || !newEvent.date) return;
-    const res = await api('/api/calendar', { method: 'POST', body: JSON.stringify(newEvent) });
+    const res = await api('/api/calendar', { method: 'POST', body: JSON.stringify({title: newEvent.title, event_date: newEvent.date, description: newEvent.description}) });
     if (res?.ok) { const ev = await res.json(); setEvents(prev => [...prev, ev]); setNewEvent({ title: '', date: '', description: '' }); setShowForm(false); }
   };
   const delEvent = async (id) => { await api(`/api/calendar/${id}`, { method: 'DELETE' }); setEvents(prev => prev.filter(e => e.id !== id)); };
@@ -829,7 +829,7 @@ function SeoPage() {
     if (!channelId.trim()) return;
     setLoading(true); setErr(''); setScore(null);
     try {
-      const res = await api('/api/seo', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
+      const res = await api('/api/seo/score', { method: 'POST', body: JSON.stringify({ channel_id: channelId }) });
       if (!res) return;
       const d = await res.json();
       if (res.ok) setScore(d); else setErr(d.detail || 'Analysis failed');
