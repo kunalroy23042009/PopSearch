@@ -773,7 +773,7 @@ async def serve_app():
     html = (static_dir / "index.html").read_text(encoding="utf-8")
     google_id = settings.GOOGLE_CLIENT_ID or ""
     script = f'<script>window.CCR_GOOGLE_CLIENT_ID={json.dumps(google_id)};</script>'
-    html = html.replace('<script src="/static/app.js"></script>', script + '<script src="/static/app.js"></script>')
+    html = html.replace('<script defer src="/static/app.js"></script>', script + '<script defer src="/static/app.js"></script>')
     from fastapi.responses import HTMLResponse
     return HTMLResponse(html)
 

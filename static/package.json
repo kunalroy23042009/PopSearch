@@ -3,5 +3,8 @@
   "private": true,
   "scripts": {
     "build": "esbuild app.jsx --bundle --minify --target=es2020 --external:react --external:react-dom --external:chart.js --outfile=app.js"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.1"
   }
 }
